@@ -36,7 +36,8 @@
             {% if serie_dias %}
                 <div class="barras">
                     {% for punto in serie_dias %}
-                        <div class="barra" style="height: {% widthratio punto.total maximo_serie 100 %}%"
+                        <div class="barra {% if not punto.total %}barra-vacia{% endif %}"
+                             style="height: {% if punto.total %}{% widthratio punto.total maximo_serie 100 %}{% else %}3{% endif %}%"
                              title="{{ punto.dia }}: {{ punto.total }} llamadas"></div>
                     {% endfor %}
                 </div>

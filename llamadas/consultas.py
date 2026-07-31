@@ -48,24 +48,36 @@ def metricas_generales(dias=30, cliente=None):
 
 
 def llamadas_por_dia(dias=14, cliente=None):
+    """Una entrada por día de la ventana, incluidos los días sin llamadas.
+
+    La consulta agrupada solo devuelve los días que tuvieron actividad; si se
+    dibujaran tal cual, un único día con llamadas ocuparía todo el ancho del
+    gráfico y el eje mentiría sobre el período que se está mirando.
+    """
     from django.db.models.functions import TruncDate
 
     from llamadas.models import Llamada
 
-    desde = timezone.now() - timedelta(days=dias)
+    # `timezone.now()` respeta USE_TZ, que en este proyecto está en False.
+    hoy = timezone.now().date()
+    primero = hoy - timedelta(days=dias - 1)
     filas = (
-        _base(Llamada, cliente).filter(fecha_inicio__gte=desde)
+        _base(Llamada, cliente).filter(fecha_inicio__date__gte=primero)
         .annotate(dia=TruncDate('fecha_inicio'))
         .values('dia')
         .annotate(total=Count('id'), minutos=Sum('duracion_segundos'))
-        .order_by('dia')
     )
-    return [
-        {'dia': fila['dia'].isoformat() if fila['dia'] else '',
-         'total': fila['total'],
-         'minutos': round((fila['minutos'] or 0) / 60, 1)}
-        for fila in filas
-    ]
+    porDia = {
+        fila['dia']: (fila['total'], fila['minutos'] or 0)
+        for fila in filas if fila['dia']
+    }
+    serie = []
+    for desplazamiento in range(dias):
+        dia = primero + timedelta(days=desplazamiento)
+        total, segundos = porDia.get(dia, (0, 0))
+        serie.append({'dia': dia.isoformat(), 'total': total,
+                      'minutos': round(segundos / 60, 1)})
+    return serie
 
 
 def top_paises(limite=8, cliente=None):

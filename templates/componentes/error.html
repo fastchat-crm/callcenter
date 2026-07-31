@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>{{ codigo }} · {{ nombre_sistema|default:"Callcenter IA" }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/css/base.css?v1.7">
+</head>
+<body>
+<div class="pagina-error">
+    <div class="tarjeta">
+        <div class="tarjeta-cuerpo">
+            <div class="error-codigo">{{ codigo }}</div>
+            <h1>{{ titulo }}</h1>
+            <p class="texto-suave mb-2">{{ detalle }}</p>
+            <a class="boton boton-primario" href="/panel/">Volver al panel</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

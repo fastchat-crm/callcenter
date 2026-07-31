@@ -327,9 +327,16 @@ table.tabla tbody tr:last-child td { border-bottom: none; }
 
 /* ---------- Gráficos ---------- */
 .barras { display: flex; align-items: flex-end; gap: 5px; height: 130px; padding-top: .5rem; }
-.barra { flex: 1; background: var(--primario); border-radius: 4px 4px 2px 2px; min-height: 3px; opacity: .85; position: relative; }
+.barra { flex: 1; max-width: 46px; background: var(--primario); border-radius: 4px 4px 2px 2px; min-height: 3px; opacity: .85; position: relative; }
+.barra-vacia { background: var(--fondo-hundido); opacity: 1; }
 .barra:hover { opacity: 1; }
 .barras-ejes { display: flex; justify-content: space-between; font-size: .7rem; color: var(--texto-tenue); margin-top: .4rem; }
+
+.pagina-error { min-height: 100vh; display: grid; place-items: center; padding: 1.5rem; background: var(--fondo); }
+.pagina-error .tarjeta { width: min(460px, 100%); }
+.pagina-error .tarjeta-cuerpo { padding: 2rem; text-align: center; }
+.pagina-error h1 { font-size: 1.3rem; margin-bottom: .4rem; }
+.error-codigo { font-size: 3rem; font-weight: 700; color: var(--primario); line-height: 1; margin-bottom: .6rem; }
 
 .medidor { height: 8px; border-radius: 999px; background: var(--fondo-hundido); overflow: hidden; }
 .medidor span { display: block; height: 100%; background: var(--primario); border-radius: 999px; }
