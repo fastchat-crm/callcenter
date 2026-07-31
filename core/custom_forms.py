@@ -33,11 +33,19 @@ class FormularioBase(forms.ModelForm):
         from core.custom_middleware import get_current_request
 
         request = get_current_request()
-        if request is None or not getattr(request.user, 'is_authenticated', False):
-            return
         for campo in self.fields.values():
             listado = getattr(campo, 'queryset', None)
             if listado is None:
+                continue
+
+            # Con borrado lógico, `objects.all()` sigue trayendo lo dado de baja:
+            # sin esto los desplegables ofrecen registros que ya no existen para
+            # el usuario, y elegir uno lo revive de hecho.
+            if any(f.name == 'status' for f in listado.model._meta.fields):
+                listado = listado.filter(status=True)
+                campo.queryset = listado
+
+            if request is None or not getattr(request.user, 'is_authenticated', False):
                 continue
             if listado.model is Cliente:
                 campo.queryset = clientes_visibles(request.user)

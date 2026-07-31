@@ -1,4 +1,10 @@
-"""Proveedores de telefonía y troncales SIP."""
+"""Proveedores de telefonía y troncales SIP.
+
+Del operador, no de los clientes: aquí viven las credenciales del carrier y el
+CRUD genérico no puede protegerlas, porque estos modelos no llevan FK `cliente`
+por la que filtrar.
+"""
+from clientes.contexto import solo_operador
 from core.crud import ConfigCrud, vista_crud
 from core.funciones import secure_module
 
@@ -13,6 +19,7 @@ def _contexto(request, data):
 
 
 @secure_module
+@solo_operador
 def proveedor_view(request):
     return vista_crud(request, ConfigCrud(
         modelo=ProveedorTelefonia,

@@ -73,3 +73,31 @@ def filtro_cliente(request, modelo):
 def acotar(queryset, request):
     """Aplica el filtro del cliente activo a un queryset cualquiera."""
     return queryset.filter(filtro_cliente(request, queryset.model))
+
+
+def solo_operador(vista):
+    """Pantalla que un usuario de cliente no debe abrir jamás.
+
+    Es para lo que no se filtra por cliente porque es infraestructura
+    compartida: proveedores y troncales llevan las credenciales del carrier del
+    operador, y el CRUD genérico no puede protegerlas —no hay FK `cliente` por
+    la que filtrar—. Sin esto, un usuario con el rol equivocado abre el
+    formulario del proveedor y ve el token.
+    """
+    from functools import wraps
+
+    from django.http import JsonResponse
+    from django.shortcuts import render
+
+    @wraps(vista)
+    def envoltorio(request, *args, **kwargs):
+        usuario = getattr(request, 'user', None)
+        if usuario is not None and usuario.is_authenticated and (
+                usuario.is_superuser or es_operador(usuario)):
+            return vista(request, *args, **kwargs)
+        mensaje = 'Esta pantalla es del operador del sistema.'
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'action' in request.GET:
+            return JsonResponse({'result': False, 'error': True, 'message': mensaje}, status=403)
+        return render(request, '403.html', status=403)
+
+    return envoltorio

@@ -1,20 +1,17 @@
 """Alta y mantenimiento de clientes, y cambio del cliente activo."""
-from django.http import JsonResponse
 from django.shortcuts import redirect
 
 from core.crud import ConfigCrud, vista_crud
 from core.funciones import log, secure_module
 
-from .contexto import elegir_cliente, es_operador
+from .contexto import elegir_cliente, solo_operador
 from .forms import ClienteForm
 from .models import Cliente
 
 
 @secure_module
+@solo_operador
 def cliente_view(request):
-    if not es_operador(request.user) and not request.user.is_superuser:
-        return JsonResponse({'error': True, 'message': 'Solo el operador administra los clientes.'},
-                            status=403)
     return vista_crud(request, ConfigCrud(
         modelo=Cliente,
         formulario=ClienteForm,

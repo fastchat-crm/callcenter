@@ -63,8 +63,15 @@ if sin_seccion.exists():
     print(f'  sin sección: {sin_seccion.count()} → se ocultan del menú')
     sin_seccion.update(visible_menu=False)
 
+# Ojo: /telefonia/proveedores/ y /configuracion/ NO entran en ningún rol de
+# cliente. Son infraestructura del operador y llevan credenciales del carrier;
+# las vistas además lo bloquean con @solo_operador.
 ROLES = {
     'Administrador': None,  # todos los módulos
+    'Cliente': ('/panel/', '/clientes/puesta-en-marcha/', '/llamadas/', '/ivr/',
+                '/agentes-ia/agentes/', '/agentes-ia/conocimiento/', '/agentes-ia/consumo/',
+                '/telefonia/numeros/', '/telefonia/asesores/', '/voz/demo/',
+                '/doc/', '/perfilpanel/'),
     'Supervisor': ('/panel/', '/clientes/puesta-en-marcha/', '/llamadas/', '/ivr/', '/agentes-ia/', '/telefonia/', '/voz/', '/doc/', '/perfilpanel/'),
     'Asesor': ('/panel/', '/llamadas/listado/', '/llamadas/monitor/', '/voz/demo/', '/doc/', '/perfilpanel/'),
     'Auditor': ('/panel/', '/llamadas/', '/agentes-ia/consumo/', '/seguridad/auditoria/', '/doc/', '/perfilpanel/'),
@@ -81,6 +88,8 @@ for nombre, prefijos in ROLES.items():
     else:
         modulos = [m for m in todos if any(m.url.startswith(prefijo) for prefijo in prefijos)]
         permisos.descripcion = {
+            'Cliente': 'Todo lo suyo: números, flujos, agentes y llamadas. '
+                       'No ve proveedores ni configuración del operador.',
             'Supervisor': 'Opera y configura flujos, agentes y telefonía.',
             'Asesor': 'Atiende llamadas y consulta el historial.',
             'Auditor': 'Solo lectura de llamadas, consumo y auditoría.',

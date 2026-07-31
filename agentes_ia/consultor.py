@@ -55,10 +55,20 @@ class AgenteConsultor:
     """Envuelve un `AgenteIA` y responde preguntas usando su proveedor y su RAG."""
 
     def __init__(self, agente, llamada=None):
+        from agentes_ia.models import ApiKeyIA
+        from agentes_ia.providers import get_provider
+
         self.agente = agente
         self.llamada = llamada
         self.apikey = agente.apikey
-        from agentes_ia.providers import get_provider
+        # Si la llave del agente quedó inactiva, la llamada no debería morir por
+        # eso: se cae a la marcada «por defecto» de su cliente, o a la del operador.
+        if self.apikey is None or not self.apikey.activo:
+            respaldo = ApiKeyIA.por_defecto_de(agente.cliente)
+            if respaldo is not None:
+                logger.warning('[agente] la llave de %s está inactiva; se usa «%s»',
+                               agente.nombre, respaldo.alias)
+                self.apikey = respaldo
 
         self.provider = get_provider(self.apikey.nombre_proveedor)
 

@@ -53,6 +53,10 @@ class ApiKeyIA(ModeloBase):
     consumo_tokens_entrada = models.BigIntegerField(default=0, editable=False)
     consumo_tokens_salida = models.BigIntegerField(default=0, editable=False)
     activo = models.BooleanField(default=True)
+    por_defecto = models.BooleanField(
+        default=False, verbose_name='Por defecto',
+        help_text='La que usan los agentes que no eligen una llave propia. '
+                  'Solo puede haber una por defecto en cada ámbito.')
 
     # Una llave sin cliente es del operador y la ven todos; por eso este modelo
     # no se filtra igual que el resto (ver clientes/contexto.py).
@@ -61,10 +65,29 @@ class ApiKeyIA(ModeloBase):
     class Meta:
         verbose_name = 'Llave de IA'
         verbose_name_plural = 'Llaves de IA'
-        ordering = ['alias']
+        ordering = ['-por_defecto', 'alias']
 
     def __str__(self):
         return f'{self.alias} · {self.get_proveedor_display()}'
+
+    def save(self, *args, **kwargs):
+        # «Por defecto» tiene que ser una sola por ámbito: las del operador
+        # (sin cliente) por un lado, y las de cada cliente por otro. Marcar una
+        # desmarca la anterior, en vez de dejar dos y que gane el orden.
+        super().save(*args, **kwargs)
+        if self.por_defecto:
+            (ApiKeyIA.objects.filter(cliente=self.cliente, por_defecto=True)
+             .exclude(pk=self.pk).update(por_defecto=False))
+
+    @classmethod
+    def por_defecto_de(cls, cliente=None):
+        """Llave que usan los agentes de ese cliente cuando no eligen una.
+
+        Primero la marcada por el propio cliente; si no tiene, la del operador.
+        """
+        consulta = cls.objects.filter(status=True, activo=True, por_defecto=True)
+        propia = consulta.filter(cliente=cliente).first() if cliente is not None else None
+        return propia or consulta.filter(cliente__isnull=True).first()
 
     @property
     def nombre_proveedor(self):

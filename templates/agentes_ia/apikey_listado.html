@@ -21,11 +21,15 @@
     <div class="tarjeta-cuerpo">{% include 'componentes/buscador.html' with placeholder='Alias o modelo…' %}</div>
     <div class="tabla-envoltura">
         <table class="tabla">
-            <thead><tr><th>Alias</th><th>Proveedor</th><th>Modelo</th><th>Clave</th><th>Consumo</th><th>Estado</th><th class="celda-acciones">Acciones</th></tr></thead>
+            <thead><tr><th>Alias</th><th>Ámbito</th><th>Proveedor</th><th>Modelo</th><th>Clave</th><th>Consumo</th><th>Estado</th><th class="celda-acciones">Acciones</th></tr></thead>
             <tbody>
             {% for filtro in listado %}
                 <tr>
-                    <td><strong>{{ filtro.alias }}</strong></td>
+                    <td>
+                        <strong>{{ filtro.alias }}</strong>
+                        {% if filtro.por_defecto %}<span class="etiqueta etiqueta-acento">Por defecto</span>{% endif %}
+                    </td>
+                    <td>{% if filtro.cliente %}{{ filtro.cliente.nombre }}{% else %}<span class="texto-tenue">Compartida</span>{% endif %}</td>
                     <td>{{ filtro.get_proveedor_display }}</td>
                     <td class="celda-mono">{{ filtro.modelo|default:"por defecto" }}</td>
                     <td class="celda-mono texto-pequeno">{{ filtro.clave_enmascarada }}</td>

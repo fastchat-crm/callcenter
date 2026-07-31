@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 
+from clientes.contexto import solo_operador
 from core.funciones import addData, log, secure_module
 
 from .forms import ConfiguracionForm
@@ -13,6 +14,7 @@ from .models import Configuracion
 
 
 @secure_module
+@solo_operador
 def configuracion_view(request):
     data = {'titulo': 'Configuración general', 'modulo': 'Centro de seguridad'}
     addData(request, data)

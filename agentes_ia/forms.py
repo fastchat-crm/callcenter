@@ -7,19 +7,44 @@ class ApiKeyForm(FormularioBase):
     class Meta:
         model = ApiKeyIA
         fields = ('cliente', 'alias', 'proveedor', 'clave', 'modelo', 'modelo_embeddings',
-                  'base_url', 'limite_mensual_llamadas', 'activo')
+                  'base_url', 'limite_mensual_llamadas', 'activo', 'por_defecto')
         labels = {
             'cliente': 'Cliente', 'alias': 'Alias', 'proveedor': 'Proveedor', 'clave': 'Clave API',
             'modelo': 'Modelo', 'modelo_embeddings': 'Modelo de embeddings',
             'base_url': 'URL base (opcional)',
             'limite_mensual_llamadas': 'Límite mensual de llamadas', 'activo': 'Activa',
+            'por_defecto': 'Usar por defecto',
         }
         help_texts = {
-            'cliente': 'Vacío: llave por defecto que pueden usar todos los clientes.',
+            'cliente': 'Vacío: llave compartida, disponible para todos los clientes.',
+            'por_defecto': 'La que usan los agentes que no eligen llave propia. '
+                           'Marcar esta desmarca la anterior del mismo ámbito.',
         }
+
+    def clean(self):
+        datos = super().clean()
+        if datos.get('por_defecto') and not datos.get('activo'):
+            self.add_error('por_defecto', 'Una llave inactiva no puede ser la de por defecto.')
+        return datos
 
 
 class AgenteForm(FormularioBase):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # En un agente nuevo viene marcada la llave «por defecto», que es lo que
+        # se espera al dar de alta el agente de un cliente.
+        if not (self.instance and self.instance.pk) and not self.initial.get('apikey'):
+            from clientes.contexto import cliente_actual
+            from core.custom_middleware import get_current_request
+
+            from .models import ApiKeyIA
+
+            peticion = get_current_request()
+            cliente = cliente_actual(peticion) if peticion is not None else None
+            defecto = ApiKeyIA.por_defecto_de(cliente)
+            if defecto is not None:
+                self.fields['apikey'].initial = defecto.pk
+
     class Meta:
         model = AgenteIA
         fields = ('nombre', 'descripcion', 'apikey', 'coleccion', 'prompt_sistema', 'tono',
