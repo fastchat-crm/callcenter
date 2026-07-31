@@ -4,7 +4,8 @@ from django.shortcuts import redirect
 from core.crud import ConfigCrud, vista_crud
 from core.funciones import log, secure_module
 
-from .contexto import elegir_cliente, solo_operador
+from .contexto import (activar_modo_cliente, elegir_cliente, en_modo_cliente,
+                       es_operador, salir_modo_cliente, solo_operador)
 from .forms import ClienteForm
 from .models import Cliente
 
@@ -35,3 +36,27 @@ def cambiar_cliente_view(request):
     if not destino.startswith('/'):
         destino = '/panel/'
     return redirect(destino)
+
+
+@secure_module
+def modo_cliente_view(request):
+    """Entra o sale de «ver como cliente».
+
+    Solo lo puede usar el operador, y salir nunca se bloquea: si el modo dejara
+    a alguien encerrado sin puerta de vuelta, sería una trampa en vez de una
+    herramienta.
+    """
+    destino = request.GET.get('siguiente') or '/panel/'
+    if not destino.startswith('/'):
+        destino = '/panel/'
+
+    if request.GET.get('salir') == '1':
+        salir_modo_cliente(request)
+        return redirect(destino)
+
+    if not (es_operador(request.user) or request.user.is_superuser):
+        return redirect('/panel/')
+    if not en_modo_cliente(request):
+        activar_modo_cliente(request)
+        log('Entró en modo «ver como cliente»', request, 'info')
+    return redirect('/panel/')

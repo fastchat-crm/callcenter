@@ -83,10 +83,17 @@ class GroupModulo(ModeloBase):
         return self.group.user_set.count()
 
 
-def modulos_de_usuario(usuario):
-    """URLs que el usuario puede abrir. Los superusuarios ven todo."""
+def modulos_de_usuario(usuario, request=None):
+    """URLs que el usuario puede abrir. Los superusuarios ven todo.
+
+    Salvo que el operador haya pedido «ver como cliente»: ahí se le aplican los
+    módulos del rol Cliente, para que compruebe de verdad qué ve quien va a usar
+    el sistema en lugar de imaginárselo.
+    """
     if not getattr(usuario, 'is_authenticated', False):
         return Modulo.objects.none()
+    if request is not None and _en_modo_cliente(request):
+        return modulos_del_rol_cliente()
     if usuario.is_superuser:
         return Modulo.objects.filter(status=True)
     return Modulo.objects.filter(
@@ -94,7 +101,35 @@ def modulos_de_usuario(usuario):
     ).distinct()
 
 
-def puede_entrar(usuario, ruta):
+def _en_modo_cliente(request):
+    try:
+        from clientes.contexto import en_modo_cliente
+
+        return en_modo_cliente(request)
+    except Exception:
+        return False
+
+
+def modulos_del_rol_cliente():
+    """Lo que ve un usuario con el rol «Cliente». Vacío si el rol no existe."""
+    from django.contrib.auth.models import Group
+
+    from clientes.contexto import ROL_CLIENTE
+
+    rol = Group.objects.filter(name=ROL_CLIENTE).first()
+    if rol is None:
+        return Modulo.objects.none()
+    return Modulo.objects.filter(status=True, roles_asignados__group=rol).distinct()
+
+
+# Rutas que nunca se bloquean por permisos. La del modo cliente está aquí por
+# una razón concreta: sin ella, entrar en «ver como cliente» dejaba encerrado al
+# operador —la salida no figura entre los módulos del rol, así que el guardia
+# rechazaba justo la puerta de vuelta—.
+RUTAS_SIEMPRE_PERMITIDAS = ('/clientes/modo-cliente/', '/perfilpanel/', '/changepass/')
+
+
+def puede_entrar(usuario, ruta, request=None):
     """¿El usuario tiene permiso para esta ruta?
 
     Si todavía no se cargó ningún módulo, no se bloquea a nadie: un sistema recién
@@ -102,13 +137,15 @@ def puede_entrar(usuario, ruta):
     """
     if not getattr(usuario, 'is_authenticated', False):
         return False
-    if usuario.is_superuser:
+    if (ruta or '').startswith(RUTAS_SIEMPRE_PERMITIDAS):
+        return True
+    if usuario.is_superuser and not (request is not None and _en_modo_cliente(request)):
         return True
     if not Modulo.objects.filter(status=True).exists():
         return True
 
     ruta = ruta or '/'
-    for url in modulos_de_usuario(usuario).values_list('url', flat=True):
+    for url in modulos_de_usuario(usuario, request).values_list('url', flat=True):
         if url and ruta.startswith(url):
             return True
     return False

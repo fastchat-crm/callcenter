@@ -5,7 +5,7 @@
     <title>{{ titulo }} · {{ configuracion.nombre_empresa|default:nombre_sistema }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#2f6bff">
-    <link rel="stylesheet" href="/static/css/base.css?v2.6">
+    <link rel="stylesheet" href="/static/css/base.css?v2.8">
     {% block head %}{% endblock %}
 </head>
 <body>
@@ -35,7 +35,7 @@
                     </button>
                     <div class="menu-items">
                         {% for item in grupo.items %}
-                            <a class="menu-item" href="{{ item.url }}" title="{{ item.nombre }}">
+                            <a class="menu-item" href="{{ item.url }}" title="{{ item.descripcion|default:item.nombre }}">
                                 <svg class="ico"><use href="#ico-{{ item.icono }}"></use></svg>
                                 <span class="menu-texto">{{ item.nombre }}</span>
                             </a>
@@ -44,6 +44,11 @@
                 </div>
             {% endfor %}
         </nav>
+
+        <button class="colapsar-menu" id="alternar-menu" type="button"
+                title="Mostrar u ocultar el menú" aria-label="Mostrar u ocultar el menú">
+            <svg class="ico"><use href="#ico-chevron"></use></svg>
+        </button>
     </aside>
 
     <main class="contenido">
@@ -53,9 +58,6 @@
                 <h1>{{ titulo }}</h1>
             </div>
             <div class="barra-acciones">
-                <button class="boton-icono" id="alternar-menu" type="button" title="Mostrar u ocultar el menú" aria-label="Mostrar u ocultar el menú">
-                    <svg class="ico"><use href="#ico-menu"></use></svg>
-                </button>
                 {% if puede_cambiar_cliente %}
                     <form class="selector-cliente" method="get" action="/clientes/cambiar/">
                         <input type="hidden" name="siguiente" value="{{ request.path }}">
@@ -68,11 +70,57 @@
                 {% elif cliente %}
                     <span class="etiqueta etiqueta-info">{{ cliente.nombre }}</span>
                 {% endif %}
-                <a class="boton boton-sutil boton-sm" href="/perfilpanel/">{{ request.user.nombre_completo|default:request.user.username }}</a>
-                <div class="avatar">{{ request.user.iniciales }}</div>
-                <a class="boton boton-sm" href="/logout/">Salir</a>
+
+                <div class="menu-usuario" id="menu-usuario">
+                    <button class="usuario-boton" type="button" data-usuario-alternar aria-haspopup="true" aria-expanded="false">
+                        <span class="avatar">{{ request.user.iniciales }}</span>
+                        <span class="usuario-nombre">{{ request.user.nombre_completo|default:request.user.username }}</span>
+                        <svg class="ico ico-flecha-abajo"><use href="#ico-chevron"></use></svg>
+                    </button>
+                    <div class="usuario-panel">
+                        <div class="usuario-cabecera">
+                            <strong>{{ request.user.nombre_completo|default:request.user.username }}</strong>
+                            <span class="texto-tenue texto-pequeno">{{ request.user.email|default:request.user.username }}</span>
+                        </div>
+
+                        {% if puede_ver_como_cliente %}
+                            <div class="usuario-seccion">Perfiles</div>
+                            <a class="usuario-item {% if not modo_cliente %}activo{% endif %}"
+                               href="/clientes/modo-cliente/?salir=1&amp;siguiente={{ request.path }}">
+                                <svg class="ico"><use href="#ico-escudo"></use></svg>
+                                <span>Administrador</span>
+                                {% if not modo_cliente %}<span class="usuario-marca">Actual</span>{% endif %}
+                            </a>
+                            <a class="usuario-item {% if modo_cliente %}activo{% endif %}"
+                               href="/clientes/modo-cliente/?siguiente={{ request.path }}">
+                                <svg class="ico"><use href="#ico-edificio"></use></svg>
+                                <span>Cliente{% if cliente %} · {{ cliente.nombre }}{% endif %}</span>
+                                {% if modo_cliente %}<span class="usuario-marca">Actual</span>{% endif %}
+                            </a>
+                            <div class="usuario-separador"></div>
+                        {% endif %}
+
+                        <a class="usuario-item" href="/perfilpanel/">
+                            <svg class="ico"><use href="#ico-persona"></use></svg><span>Mi perfil</span>
+                        </a>
+                        <a class="usuario-item" href="/changepass/">
+                            <svg class="ico"><use href="#ico-llave"></use></svg><span>Cambiar contraseña</span>
+                        </a>
+                        <div class="usuario-separador"></div>
+                        <a class="usuario-item usuario-salir" href="/logout/">
+                            <svg class="ico"><use href="#ico-desvio"></use></svg><span>Salir</span>
+                        </a>
+                    </div>
+                </div>
             </div>
         </header>
+
+        {% if modo_cliente %}
+            <div class="cinta-modo">
+                <span>Estás viendo el panel como lo ve <strong>{{ cliente.nombre }}</strong>. Los módulos del operador están ocultos.</span>
+                <a class="boton boton-sm" href="/clientes/modo-cliente/?salir=1&amp;siguiente={{ request.path }}">Volver a administrador</a>
+            </div>
+        {% endif %}
 
         <div class="lienzo">
             {% if messages %}
@@ -98,7 +146,7 @@
 
 <div class="avisos" id="avisos"></div>
 <form id="formulario-csrf">{% csrf_token %}</form>
-<script src="/static/js/app.js?v2.6"></script>
+<script src="/static/js/app.js?v2.8"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

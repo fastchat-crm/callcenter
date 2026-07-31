@@ -157,6 +157,20 @@ GUIAS = {
                    'los minutos incluidos sirven de referencia contra el consumo real.',
         'doc': ('guia-de-uso', 'Guía de uso'),
     },
+    '/doc/': {
+        'centro': 'Ayuda',
+        'titulo': 'Documentación',
+        'resumen': 'Los mismos documentos que viven en la carpeta docs/ del proyecto, servidos '
+                   'dentro del panel. Empieza por la Guía de uso si no sabes por dónde arrancar.',
+        'doc': ('guia-de-uso', 'Guía de uso'),
+    },
+    '/perfilpanel/': {
+        'centro': 'Ayuda',
+        'titulo': 'Mi perfil',
+        'resumen': 'Tus datos y tu foto. Desde aquí también se cambia la contraseña, que conviene '
+                   'hacer en el primer ingreso si te la entregaron por escrito.',
+        'doc': ('seguridad', 'Seguridad'),
+    },
     '/seguridad/usuarios/': {
         'centro': CENTRO_SEGURIDAD,
         'titulo': 'Usuarios',

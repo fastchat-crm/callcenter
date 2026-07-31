@@ -15,7 +15,7 @@ logger = logging.getLogger('seguridad')
 PREFIJOS_IGNORADOS = (
     '/admin/', '/static/', '/media/', '/ajaxrequest/', '/health/', '/login/',
     '/logout/', '/changepass/', '/telefonia/webhook/', '/agentes-ia/estado/',
-    '/voz/estado/', '/clientes/cambiar/',
+    '/voz/estado/', '/clientes/cambiar/', '/clientes/modo-cliente/',
 )
 
 # Nombre legible para las rutas que el descubridor no puede nombrar solo.
@@ -94,16 +94,62 @@ def sincronizar_modulos():
     creados = existentes = 0
     orden = (Modulo.objects.order_by('-orden').values_list('orden', flat=True).first() or 0)
     for ruta in rutas_del_proyecto():
-        if Modulo.objects.filter(url=ruta).exists():
+        existente = Modulo.objects.filter(url=ruta).first()
+        if existente is not None:
             existentes += 1
+            _refrescar_descripcion(existente)
             continue
         orden += 10
         Modulo.objects.create(
             nombre=nombre_para(ruta),
             url=ruta,
-            descripcion='Detectado automáticamente desde las URLs del proyecto.',
+            descripcion=descripcion_para(ruta),
             orden=orden,
         )
         creados += 1
     logger.info('[seguridad] sincronización de módulos: %s nuevos, %s existentes', creados, existentes)
     return creados, existentes
+
+
+# Texto que dejaban las versiones anteriores: no dice nada, así que se pisa.
+RELLENO = 'Detectado automáticamente desde las URLs del proyecto.'
+
+
+def descripcion_para(ruta):
+    """Qué hace esta pantalla, tomado de la guía que ya se muestra dentro de ella.
+
+    Una sola fuente: `core/guias.py`. Así el módulo, el menú y el recuadro de la
+    pantalla dicen lo mismo, y cambiar la explicación es tocar un solo archivo.
+    """
+    from core.guias import obtener
+
+    guia = obtener(ruta)
+    if not guia:
+        return RELLENO
+    from seguridad.models import Modulo
+
+    return _recortar(guia['resumen'], Modulo._meta.get_field('descripcion').max_length)
+
+
+def _recortar(texto, maximo):
+    """Corta en el último espacio para no partir una palabra a la mitad."""
+    texto = (texto or '').strip()
+    if len(texto) <= maximo:
+        return texto
+    corte = texto[:maximo - 1]
+    espacio = corte.rfind(' ')
+    return (corte[:espacio] if espacio > maximo * 0.6 else corte).rstrip(' ,.;') + '…'
+
+
+def _refrescar_descripcion(modulo):
+    """Completa la descripción si está vacía o es el relleno viejo.
+
+    Nunca pisa un texto que alguien haya escrito a mano en el panel.
+    """
+    actual = (modulo.descripcion or '').strip()
+    if actual and actual != RELLENO:
+        return
+    nueva = descripcion_para(modulo.url)
+    if nueva != actual:
+        modulo.descripcion = nueva
+        modulo.save(update_fields=['descripcion'])

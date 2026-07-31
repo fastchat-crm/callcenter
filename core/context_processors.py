@@ -29,11 +29,18 @@ def cliente_panel(request):
 
     usuario = getattr(request, 'user', None)
     if usuario is None or not usuario.is_authenticated:
-        return {'cliente': None, 'clientes_elegibles': [], 'puede_cambiar_cliente': False}
+        return {'cliente': None, 'clientes_elegibles': [], 'puede_cambiar_cliente': False,
+                'modo_cliente': False, 'puede_ver_como_cliente': False}
+    from clientes.contexto import en_modo_cliente
+
+    modo = en_modo_cliente(request)
     return {
         'cliente': cliente_actual(request),
         'clientes_elegibles': clientes_visibles(usuario).order_by('nombre'),
-        'puede_cambiar_cliente': es_operador(usuario),
+        # En modo cliente el selector desaparece: un cliente no elige cliente.
+        'puede_cambiar_cliente': es_operador(usuario) and not modo,
+        'modo_cliente': modo,
+        'puede_ver_como_cliente': es_operador(usuario) or usuario.is_superuser,
     }
 
 

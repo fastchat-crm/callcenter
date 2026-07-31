@@ -103,15 +103,15 @@ MENU_BASE = (
 )
 
 
-def menu_para_usuario(usuario):
+def menu_para_usuario(usuario, request=None):
     """Secciones y entradas que este usuario puede ver."""
-    desde_base_datos = _menu_desde_base_datos(usuario)
+    desde_base_datos = _menu_desde_base_datos(usuario, request)
     if desde_base_datos:
         return desde_base_datos
     return _menu_estatico(usuario)
 
 
-def _menu_desde_base_datos(usuario):
+def _menu_desde_base_datos(usuario, request=None):
     try:
         from seguridad.models import ModuloGrupo, modulos_de_usuario
     except Exception:
@@ -121,7 +121,7 @@ def _menu_desde_base_datos(usuario):
         secciones = list(ModuloGrupo.objects.filter(status=True).prefetch_related('modulos'))
         if not secciones:
             return []
-        permitidos = set(modulos_de_usuario(usuario).values_list('id', flat=True))
+        permitidos = set(modulos_de_usuario(usuario, request).values_list('id', flat=True))
     except Exception:
         # Base sin migrar todavía: el menú estático cubre el arranque.
         return []
@@ -130,6 +130,7 @@ def _menu_desde_base_datos(usuario):
     for seccion in secciones:
         items = [
             {'nombre': modulo.nombre, 'url': modulo.url,
+             'descripcion': (modulo.descripcion or '').strip(),
              'icono': icono_de(modulo.url, modulo.icono)}
             for modulo in seccion.modulos_visibles()
             if modulo.id in permitidos

@@ -9,6 +9,27 @@ from django.db.models import Q
 from .models import Cliente
 
 CLAVE_SESION = 'cliente_activo'
+CLAVE_MODO = 'ver_como_cliente'
+ROL_CLIENTE = 'Cliente'
+
+
+def en_modo_cliente(request):
+    """El operador está mirando el panel con los ojos de su cliente.
+
+    Sirve para comprobar qué ve de verdad quien va a usar el sistema, sin tener
+    que crear un usuario aparte y cerrar sesión. Solo cambia lo que se ve: los
+    datos ya venían acotados al cliente activo.
+    """
+    sesion = getattr(request, 'session', None)
+    return bool(sesion.get(CLAVE_MODO)) if sesion is not None else False
+
+
+def activar_modo_cliente(request):
+    request.session[CLAVE_MODO] = True
+
+
+def salir_modo_cliente(request):
+    request.session.pop(CLAVE_MODO, None)
 
 
 def es_operador(usuario):
@@ -92,8 +113,11 @@ def solo_operador(vista):
     @wraps(vista)
     def envoltorio(request, *args, **kwargs):
         usuario = getattr(request, 'user', None)
-        if usuario is not None and usuario.is_authenticated and (
-                usuario.is_superuser or es_operador(usuario)):
+        # En modo cliente el operador se autoimpone el límite: si no, entraría a
+        # pantallas que su cliente no ve y la comprobación no serviría de nada.
+        if (usuario is not None and usuario.is_authenticated
+                and not en_modo_cliente(request)
+                and (usuario.is_superuser or es_operador(usuario))):
             return vista(request, *args, **kwargs)
         mensaje = 'Esta pantalla es del operador del sistema.'
         if request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'action' in request.GET:

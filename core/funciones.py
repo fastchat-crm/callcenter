@@ -23,7 +23,7 @@ def addData(request, data):
     data['nombre_sistema'] = settings.NOMBRE_SISTEMA
     data['url_general'] = settings.URL_GENERAL
     data['ip_publica'] = settings.IP_PUBLICA
-    data['menu'] = menu_para_usuario(request.user)
+    data['menu'] = menu_para_usuario(request.user, request)
     data['full_url'] = request.path + ('?' + request.GET.urlencode() if request.GET else '')
     return data
 
@@ -70,7 +70,7 @@ def secure_module(vista):
         try:
             from seguridad.models import puede_entrar
 
-            if not puede_entrar(request.user, request.path):
+            if not puede_entrar(request.user, request.path, request):
                 messages.error(request, 'No tienes permiso para entrar a este módulo.')
                 return HttpResponseRedirect('/panel/')
         except Exception:

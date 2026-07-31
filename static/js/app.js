@@ -13,7 +13,10 @@
             document.addEventListener('click', (evento) => this.enClick(evento));
             document.addEventListener('submit', (evento) => this.enSubmit(evento));
             document.addEventListener('keydown', (evento) => {
-                if (evento.key === 'Escape') this.cerrarModal();
+                if (evento.key !== 'Escape') return;
+                this.cerrarModal();
+                const menu = document.getElementById('menu-usuario');
+                if (menu) menu.classList.remove('abierto');
             });
             this.marcarMenuActivo();
             this.restaurarGrupos();
@@ -104,6 +107,22 @@
             const cabeceraGrupo = evento.target.closest('[data-grupo-alternar]');
             if (cabeceraGrupo) {
                 this.alternarGrupo(cabeceraGrupo.closest('.menu-grupo'));
+            }
+            this.gestionarMenuUsuario(evento);
+        },
+
+        gestionarMenuUsuario(evento) {
+            const menu = document.getElementById('menu-usuario');
+            if (!menu) return;
+            const boton = evento.target.closest('[data-usuario-alternar]');
+            if (boton) {
+                const abierto = menu.classList.toggle('abierto');
+                boton.setAttribute('aria-expanded', abierto ? 'true' : 'false');
+                return;
+            }
+            // Un clic fuera lo cierra: si no, queda abierto tapando la pantalla.
+            if (!evento.target.closest('.usuario-panel')) {
+                menu.classList.remove('abierto');
             }
         },
 
