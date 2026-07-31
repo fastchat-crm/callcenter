@@ -33,6 +33,7 @@ def index_view(request):
     data['costo_mes'] = costo_estimado_mes(cliente=cliente)
     data['estado_motores'] = estado_motores()
     data['estado_rag'] = _estado_rag(request)
+    data['estado_telefonia'] = _estado_telefonia()
     data['numeros'] = acotar(
         NumeroTelefonico.objects.filter(status=True, activo=True), request
     ).select_related('flujo')[:8]
@@ -43,6 +44,17 @@ def index_view(request):
         .select_related('flujo').order_by('-fecha_inicio')[:8]
     )
     return render(request, 'panel/index.html', data)
+
+
+def _estado_telefonia():
+    """Asterisk y el puente de audio. Consultarlos ejecuta comandos del sistema,
+    así que un fallo no debe tumbar el tablero entero."""
+    from telefonia.estado import estado_asterisk, estado_audiosocket
+
+    try:
+        return {'asterisk': estado_asterisk(), 'audiosocket': estado_audiosocket()}
+    except Exception:
+        return {'asterisk': {}, 'audiosocket': {}}
 
 
 def _estado_rag(request):

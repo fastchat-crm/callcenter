@@ -26,5 +26,20 @@ def health_view(request):
     else:
         estado['redis'] = None
 
+    # La telefonía no entra en el `ok`: el panel funciona perfectamente sin
+    # Asterisk, y un balanceador no debería sacar el servidor de rotación
+    # porque una troncal se cayó. Se informa aparte, con ?telefonia=1.
+    if request.GET.get('telefonia'):
+        try:
+            from telefonia.estado import estado_asterisk, estado_audiosocket, uso
+
+            estado['telefonia'] = {
+                'asterisk': estado_asterisk(),
+                'audiosocket': estado_audiosocket(),
+                'uso': uso(),
+            }
+        except Exception as ex:
+            estado['telefonia'] = {'error': str(ex)}
+
     ok = estado['base_datos'] and (estado['redis'] is not False)
     return JsonResponse({'ok': ok, **estado}, status=200 if ok else 503)

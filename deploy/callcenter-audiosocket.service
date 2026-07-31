@@ -1,0 +1,25 @@
+[Unit]
+Description=Callcenter IA - puente AudioSocket para Asterisk
+After=network.target postgresql.service callcenter.service
+Requires=postgresql.service
+
+[Service]
+User=root
+Group=root
+WorkingDirectory=/home/callcenter
+Environment="DJANGO_SETTINGS_MODULE=callcenterdj.settings"
+Environment="PYTHONUNBUFFERED=1"
+Environment="KMP_DUPLICATE_LIB_OK=TRUE"
+
+# Proceso aparte del panel a propósito: una llamada ocupa su hilo durante toda
+# la conversación, y no debe competir con las peticiones web. Escucha solo en
+# loopback porque Asterisk corre en este mismo servidor.
+ExecStart=/home/callcenter/venv/bin/python manage.py audiosocket
+
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/log/callcenter/audiosocket.log
+StandardError=append:/var/log/callcenter/audiosocket-error.log
+
+[Install]
+WantedBy=multi-user.target

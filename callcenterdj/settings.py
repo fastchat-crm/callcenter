@@ -69,6 +69,12 @@ VOZ_UMBRAL_SILENCIO = int(data.get('VOZ_UMBRAL_SILENCIO', 500) or 500)
 VOZ_MS_SILENCIO_FIN_TURNO = int(data.get('VOZ_MS_SILENCIO_FIN_TURNO', 800) or 800)
 VOZ_GRABAR_LLAMADAS = bool(data.get('VOZ_GRABAR_LLAMADAS', True))
 
+# AudioSocket: el puente con Asterisk auto-hospedado. Escucha solo en loopback
+# porque Asterisk corre en el mismo servidor; exponerlo sería dejar el audio de
+# las llamadas abierto a internet sin autenticación.
+AUDIOSOCKET_HOST = data.get('AUDIOSOCKET_HOST', '127.0.0.1')
+AUDIOSOCKET_PUERTO = int(data.get('AUDIOSOCKET_PUERTO', 8090) or 8090)
+
 # --- Embeddings locales para el RAG (sin costo de API) ---
 RAG_MODELO_EMBEDDINGS = data.get('RAG_MODELO_EMBEDDINGS', 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
 RAG_DIRECTORIO_VECTORSTORE = data.get('RAG_DIRECTORIO_VECTORSTORE', 'vectorstore')

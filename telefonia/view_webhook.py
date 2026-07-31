@@ -47,6 +47,52 @@ def webhook_llamada_entrante(request):
 
 
 @csrf_exempt
+@require_http_methods(['GET', 'POST'])
+def webhook_asterisk_entrante(request):
+    """Registra la llamada antes de que Asterisk abra el AudioSocket.
+
+    AudioSocket solo transporta un UUID: nunca dice desde qué número llamaron
+    ni a cuál. El dialplan avisa aquí primero con esos datos, y el servidor de
+    `voz/audiosocket.py` recupera la llamada por ese mismo UUID.
+    """
+    from llamadas.models import Llamada
+    from telefonia.models import NumeroTelefonico
+
+    datos = request.POST if request.method == 'POST' else request.GET
+    identificador = (datos.get('uuid') or '').strip()
+    numero_origen = (datos.get('from') or '').strip()
+    numero_destino = (datos.get('to') or '').strip()
+    if not identificador:
+        return JsonResponse({'error': True, 'message': 'Falta el uuid de la llamada.'}, status=400)
+
+    numero = (
+        NumeroTelefonico.objects.select_related('flujo', 'cliente')
+        .filter(numero=numero_destino, status=True, activo=True).first()
+    )
+    flujo = numero.flujo if numero is not None and numero.flujo_id else None
+    if flujo is None or not flujo.activo:
+        logger.warning('[telefonia] %s no tiene flujo activo; se rechaza la llamada', numero_destino)
+        return JsonResponse({'error': True, 'message': 'El número no tiene un flujo activo.'}, status=409)
+
+    llamada = Llamada.objects.create(
+        cliente=numero.cliente,
+        sentido='entrante',
+        driver='asterisk',
+        call_id=identificador,
+        numero=numero,
+        numero_origen=numero_origen,
+        numero_destino=numero_destino,
+        pais_iso=numero.pais_iso or '',
+        idioma=numero.idioma or 'es',
+        flujo=flujo,
+        estado='iniciando',
+    )
+    logger.info('[telefonia] Asterisk anuncia %s → %s (llamada %s)',
+                numero_origen, numero_destino, llamada.id)
+    return JsonResponse({'error': False, 'llamada': llamada.id})
+
+
+@csrf_exempt
 @require_http_methods(['POST'])
 def webhook_estado_llamada(request):
     """Actualiza la llamada cuando el carrier informa que terminó."""

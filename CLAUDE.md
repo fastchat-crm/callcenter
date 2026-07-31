@@ -33,7 +33,8 @@ auto-hospedados.
 - `ivr/` — modelos de flujo y `motor.py` (ejecutor paso a paso)
 - `agentes_ia/` — agentes, llaves, RAG local, `consultor.py`, `providers/` e `interna.py`
   (resumen y detección de datos con el token global del operador)
-- `voz/` — `services.py` (STT/TTS), `consumers.py` (WebSocket), `orquestador.py`, `audio.py`
+- `voz/` — `services.py` (STT/TTS), `consumers.py` (WebSocket), `audiosocket.py` (puente TCP
+  con Asterisk), `orquestador.py`, `audio.py`
 - `llamadas/` — llamadas, turnos, transferencias, grabaciones, `consultas.py` (métricas)
 
 ## Documentación
@@ -154,3 +155,4 @@ Todo `FileField`/`ImageField` declara `FileExtensionValidator` y un validador de
 - **No formatear ni lintear** archivos que no se estén tocando
 - Un solo worker: los modelos de voz se comparten entre llamadas. El servicio es `callcenter`
   (gunicorn + `uvicorn_worker.UvicornWorker`); se reinicia con `service callcenter restart`
+- El puente con Asterisk corre aparte: `service callcenter-audiosocket restart`

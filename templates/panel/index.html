@@ -83,6 +83,20 @@
                     <span>{{ flujos_activos }}</span>
                 </div>
                 <div class="fila">
+                    <span>Asterisk{% if estado_telefonia.asterisk.canales %} · {{ estado_telefonia.asterisk.canales }} canal{{ estado_telefonia.asterisk.canales|pluralize:"es" }}{% endif %}</span>
+                    <span class="etiqueta {% if estado_telefonia.asterisk.activo %}etiqueta-exito{% elif estado_telefonia.asterisk.instalado %}etiqueta-peligro{% else %}etiqueta-alerta{% endif %}"
+                          title="{{ estado_telefonia.asterisk.detalle }}">
+                        {% if estado_telefonia.asterisk.activo %}Activo{% elif estado_telefonia.asterisk.instalado %}Detenido{% else %}Sin instalar{% endif %}
+                    </span>
+                </div>
+                <div class="fila">
+                    <span>Puente AudioSocket</span>
+                    <span class="etiqueta {% if estado_telefonia.audiosocket.escuchando %}etiqueta-exito{% else %}etiqueta-alerta{% endif %}"
+                          title="{{ estado_telefonia.audiosocket.detalle }}">
+                        {% if estado_telefonia.audiosocket.escuchando %}Escuchando{% else %}Apagado{% endif %}
+                    </span>
+                </div>
+                <div class="fila">
                     <span>Base de conocimiento</span>
                     <span class="etiqueta {% if estado_rag.fragmentos %}etiqueta-exito{% else %}etiqueta-alerta{% endif %}">
                         {{ estado_rag.fragmentos }} fragmento{{ estado_rag.fragmentos|pluralize:"s" }}

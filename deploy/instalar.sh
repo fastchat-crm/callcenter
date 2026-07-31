@@ -55,12 +55,16 @@ bash scripts/descargar_modelos_voz.sh || echo "  (puedes ejecutarlo luego manual
 echo "=== 7/7 Servicios ==="
 mkdir -p /var/log/callcenter
 cp deploy/callcenter.service /etc/systemd/system/
+cp deploy/callcenter-audiosocket.service /etc/systemd/system/
 cp deploy/callcenter.nginx.conf /etc/nginx/sites-available/callcenter
 ln -sf /etc/nginx/sites-available/callcenter /etc/nginx/sites-enabled/callcenter
 rm -f /etc/nginx/sites-enabled/default
 systemctl daemon-reload
 systemctl enable --now redis-server postgresql
 systemctl enable --now callcenter
+# El puente con Asterisk queda listo aunque Asterisk todavía no esté instalado:
+# no estorba, y evita tener que acordarse después.
+systemctl enable --now callcenter-audiosocket
 nginx -t && systemctl reload nginx
 
 IP=$(curl -s --max-time 5 ifconfig.me || echo "IP-DEL-SERVIDOR")

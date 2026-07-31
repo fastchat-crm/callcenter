@@ -66,11 +66,111 @@ sudo asterisk -rx "pjsip show endpoints"
 Configura Linphone o Zoiper con usuario `1001`, la clave y la IP del servidor, marca `*100`
 y estarás hablando con el mismo motor que atenderá las llamadas reales.
 
-El puente entre Asterisk y el WebSocket se hace con **ARI + externalMedia** o con el módulo
-**audiosocket**; ambos entregan audio crudo que el `MediaStreamConsumer` ya sabe leer. En el
-panel se registra como proveedor con driver `asterisk`.
-
 Firewall: `5060/udp` para SIP y `10000-20000/udp` para RTP.
+
+## El puente con Asterisk
+
+Conviene entender esto antes de instalar nada, porque es la parte que más confusión genera.
+
+**Asterisk no puede conectarse a `/ws/voz/stream/`.** Ese endpoint habla el protocolo de
+Media Streams de Twilio: JSON sobre WebSocket con el audio en mu-law codificado en base64.
+Asterisk no lo habla y no hay forma de que lo hable. Lo que sí trae de fábrica es la
+aplicación `AudioSocket()` del dialplan, que abre un **TCP plano** y manda audio crudo con un
+encabezado de tres bytes.
+
+Por eso existe `voz/audiosocket.py`: un servidor que habla ese protocolo y entrega la
+conversación al mismo `OrquestadorLlamada` que usan los carriers. Hay dos transportes, una
+sola lógica de conversación.
+
+```
+Twilio / Telnyx  →  WebSocket /ws/voz/stream/   ┐
+                                                 ├→  OrquestadorLlamada
+Asterisk         →  TCP AudioSocket :8090       ┘
+```
+
+Queda un problema: **AudioSocket solo transporta un UUID**, nunca dice desde qué número
+llamaron ni a cuál. Sin eso no se sabe de qué cliente es la llamada ni qué flujo la atiende.
+La solución es que el dialplan avise antes por HTTP:
+
+```
+1. Entra la llamada          →  Asterisk contesta y genera un UUID
+2. CURL a /telefonia/webhook/asterisk/  (uuid, from, to)
+   → el panel crea la Llamada, ya con su cliente y su flujo
+   → responde {"error": false}; si el número no existe o no tiene flujo,
+     responde 409 y el dialplan cuelga con un mensaje en vez de dejar la
+     llamada muda
+3. AudioSocket(${CALLUUID},127.0.0.1:8090)
+   → el servidor busca la llamada por ese UUID y empieza a conversar
+```
+
+### Instalación
+
+```bash
+sudo bash deploy/instalar_asterisk.sh
+```
+
+Antes de correrlo, **carga la troncal en el panel** (*Centro de telefonía → Proveedores →
+Troncales*): de ahí sale la configuración. El script instala Asterisk, genera `pjsip.conf` y
+`extensions.conf` desde la base, levanta el servicio del puente y abre los puertos.
+
+La configuración no se escribe a mano. Se regenera cuando cambies algo en el panel:
+
+```bash
+./venv/bin/python manage.py generar_config_asterisk            # muestra qué haría
+./venv/bin/python manage.py generar_config_asterisk --escribir # instala
+sudo asterisk -rx "pjsip reload"
+sudo asterisk -rx "dialplan reload"
+```
+
+Los archivos originales se respaldan una vez como `.antes-callcenter`.
+
+### Los dos servicios
+
+| Servicio | Qué hace | Reinicio |
+|---|---|---|
+| `callcenter` | Panel, webhooks y WebSocket de los carriers | `service callcenter restart` |
+| `callcenter-audiosocket` | Recibe el audio de Asterisk | `service callcenter-audiosocket restart` |
+| `asterisk` | Habla SIP con el proveedor | `service asterisk restart` |
+
+El puente corre **en su propio proceso**, no dentro de gunicorn: una llamada ocupa su hilo
+durante toda la conversación y no debe competir con las peticiones del panel. Escucha solo en
+`127.0.0.1:8090`, porque Asterisk está en el mismo servidor; exponerlo dejaría el audio de las
+llamadas abierto a internet sin autenticación.
+
+### Saber si está arriba y cuánto se usa
+
+```bash
+./venv/bin/python manage.py estado_telefonia
+./venv/bin/python manage.py estado_telefonia --cliente "Ferretería Andina"
+```
+
+Responde tres cosas: si Asterisk corre, si las troncales siguen **registradas** con el
+proveedor —una troncal que se cae deja de recibir llamadas sin avisar— y cuánto se viene
+usando (llamadas y minutos de hoy y del período, cuántas hay en curso, y qué porcentaje del
+plan contratado va consumido).
+
+Lo mismo, en JSON, para monitoreo externo o un cron:
+
+```bash
+curl -s http://127.0.0.1:9000/health/?telefonia=1
+```
+
+La telefonía **no** entra en el `ok` del health check: el panel funciona perfectamente sin
+Asterisk, y un balanceador no debería sacar el servidor de rotación porque una troncal se
+cayó. Por eso va detrás de `?telefonia=1`.
+
+En el panel, la tarjeta *Estado del motor de voz* muestra Asterisk (con sus canales activos)
+y el puente. Si el puente aparece **Apagado**, Asterisk no tiene a dónde entregar el audio y
+las llamadas entran mudas.
+
+### Cuando algo no suena
+
+| Síntoma | Dónde mirar |
+|---|---|
+| La llamada entra pero cuelga enseguida | `journalctl -u asterisk -f` — el dialplan fue a `sinpanel`: el número no está cargado o su flujo está inactivo |
+| Entra y queda muda | ¿El puente escucha? `manage.py estado_telefonia`. Si no, `service callcenter-audiosocket restart` |
+| El proveedor no manda llamadas | `asterisk -rx "pjsip show registrations"` — si no dice `Registered`, revisa usuario y clave de la troncal |
+| Se oye entrecortado | Falta `10000-20000/udp` abierto, o el códec no coincide con el del proveedor |
 
 ## 2. Producción con troncal SIP propia
 
