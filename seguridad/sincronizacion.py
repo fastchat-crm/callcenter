@@ -23,6 +23,7 @@ NOMBRES = {
     '/panel/': 'Panel',
     '/perfilpanel/': 'Mi perfil',
     '/doc/': 'Documentación',
+    '/configuracion/': 'Configuración general',
     '/llamadas/listado/': 'Llamadas',
     '/llamadas/monitor/': 'Monitor en vivo',
     '/llamadas/transferencias/': 'Transferencias',

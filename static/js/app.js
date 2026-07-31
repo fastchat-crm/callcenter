@@ -16,7 +16,28 @@
                 if (evento.key === 'Escape') this.cerrarModal();
             });
             this.marcarMenuActivo();
+            this.restaurarMenu();
             this.restaurarGuia();
+        },
+
+        esPantallaAngosta() {
+            return window.matchMedia('(max-width: 980px)').matches;
+        },
+
+        restaurarMenu() {
+            if (!this.esPantallaAngosta() && localStorage.getItem('menu') === 'colapsado') {
+                document.querySelector('.aplicacion').classList.add('menu-colapsado');
+            }
+        },
+
+        alternarMenu() {
+            if (this.esPantallaAngosta()) {
+                document.querySelector('.menu-lateral').classList.toggle('abierto');
+                return;
+            }
+            const aplicacion = document.querySelector('.aplicacion');
+            const colapsado = aplicacion.classList.toggle('menu-colapsado');
+            localStorage.setItem('menu', colapsado ? 'colapsado' : 'abierto');
         },
 
         restaurarGuia() {
@@ -52,7 +73,7 @@
                 this.cerrarModal();
             }
             if (evento.target.closest('#alternar-menu')) {
-                document.querySelector('.menu-lateral').classList.toggle('abierto');
+                this.alternarMenu();
             }
             const alternador = evento.target.closest('[data-guia-alternar]');
             if (alternador) {

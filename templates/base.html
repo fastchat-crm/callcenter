@@ -2,19 +2,23 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>{{ titulo }} · {{ nombre_sistema }}</title>
+    <title>{{ titulo }} · {{ configuracion.nombre_empresa|default:nombre_sistema }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#2f6bff">
-    <link rel="stylesheet" href="/static/css/base.css?v1.1">
+    <link rel="stylesheet" href="/static/css/base.css?v1.2">
     {% block head %}{% endblock %}
 </head>
 <body>
 <div class="aplicacion">
     <aside class="menu-lateral">
         <div class="marca">
-            <div class="marca-logo">CI</div>
+            {% if configuracion.logo %}
+                <img class="marca-imagen" src="{{ configuracion.logo.url }}" alt="{{ configuracion.nombre_empresa }}">
+            {% else %}
+                <div class="marca-logo">{{ configuracion.nombre_empresa|default:nombre_sistema|slice:":2"|upper }}</div>
+            {% endif %}
             <div>
-                <div class="marca-nombre">{{ nombre_sistema }}</div>
+                <div class="marca-nombre">{{ configuracion.nombre_empresa|default:nombre_sistema }}</div>
                 <div class="marca-sub">Voz con inteligencia artificial</div>
             </div>
         </div>
@@ -66,7 +70,7 @@
 
 <div class="avisos" id="avisos"></div>
 <form id="formulario-csrf">{% csrf_token %}</form>
-<script src="/static/js/app.js?v1.1"></script>
+<script src="/static/js/app.js?v1.2"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

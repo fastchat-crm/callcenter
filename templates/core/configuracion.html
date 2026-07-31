@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="rejilla rejilla-2">
+    <div class="tarjeta">
+        <div class="tarjeta-encabezado">
+            <div>
+                <div class="tarjeta-titulo">Identidad y contacto</div>
+                <div class="tarjeta-nota">El nombre y el logo se muestran en el menú lateral y en el ingreso.</div>
+            </div>
+        </div>
+        <div class="tarjeta-cuerpo">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="rejilla-form">
+                    {% for campo in form %}
+                        <div class="grupo-campo">
+                            <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                            {{ campo }}
+                            {% if campo.help_text %}<div class="ayuda">{{ campo.help_text }}</div>{% endif %}
+                            {% for error in campo.errors %}<div class="error">{{ error }}</div>{% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <button class="boton boton-primario mt-2" type="submit">Guardar cambios</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="tarjeta">
+        <div class="tarjeta-encabezado"><div class="tarjeta-titulo">Vista actual</div></div>
+        <div class="tarjeta-cuerpo">
+            <div class="marca mb-2">
+                {% if configuracion.logo %}
+                    <img class="marca-imagen" src="{{ configuracion.logo.url }}" alt="{{ configuracion.nombre_empresa }}">
+                {% else %}
+                    <div class="marca-logo">{{ configuracion.nombre_empresa|slice:":2"|upper }}</div>
+                {% endif %}
+                <div>
+                    <div class="marca-nombre">{{ configuracion.nombre_empresa }}</div>
+                    <div class="marca-sub">Voz con inteligencia artificial</div>
+                </div>
+            </div>
+            <div class="lista-datos">
+                <div class="fila"><span>Zona horaria</span><span class="texto-mono">{{ configuracion.zona_horaria }}</span></div>
+                <div class="fila"><span>Minutos incluidos al mes</span><span>{{ configuracion.minutos_incluidos_mes }}</span></div>
+                <div class="fila"><span>Correo de notificaciones</span><span>{{ configuracion.correo_notificaciones|default:"—" }}</span></div>
+                <div class="fila"><span>Teléfono de soporte</span><span>{{ configuracion.telefono_soporte|default:"—" }}</span></div>
+                <div class="fila"><span>Última modificación</span><span>{{ configuracion.fecha_modificacion|date:"d/m/Y H:i"|default:"—" }}</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

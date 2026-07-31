@@ -85,7 +85,13 @@ h3 { font-size: 1.02rem; }
     top: 0;
     height: 100vh;
     overflow-y: auto;
+    transition: width .2s ease, flex-basis .2s ease, padding .2s ease;
 }
+.aplicacion.menu-colapsado .menu-lateral {
+    width: 0; flex-basis: 0; padding-left: 0; padding-right: 0;
+    border-right-width: 0; overflow: hidden;
+}
+.aplicacion.menu-colapsado .menu-lateral > * { display: none; }
 
 .marca { display: flex; align-items: center; gap: .65rem; padding: .2rem .5rem 1.2rem; }
 .marca-logo {
@@ -93,6 +99,7 @@ h3 { font-size: 1.02rem; }
     background: linear-gradient(135deg, var(--primario), var(--acento));
     display: grid; place-items: center; color: #fff; font-weight: 700; font-size: .95rem;
 }
+.marca-imagen { width: 36px; height: 36px; border-radius: 10px; object-fit: contain; background: var(--fondo-hundido); }
 .marca-nombre { font-weight: 650; letter-spacing: -.02em; }
 .marca-sub { font-size: .72rem; color: var(--texto-tenue); }
 

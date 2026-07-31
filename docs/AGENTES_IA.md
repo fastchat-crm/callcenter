@@ -154,7 +154,7 @@ que el agente no debe mencionar por teléfono.
 
 ## Consumo y costos
 
-*Configuración de voz → Consumo de IA* es el tablero: tokens, latencia y costo estimado por
+*Centro de voz e IA → Consumo de IA* es el tablero: tokens, latencia y costo estimado por
 rango de fechas, con desglose por modelo y por agente, la serie diaria y el detalle turno por
 turno.
 

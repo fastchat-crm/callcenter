@@ -86,7 +86,7 @@ server_uri = sip:sip.proveedor.com
 client_uri = sip:USUARIO@sip.proveedor.com
 ```
 
-En el panel: *Telefonía → Proveedores* (driver `asterisk` o `sip_generico`) → *Troncales* →
+En el panel: *Centro de telefonía → Proveedores* (driver `asterisk` o `sip_generico`) → *Troncales* →
 *Números*. El número entrante se enruta al contexto `desde-troncal`, que lo entrega al bot.
 
 Ventaja: control total, minutos al costo mayorista, el audio nunca sale de tu servidor.
@@ -127,7 +127,7 @@ Referencias: [Twilio](https://www.twilio.com/voice/pricing) ·
 El sistema no distingue países: solo E.164 e ISO. Para operar en varios:
 
 1. Compra el DID en el país (Telnyx y Twilio cubren 100+).
-2. *Telefonía → Números* → alta con `pais_iso`, `prefijo_pais`, `idioma` y `zona_horaria`.
+2. *Centro de telefonía → Números* → alta con `pais_iso`, `prefijo_pais`, `idioma` y `zona_horaria`.
 3. Asigna el flujo IVR que corresponda a ese mercado.
 
 El idioma del número define el modelo STT y la voz TTS. Con flujos separados por país puedes

@@ -122,7 +122,7 @@ En el navegador:
 
 1. `http://<IP>/login/` → ingresa con `admin`.
 2. *Panel* → la tarjeta **Estado del motor de voz** dice qué falta instalar.
-3. *Configuración de voz → Demo de voz* → habla por el micrófono y verifica la respuesta.
+3. *Centro de voz e IA → Demo de voz* → habla por el micrófono y verifica la respuesta.
 
 ## Problemas frecuentes
 

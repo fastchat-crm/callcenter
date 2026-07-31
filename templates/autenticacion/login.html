@@ -2,18 +2,22 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>Ingreso · {{ nombre_sistema }}</title>
+    <title>Ingreso · {{ configuracion.nombre_empresa|default:nombre_sistema }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/static/css/base.css?v1.1">
+    <link rel="stylesheet" href="/static/css/base.css?v1.2">
 </head>
 <body>
 <div class="ingreso">
     <div class="ingreso-panel">
         <div class="ingreso-formulario">
             <div class="marca mb-3">
-                <div class="marca-logo">CI</div>
+                {% if configuracion.logo %}
+                    <img class="marca-imagen" src="{{ configuracion.logo.url }}" alt="{{ configuracion.nombre_empresa }}">
+                {% else %}
+                    <div class="marca-logo">{{ configuracion.nombre_empresa|default:nombre_sistema|slice:":2"|upper }}</div>
+                {% endif %}
                 <div>
-                    <div class="marca-nombre">{{ nombre_sistema }}</div>
+                    <div class="marca-nombre">{{ configuracion.nombre_empresa|default:nombre_sistema }}</div>
                     <div class="marca-sub">Panel de operación</div>
                 </div>
             </div>

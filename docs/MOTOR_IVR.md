@@ -1,7 +1,7 @@
 # Motor IVR
 
 Un flujo es un grafo de pasos. Cada paso hace **una sola cosa** y declara a dónde continuar.
-Se diseña desde el panel: *Configuración de voz → Flujos IVR → Diseñar*.
+Se diseña desde el panel: *Centro de voz e IA → Flujos IVR → Diseñar*.
 
 ## Tipos de paso
 

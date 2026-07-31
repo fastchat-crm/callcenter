@@ -14,6 +14,7 @@ from autenticacion.view_login import cambiar_clave_view, login_view, logout_view
 from autenticacion.view_perfil import perfil_view
 from callcenterdj.view_health import health_view
 from core.ajax import ConsultasAjax
+from core.view_configuracion import configuracion_view
 from panel.view_doc import doc_view
 from panel.view_index import index_view
 
@@ -26,6 +27,7 @@ urlpatterns = [
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
     path('perfilpanel/', perfil_view, name='perfil'),
+    path('configuracion/', configuracion_view, name='configuracion'),
     path('doc/', doc_view, name='documentacion'),
     path('doc/<slug:slug>/', doc_view, name='documentacion_detalle'),
     path('changepass/', cambiar_clave_view, name='cambiar_clave'),

@@ -124,6 +124,14 @@ GUIAS = {
                    'navegador, sin gastar una llamada real ni depender del carrier.',
         'doc': ('arquitectura', 'Arquitectura'),
     },
+    '/configuracion/': {
+        'centro': CENTRO_SEGURIDAD,
+        'titulo': 'Configuración general',
+        'resumen': 'La identidad del sistema: nombre de la empresa, logo y datos de contacto. El '
+                   'nombre y el logo se muestran en el menú lateral y en la pantalla de ingreso; '
+                   'los minutos incluidos sirven de referencia contra el consumo real.',
+        'doc': ('guia-de-uso', 'Guía de uso'),
+    },
     '/seguridad/usuarios/': {
         'centro': CENTRO_SEGURIDAD,
         'titulo': 'Usuarios',

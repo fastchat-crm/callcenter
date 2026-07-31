@@ -7,6 +7,7 @@ secciones del menú y crea cuatro roles con permisos razonables.
 """
 from django.contrib.auth.models import Group
 
+from core.guias import CENTRO_OPERACION, CENTRO_SEGURIDAD, CENTRO_TELEFONIA, CENTRO_VOZ
 from seguridad.models import GroupModulo, Modulo, ModuloGrupo
 from seguridad.sincronizacion import sincronizar_modulos
 
@@ -14,15 +15,33 @@ print('→ Sincronizando módulos con las URLs del proyecto')
 creados, existentes = sincronizar_modulos()
 print(f'  {creados} nuevos · {existentes} ya existían · {Modulo.objects.count()} en total')
 
+# Los nombres salen de core/guias.py para que el menú y el recuadro de guía de
+# cada pantalla hablen siempre del mismo centro.
 SECCIONES = (
-    (10, 'Operación', ('/panel/', '/llamadas/listado/', '/llamadas/monitor/', '/llamadas/transferencias/')),
-    (20, 'Configuración de voz', ('/ivr/flujos/', '/agentes-ia/agentes/', '/agentes-ia/conocimiento/',
-                                  '/agentes-ia/apikeys/', '/agentes-ia/consumo/', '/voz/demo/')),
-    (30, 'Telefonía', ('/telefonia/proveedores/', '/telefonia/numeros/', '/telefonia/asesores/')),
-    (40, 'Seguridad', ('/seguridad/usuarios/', '/seguridad/roles/', '/seguridad/modulos/',
-                       '/seguridad/secciones/', '/seguridad/auditoria/')),
+    (10, CENTRO_OPERACION, ('/panel/', '/llamadas/listado/', '/llamadas/monitor/',
+                            '/llamadas/transferencias/')),
+    (20, CENTRO_VOZ, ('/ivr/flujos/', '/agentes-ia/agentes/', '/agentes-ia/conocimiento/',
+                      '/agentes-ia/apikeys/', '/agentes-ia/consumo/', '/voz/demo/')),
+    (30, CENTRO_TELEFONIA, ('/telefonia/proveedores/', '/telefonia/numeros/', '/telefonia/asesores/')),
+    (40, CENTRO_SEGURIDAD, ('/configuracion/', '/seguridad/usuarios/', '/seguridad/roles/',
+                            '/seguridad/modulos/', '/seguridad/secciones/', '/seguridad/auditoria/')),
     (50, 'Ayuda', ('/doc/', '/perfilpanel/')),
 )
+
+# Nombres viejos → nombre actual, para que renombrar no cree secciones duplicadas.
+RENOMBRES = {
+    'Operación': CENTRO_OPERACION,
+    'Configuración de voz': CENTRO_VOZ,
+    'Telefonía': CENTRO_TELEFONIA,
+    'Seguridad': CENTRO_SEGURIDAD,
+}
+
+for anterior, actual in RENOMBRES.items():
+    seccion = ModuloGrupo.objects.filter(nombre=anterior).first()
+    if seccion and not ModuloGrupo.objects.filter(nombre=actual).exists():
+        seccion.nombre = actual
+        seccion.save()
+        print(f'  renombrada: {anterior} → {actual}')
 
 print('\n→ Secciones del menú')
 for prioridad, nombre, urls in SECCIONES:

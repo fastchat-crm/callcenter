@@ -59,7 +59,11 @@ hace esa pantalla y en qué punto de la llamada entra. Trae tres cosas:
 - **Un enlace al documento** de `/doc/` que profundiza en esa parte.
 
 El recuadro se pliega con un clic en su cabecera y el sistema recuerda la elección por
-pantalla, así que una vez que conoces el módulo deja de estorbar.
+pantalla, así que una vez que conoces el módulo deja de estorbar. El menú lateral también se
+pliega, con el botón **Menú** de la barra superior, y esa elección igualmente se recuerda.
+
+Los mismos cuatro centros son las secciones del menú lateral, para que el sitio donde entras
+y el recuadro que lo explica hablen del mismo lugar.
 
 Los textos viven en `core/guias.py`; para cambiar uno, o para dar de alta la guía de una
 pantalla nueva, basta con editar ese diccionario: se resuelven por la ruta y ninguna vista
@@ -72,15 +76,26 @@ necesita tocarse.
 Abre `http://<IP-DEL-SERVIDOR>:<PUERTO>/login/` con el usuario y la contraseña que te
 entregaron. Cambia la contraseña de inmediato desde *Mi perfil → Cambiar contraseña*.
 
-### 2. Revisar el estado del motor
+### 2. Poner la identidad de la empresa
+
+*Centro de seguridad → Configuración general*
+
+El nombre de la empresa, el logo y los datos de contacto. Lo que cargues aquí reemplaza la
+marca por defecto en el menú lateral, en la pestaña del navegador y en la pantalla de
+ingreso. El logo acepta PNG, JPG, WEBP o SVG de hasta 2 MB.
+
+Los **minutos incluidos al mes** son la referencia del plan contratado: sirven para comparar
+contra el consumo real en el panel.
+
+### 3. Revisar el estado del motor
 
 El **Panel** muestra arriba a la derecha qué componentes están listos: reconocimiento de voz,
 síntesis de voz y agentes de IA. Si alguno aparece en rojo, la llamada no va a funcionar
 completa. Debajo dice exactamente qué falta.
 
-### 3. Cargar el conocimiento de la empresa
+### 4. Cargar el conocimiento de la empresa
 
-*Configuración de voz → Base de conocimiento*
+*Centro de voz e IA → Base de conocimiento*
 
 1. **Nueva colección** — por ejemplo "Planes y servicios".
 2. **Documento** — sube el tarifario en PDF, las preguntas frecuentes en Word, o pega el
@@ -93,9 +108,9 @@ Para comprobar que quedó bien, entra a la colección y usa el buscador: escribe
 como haría un cliente y mira qué fragmentos aparecen. Si el fragmento correcto no aparece
 ahí, el agente tampoco lo va a encontrar — el problema está en el documento, no en la IA.
 
-### 4. Crear el agente
+### 5. Crear el agente
 
-*Configuración de voz → Agentes IA → Nuevo agente*
+*Centro de voz e IA → Agentes IA → Nuevo agente*
 
 - **Llave de IA**: la que corresponda (ver *Llaves de IA*).
 - **Base de conocimiento**: la colección del paso anterior.
@@ -105,9 +120,9 @@ ahí, el agente tampoco lo va a encontrar — el problema está en el documento,
 Botón **Probar**: hazle una pregunta real y mira la respuesta, la latencia y el modelo que
 respondió. Es la forma rápida de saber si el agente está listo.
 
-### 5. Diseñar el flujo
+### 6. Diseñar el flujo
 
-*Configuración de voz → Flujos IVR → Diseñar*
+*Centro de voz e IA → Flujos IVR → Diseñar*
 
 Un flujo es la ruta que sigue la llamada. El sistema trae uno de ejemplo:
 
@@ -122,20 +137,20 @@ saludo
 Cada paso hace una sola cosa: hablar, ofrecer opciones, capturar un dato, conversar con la
 IA, transferir o colgar. Detalle completo en la documentación del **Motor IVR**.
 
-### 6. Probar sin gastar un minuto de teléfono
+### 7. Probar sin gastar un minuto de teléfono
 
 Dos formas:
 
 - **Simulador** (dentro de la pantalla de pasos): escribes las respuestas del cliente
   separadas por `|` y ves la conversación completa en texto. Ideal para validar un cambio en
   segundos.
-- **Demo de voz** (*Configuración de voz → Demo de voz*): hablas por el micrófono del
+- **Demo de voz** (*Centro de voz e IA → Demo de voz*): hablas por el micrófono del
   navegador contra el mismo motor que atiende las llamadas reales. Es la prueba de verdad:
   micrófono → reconocimiento → agente → voz.
 
-### 7. Conectar el número
+### 8. Conectar el número
 
-*Telefonía → Números → Nuevo número*
+*Centro de telefonía → Números → Nuevo número*
 
 Se registra en formato internacional (`+593987654321`), con su país, idioma y el flujo que lo
 atiende. En la parte superior de esa pantalla está la **URL de webhook** que hay que pegar en
@@ -147,13 +162,13 @@ el panel del proveedor telefónico.
 
 ### Monitor en vivo
 
-*Operación → Monitor en vivo* muestra las llamadas en curso y se refresca cada 4 segundos:
+*Centro de operación → Monitor en vivo* muestra las llamadas en curso y se refresca cada 4 segundos:
 de dónde llaman, en qué paso del flujo van y cuál fue el último turno de la conversación.
 Sirve para ver el sistema trabajando y detectar si alguna llamada se quedó trabada.
 
 ### Historial
 
-*Operación → Llamadas* es el archivo completo. Se puede filtrar por fecha, estado, resultado
+*Centro de operación → Llamadas* es el archivo completo. Se puede filtrar por fecha, estado, resultado
 o buscar una palabra dentro de las transcripciones —útil cuando el cliente reclama algo que
 "le dijeron por teléfono".
 
@@ -163,7 +178,7 @@ datos capturados y las transferencias.
 
 ### Transferencias
 
-*Operación → Transferencias* lista cada escalamiento con su motivo. **Es el reporte más útil
+*Centro de operación → Transferencias* lista cada escalamiento con su motivo. **Es el reporte más útil
 del sistema**, porque dice qué mejorar:
 
 | Motivo predominante | Qué significa | Qué hacer |

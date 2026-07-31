@@ -1,8 +1,10 @@
 """Modelos transversales: bitacora de acciones y configuracion del sistema."""
 from django.conf import settings
+from django.core.validators import FileExtensionValidator
 from django.db import models
 
 from core.custom_models import ModeloBase
+from core.validadores import validate_file_size_2mb
 
 ACCION_CHOICES = (
     ('add', 'Creación'),
@@ -38,7 +40,9 @@ class Configuracion(ModeloBase):
     """Parametros editables del sistema (una sola fila)."""
 
     nombre_empresa = models.CharField(max_length=120, default='Callcenter IA')
-    logo = models.ImageField(upload_to='configuracion/', blank=True, null=True)
+    logo = models.FileField(upload_to='configuracion/', blank=True, null=True,
+                            validators=[FileExtensionValidator(['png', 'jpg', 'jpeg', 'webp', 'svg']),
+                                        validate_file_size_2mb])
     zona_horaria = models.CharField(max_length=60, default='America/Guayaquil')
     minutos_incluidos_mes = models.IntegerField(default=3500)
     correo_notificaciones = models.EmailField(blank=True, null=True)
