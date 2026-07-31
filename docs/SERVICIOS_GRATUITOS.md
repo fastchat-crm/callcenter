@@ -203,6 +203,24 @@ dejar de funcionar cuando Microsoft quiera. Está bien como mejora, no como cimi
 Las cuotas gratuitas se recortan sin aviso —Gemini es la prueba—, así que un cliente en
 producción sobre capa gratuita es una promesa que no controlas.
 
+### Cómo dejarlo funcionando
+
+Una sola cuenta —Groq— cubre el cerebro y el reconocimiento de voz, y no pide tarjeta.
+
+1. Crea la llave en <https://console.groq.com/keys>.
+2. *Centro de voz e IA → Llaves de IA → Nueva llave*: proveedor **Groq**, pega la clave, deja
+   el modelo vacío (sale `llama-3.1-8b-instant`, que es el que rinde ~355 llamadas/día) y
+   márcala **por defecto**. Usa **Probar** antes de guardar.
+3. *Centro de voz e IA → Agentes IA*: en el agente, elige esa llave.
+4. *Centro de seguridad → Parámetros del sistema*: pon `VOZ_STT_MOTOR` en **groq**. El cambio
+   entra en las llamadas nuevas, sin reiniciar.
+
+La misma llave sirve para las dos cosas: el agente la usa para responder y el motor de voz la
+usa para transcribir. Si Groq no responde, la transcripción **cae sola a Whisper local** en vez
+de perder el turno, así que cambiar el parámetro no es un salto sin red.
+
+Para revertir, pon `VOZ_STT_MOTOR` en `faster_whisper` y todo vuelve a correr en el servidor.
+
 ## Costo mensual comparado
 
 Escenario: 1 cliente, 10 llamadas/día × 12,5 min ≈ **3.000 min/mes**.

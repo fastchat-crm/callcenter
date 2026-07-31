@@ -91,7 +91,8 @@ def _agentes(cliente):
     else:
         detalle = f'{total} agente(s) con llave activa'
     return _paso(5, 'Agente IA', '/agentes-ia/agentes/', listo, detalle,
-                 'Es quien responde las preguntas abiertas. Sin llave válida, el flujo cae a su respaldo.')
+                 'Es quien responde las preguntas abiertas. Sin llave válida, el flujo cae a su '
+                 'respaldo. La opción gratuita recomendada es Groq con llama-3.1-8b-instant.')
 
 
 def _conocimiento(cliente):

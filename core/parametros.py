@@ -27,6 +27,15 @@ class Parametro:
 
 CATALOGO = (
     Parametro(
+        'VOZ_STT_MOTOR', 'Motor de reconocimiento de voz', tipo='texto', defecto='faster_whisper',
+        grupo='Reconocimiento de voz',
+        descripcion='«faster_whisper» transcribe en este servidor: nada sale de aquí, pero '
+                    'cuesta cerca de dos segundos por turno en CPU. «groq» usa Whisper '
+                    'large-v3 en la nube: baja a 200-400 ms y acierta más, con 8 horas de '
+                    'audio gratis al día, pero el audio del cliente viaja a Groq y hace falta '
+                    'una llave suya activa. «vosk» es el más liviano y el menos preciso. Si '
+                    'Groq falla, la llamada se transcribe local en vez de perder el turno.'),
+    Parametro(
         'VOZ_UMBRAL_SILENCIO', 'Umbral de silencio', tipo='entero', defecto=500, unidad='RMS',
         grupo='Detección de fin de turno',
         descripcion='Por debajo de este nivel de energía el audio se considera silencio. '

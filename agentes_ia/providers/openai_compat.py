@@ -64,12 +64,18 @@ class OpenAICompatProvider(BaseProvider):
 
 
 class GroqProvider(OpenAICompatProvider):
-    """Groq: capa gratuita generosa y la inferencia mas rapida del mercado."""
+    """Groq: capa gratuita generosa y la inferencia mas rapida del mercado.
+
+    El modelo por defecto es el 8B y no el 70B a propósito. Medido contra el
+    consumo real de este sistema —unos 1.400 tokens por llamada—, la cuota
+    gratuita del 70B da para ~70 llamadas al día y la del 8B para ~355. Para
+    contestar el teléfono en dos oraciones, el 8B alcanza de sobra.
+    """
 
     name = 'groq'
     gratuito = True
     base_url_defecto = 'https://api.groq.com/openai/v1'
-    modelo_defecto = 'llama-3.3-70b-versatile'
+    modelo_defecto = 'llama-3.1-8b-instant'
 
 
 class OpenRouterProvider(OpenAICompatProvider):

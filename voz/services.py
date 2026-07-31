@@ -59,18 +59,70 @@ def _cargar_vosk():
     return _stt
 
 
+def _motor_stt():
+    """Motor configurado en el panel; si no está declarado, el de settings."""
+    try:
+        from core.parametros import obtener
+
+        return (obtener('VOZ_STT_MOTOR') or settings.VOZ_STT_MOTOR).strip()
+    except Exception:
+        return settings.VOZ_STT_MOTOR
+
+
 def transcribir_pcm(pcm: bytes, sample_rate: int = SAMPLE_RATE_TELEFONICO, idioma: str = 'es') -> str:
     """PCM 16-bit mono → texto. Devuelve cadena vacía si no se entendió nada."""
     if not pcm:
         return ''
-    motor = settings.VOZ_STT_MOTOR
+    motor = _motor_stt()
     try:
+        if motor == 'groq':
+            # La nube es más rápida y precisa, pero depende de la red y de una
+            # cuota. Si falla, se transcribe local en vez de perder el turno.
+            texto = _transcribir_groq(pcm, sample_rate, idioma)
+            if texto:
+                return texto
+            logger.warning('[voz] Groq no transcribió; se cae a Whisper local')
+            return _transcribir_whisper(pcm, sample_rate, idioma)
         if motor == 'vosk':
             return _transcribir_vosk(pcm, sample_rate)
         return _transcribir_whisper(pcm, sample_rate, idioma)
     except Exception:
         logger.exception('[voz] falló la transcripción con motor %s', motor)
         return ''
+
+
+def _llave_groq():
+    """Primera llave de Groq activa: la del cliente si tiene, si no la compartida."""
+    from agentes_ia.models import ApiKeyIA
+
+    return (ApiKeyIA.objects.filter(status=True, activo=True, proveedor=2)
+            .exclude(clave__isnull=True).exclude(clave='')
+            .order_by('cliente_id').first())
+
+
+def _transcribir_groq(pcm, sample_rate, idioma):
+    """Whisper large-v3 en la nube de Groq. Capa gratuita: 8 h de audio al día."""
+    import requests
+
+    llave = _llave_groq()
+    if llave is None:
+        logger.warning('[voz] no hay llave de Groq activa para el STT')
+        return ''
+
+    wav = audio_utils.pcm_a_wav(pcm, sample_rate)
+    respuesta = requests.post(
+        'https://api.groq.com/openai/v1/audio/transcriptions',
+        headers={'Authorization': f'Bearer {llave.clave}'},
+        files={'file': ('turno.wav', wav, 'audio/wav')},
+        data={'model': 'whisper-large-v3-turbo', 'language': idioma,
+              'response_format': 'text', 'temperature': '0'},
+        timeout=20,
+    )
+    if respuesta.status_code >= 400:
+        logger.warning('[voz] Groq STT devolvió HTTP %s: %s',
+                       respuesta.status_code, respuesta.text[:200])
+        return ''
+    return (respuesta.text or '').strip()
 
 
 def _transcribir_whisper(pcm, sample_rate, idioma):
