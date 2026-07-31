@@ -1,0 +1,31 @@
+{% if guia %}
+<section class="guia" data-guia="{{ guia.clave }}">
+    <button class="guia-cabecera" type="button" data-guia-alternar>
+        <span class="guia-icono">i</span>
+        <span class="guia-encabezado">
+            <span class="guia-titulo">{{ guia.titulo }}</span>
+            <span class="etiqueta etiqueta-info">{{ guia.centro }}</span>
+            {% if guia.paso %}<span class="guia-paso">Paso {{ guia.paso }} de {{ guia.total }} del recorrido</span>{% endif %}
+        </span>
+        <span class="guia-flecha" aria-hidden="true"></span>
+    </button>
+    <div class="guia-cuerpo">
+        <p class="guia-resumen">{{ guia.resumen }}</p>
+        <div class="guia-pie">
+            <span class="guia-vecinos">
+                {% if guia.antes %}
+                    <span class="guia-vecino">Antes:
+                        {% if guia.antes.url %}<a href="{{ guia.antes.url }}">{{ guia.antes.nombre }}</a>{% else %}{{ guia.antes.nombre }}{% endif %}
+                    </span>
+                {% endif %}
+                {% if guia.despues %}
+                    <span class="guia-vecino">Después:
+                        {% if guia.despues.url %}<a href="{{ guia.despues.url }}">{{ guia.despues.nombre }}</a>{% else %}{{ guia.despues.nombre }}{% endif %}
+                    </span>
+                {% endif %}
+            </span>
+            <a class="guia-doc" href="/doc/{{ guia.doc_slug }}/">{{ guia.doc_nombre }} &rarr;</a>
+        </div>
+    </div>
+</section>
+{% endif %}

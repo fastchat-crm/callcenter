@@ -41,6 +41,30 @@ necesita más velocidad y una voz más natural. Se cambia de uno a otro sin reha
 
 ---
 
+## La guía que trae cada pantalla
+
+Todas las ventanas de configuración y de operación abren con un recuadro azul que explica qué
+hace esa pantalla y en qué punto de la llamada entra. Trae tres cosas:
+
+- **El centro al que pertenece** — *Centro de telefonía*, *Centro de voz e IA*, *Centro de
+  operación* o *Centro de seguridad*. Es la agrupación temática del sistema.
+- **Su lugar en el recorrido** — las ocho pantallas que forman la cadena de una llamada están
+  numeradas, con enlaces a la anterior y a la siguiente. El recorrido es:
+
+  1. Proveedores y troncales SIP → 2. Números telefónicos → 3. Flujos IVR → 4. Pasos del flujo
+  → 5. Agentes IA → 6. Base de conocimiento → 7. Asesores humanos → 8. Llamadas
+
+  Las demás pantallas (llaves de IA, consumo, demo de voz, monitor, transferencias y todo
+  *Seguridad*) son de apoyo y no llevan número.
+- **Un enlace al documento** de `/doc/` que profundiza en esa parte.
+
+El recuadro se pliega con un clic en su cabecera y el sistema recuerda la elección por
+pantalla, así que una vez que conoces el módulo deja de estorbar.
+
+Los textos viven en `core/guias.py`; para cambiar uno, o para dar de alta la guía de una
+pantalla nueva, basta con editar ese diccionario: se resuelven por la ruta y ninguna vista
+necesita tocarse.
+
 ## Primeros pasos
 
 ### 1. Ingresar

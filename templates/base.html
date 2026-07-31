@@ -5,7 +5,7 @@
     <title>{{ titulo }} · {{ nombre_sistema }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#2f6bff">
-    <link rel="stylesheet" href="/static/css/base.css?v1.0">
+    <link rel="stylesheet" href="/static/css/base.css?v1.1">
     {% block head %}{% endblock %}
 </head>
 <body>
@@ -48,6 +48,7 @@
                     <div class="aviso aviso-{{ mensaje.tags }} mb-2">{{ mensaje }}</div>
                 {% endfor %}
             {% endif %}
+            {% include 'componentes/guia.html' %}
             {% block contenido %}{% endblock %}
         </div>
     </main>
@@ -65,7 +66,7 @@
 
 <div class="avisos" id="avisos"></div>
 <form id="formulario-csrf">{% csrf_token %}</form>
-<script src="/static/js/app.js?v1.0"></script>
+<script src="/static/js/app.js?v1.1"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

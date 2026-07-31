@@ -1,5 +1,7 @@
 from django import forms
 
+from core.custom_forms import FormularioBase
+
 from .models import Usuario
 
 
@@ -11,7 +13,7 @@ class LoginForm(forms.Form):
                                widget=forms.PasswordInput(attrs={'placeholder': 'Contraseña'}))
 
 
-class PerfilForm(forms.ModelForm):
+class PerfilForm(FormularioBase):
     class Meta:
         model = Usuario
         fields = ('first_name', 'last_name', 'email', 'cedula', 'telefono', 'foto')

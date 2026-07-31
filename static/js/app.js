@@ -16,6 +16,19 @@
                 if (evento.key === 'Escape') this.cerrarModal();
             });
             this.marcarMenuActivo();
+            this.restaurarGuia();
+        },
+
+        restaurarGuia() {
+            const guia = document.querySelector('.guia');
+            if (guia && localStorage.getItem(`guia:${guia.dataset.guia}`) === 'plegada') {
+                guia.classList.add('plegada');
+            }
+        },
+
+        alternarGuia(guia) {
+            const plegada = guia.classList.toggle('plegada');
+            localStorage.setItem(`guia:${guia.dataset.guia}`, plegada ? 'plegada' : 'abierta');
         },
 
         marcarMenuActivo() {
@@ -40,6 +53,10 @@
             }
             if (evento.target.closest('#alternar-menu')) {
                 document.querySelector('.menu-lateral').classList.toggle('abierto');
+            }
+            const alternador = evento.target.closest('[data-guia-alternar]');
+            if (alternador) {
+                this.alternarGuia(alternador.closest('.guia'));
             }
         },
 
