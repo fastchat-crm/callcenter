@@ -21,6 +21,8 @@ auto-hospedados.
 - `core/` — `ModeloBase` (auditoría + borrado lógico), `crud.py` (CRUD genérico), `ajax.py`
   (despachador), `funciones.py` (`addData`, `paginador`, `secure_module`, `log`), validadores,
   menú lateral, bitácora
+- `clientes/` — `Cliente` (el dueño de todo lo configurable) y `contexto.py`, que resuelve el
+  cliente activo y da los helpers de filtrado
 - `autenticacion/` — usuario del panel, ingreso, perfil, cambio de clave
 - `seguridad/` — `Modulo` (una URL = un permiso), `ModuloGrupo` (secciones del menú),
   `GroupModulo` (permisos por rol), CRUD de usuarios y roles, auditoría y
@@ -71,6 +73,27 @@ escribir el despacho a mano siguiendo el mismo patrón (ver `ivr/view_paso.py`).
 
 Un archivo por vista: `view_<entidad>.py`. Las URL de cada app se declaran en una tupla
 `<app>_urls` con `nombre`/`url`/`vista`.
+
+## Multi-cliente
+
+Todo lo configurable pertenece a un `Cliente`: números, flujos, agentes, colecciones de
+conocimiento, asesores y llamadas llevan FK `cliente`. Un usuario con `cliente` asignado solo
+existe dentro de ese cliente; uno sin `cliente` es del operador y elige con cuál trabajar
+desde el selector de la barra superior (la elección vive en la sesión).
+
+El filtrado no se escribe a mano en cada vista:
+
+- `core/crud.py` acota solo, y también impide editar o borrar un registro de otro cliente.
+- `core/custom_forms.py` acota los desplegables, para que ningún formulario ofrezca el flujo
+  o el agente de otro cliente.
+- Las vistas que no usan `vista_crud` llaman a `clientes.contexto.acotar(queryset, request)`.
+
+Excepción: un modelo con `CLIENTE_COMPARTIBLE = True` (hoy `ApiKeyIA`) admite filas sin
+cliente, que son del operador y las ven todos. En esos, el formulario decide el dueño; en el
+resto se impone el cliente activo.
+
+**Al agregar un modelo configurable nuevo, ponle la FK `cliente`.** Sin ella queda visible
+para todos los clientes.
 
 ## Borrado lógico
 

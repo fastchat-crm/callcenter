@@ -34,6 +34,10 @@ TONO_CHOICES = (
 
 
 class ApiKeyIA(ModeloBase):
+    cliente = models.ForeignKey('clientes.Cliente', on_delete=models.PROTECT, blank=True, null=True,
+                                related_name='apikeys',
+                                help_text='Vacío: llave por defecto, disponible para todos los '
+                                          'clientes. Con cliente: solo la usan sus agentes.')
     alias = models.CharField(max_length=80, help_text='Nombre interno de la llave, ejemplo: gemini-produccion.')
     proveedor = models.IntegerField(choices=PROVEEDOR_CHOICES, default=1)
     clave = models.CharField(max_length=300, blank=True, null=True,
@@ -49,6 +53,10 @@ class ApiKeyIA(ModeloBase):
     consumo_tokens_entrada = models.BigIntegerField(default=0, editable=False)
     consumo_tokens_salida = models.BigIntegerField(default=0, editable=False)
     activo = models.BooleanField(default=True)
+
+    # Una llave sin cliente es del operador y la ven todos; por eso este modelo
+    # no se filtra igual que el resto (ver clientes/contexto.py).
+    CLIENTE_COMPARTIBLE = True
 
     class Meta:
         verbose_name = 'Llave de IA'
@@ -74,6 +82,8 @@ class ApiKeyIA(ModeloBase):
 class ColeccionConocimiento(ModeloBase):
     """Agrupa los documentos que alimentan el RAG de uno o varios agentes."""
 
+    cliente = models.ForeignKey('clientes.Cliente', on_delete=models.PROTECT, null=True,
+                                related_name='colecciones')
     nombre = models.CharField(max_length=120)
     slug = models.SlugField(max_length=140, unique=True, blank=True)
     descripcion = models.TextField(blank=True, null=True)
@@ -139,6 +149,8 @@ class DocumentoConocimiento(ModeloBase):
 
 
 class AgenteIA(ModeloBase):
+    cliente = models.ForeignKey('clientes.Cliente', on_delete=models.PROTECT, null=True,
+                                related_name='agentes')
     nombre = models.CharField(max_length=120)
     descripcion = models.TextField(blank=True, null=True,
                                    help_text='Qué hace este agente y para qué cliente trabaja.')

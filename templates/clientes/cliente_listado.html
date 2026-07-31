@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="tarjeta">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">Clientes</div>
+            <div class="tarjeta-nota">Cada cliente es dueño de sus números, flujos, agentes, conocimiento y asesores.</div>
+        </div>
+        <button class="boton boton-primario" data-accion="add" data-titulo="Nuevo cliente">Nuevo cliente</button>
+    </div>
+    <div class="tarjeta-cuerpo">{% include 'componentes/buscador.html' with placeholder='Nombre, razón social o RUC…' %}</div>
+    <div class="tabla-envoltura">
+        <table class="tabla">
+            <thead>
+            <tr><th>Cliente</th><th>Identificación</th><th>Contacto</th><th>Números</th><th>Flujos</th><th>Estado</th><th class="celda-acciones">Acciones</th></tr>
+            </thead>
+            <tbody>
+            {% for filtro in listado %}
+                <tr>
+                    <td><strong>{{ filtro.nombre }}</strong><div class="texto-tenue texto-pequeno">{{ filtro.razon_social|default:"—" }}</div></td>
+                    <td class="celda-mono">{{ filtro.identificacion|default:"—" }}</td>
+                    <td>{{ filtro.correo|default:"—" }}<div class="texto-tenue texto-pequeno">{{ filtro.telefono|default:"—" }}</div></td>
+                    <td>{{ filtro.numeros.count }}</td>
+                    <td>{{ filtro.flujos.count }}</td>
+                    <td>
+                        {% if filtro.activo %}<span class="etiqueta etiqueta-exito">Activo</span>
+                        {% else %}<span class="etiqueta etiqueta-alerta">Inactivo</span>{% endif %}
+                    </td>
+                    <td class="celda-acciones">
+                        <a class="boton boton-sm" href="/clientes/cambiar/?cliente={{ filtro.id }}&siguiente=/panel/">Trabajar aquí</a>
+                        <button class="boton boton-sm" data-accion="change" data-id="{{ filtro.id }}" data-titulo="Editar cliente">Editar</button>
+                        <button class="boton boton-sm boton-peligro" data-accion="delete" data-id="{{ filtro.id }}"
+                                data-mensaje="¿Eliminar a {{ filtro.nombre }}? Sus números y flujos dejan de atender.">Eliminar</button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="7" class="vacio"><strong>Sin clientes</strong>Crea el primero para poder darle números y flujos.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'componentes/paginacion.html' %}
+</div>
+{% endblock %}

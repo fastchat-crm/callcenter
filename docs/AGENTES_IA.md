@@ -209,3 +209,19 @@ GROUP BY 1 ORDER BY 5 DESC;
 `GET /agentes-ia/estado/` devuelve en JSON si Weaviate responde, qué colecciones están
 indexadas y con qué backend, y el estado de cada llave. Es el primer lugar para mirar cuando
 un agente deja de contestar bien.
+
+## Llaves por cliente
+
+Una llave de IA puede ser de dos maneras, según el campo **Cliente** de su formulario:
+
+| Campo Cliente | Qué significa |
+|---|---|
+| Vacío | Llave por defecto del operador: la pueden usar los agentes de cualquier cliente. |
+| Con un cliente | Exclusiva de ese cliente; los agentes de los demás no la ven ni la pueden elegir. |
+
+Es la única excepción a la regla de que todo pertenece a un cliente
+(`CLIENTE_COMPARTIBLE = True` en el modelo). Sirve para arrancar con una sola llave del
+operador y, cuando un cliente trae la suya, asignársela sin tocar al resto.
+
+No confundirla con el **token global de IA** de *Configuración general*: ese no atiende
+llamadas, lo usan las funciones internas del sistema.

@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
 
+from clientes.contexto import acotar, cliente_actual
 from core.funciones import addData, paginador, secure_module
 
 from .consumo import resumen_por_agente, resumen_por_modelo, totales
@@ -37,7 +38,7 @@ def consumo_view(request):
         url_vars += '&errores=1'
         data['solo_errores'] = True
 
-    consulta = ConsumoIA.objects.filter(filtros)
+    consulta = ConsumoIA.objects.filter(filtros, agente__cliente=cliente_actual(request))
 
     if request.GET.get('action') == 'datos':
         return JsonResponse({
@@ -54,7 +55,7 @@ def consumo_view(request):
     data['por_agente'] = resumen_por_agente(consulta)
     data['serie'] = _serie_diaria(consulta)
     data['maximo_serie'] = max([punto['turnos'] for punto in data['serie']] or [1]) or 1
-    data['agentes'] = _agentes_disponibles()
+    data['agentes'] = _agentes_disponibles(request)
 
     listado = consulta.select_related('agente', 'llamada', 'apikey').order_by('-fecha')
     paginador(request, listado, data, 25, url_vars)
@@ -78,10 +79,11 @@ def _serie_diaria(consulta):
     ]
 
 
-def _agentes_disponibles():
+def _agentes_disponibles(request):
     from .models import AgenteIA
 
-    return list(AgenteIA.objects.filter(status=True).values('id', 'nombre').order_by('nombre'))
+    return list(acotar(AgenteIA.objects.filter(status=True), request)
+                .values('id', 'nombre').order_by('nombre'))
 
 
 @secure_module
@@ -94,7 +96,7 @@ def estado_ia_view(request):
 
     disponible, detalle = weaviate_rag.disponible()
     colecciones = []
-    for coleccion in ColeccionConocimiento.objects.filter(status=True):
+    for coleccion in acotar(ColeccionConocimiento.objects.filter(status=True), request):
         colecciones.append({
             'nombre': coleccion.nombre,
             'backend': coleccion.backend,

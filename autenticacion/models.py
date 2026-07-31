@@ -11,6 +11,9 @@ PERFIL_CHOICES = (
 
 
 class Usuario(AbstractUser):
+    cliente = models.ForeignKey('clientes.Cliente', on_delete=models.PROTECT, blank=True, null=True,
+                                related_name='usuarios',
+                                help_text='Si se deja vacío, es del operador y ve a todos los clientes.')
     cedula = models.CharField(max_length=20, blank=True, null=True, db_index=True)
     telefono = models.CharField(max_length=30, blank=True, null=True)
     perfil = models.CharField(max_length=20, choices=PERFIL_CHOICES, default='asesor')

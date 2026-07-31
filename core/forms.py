@@ -10,7 +10,7 @@ class ConfiguracionForm(FormularioBase):
     class Meta:
         model = Configuracion
         fields = ('nombre_empresa', 'logo', 'zona_horaria', 'minutos_incluidos_mes',
-                  'correo_notificaciones', 'telefono_soporte')
+                  'correo_notificaciones', 'telefono_soporte', 'token_ia_interna')
         labels = {
             'nombre_empresa': 'Nombre de la empresa',
             'logo': 'Logo',
@@ -18,10 +18,14 @@ class ConfiguracionForm(FormularioBase):
             'minutos_incluidos_mes': 'Minutos incluidos al mes',
             'correo_notificaciones': 'Correo de notificaciones',
             'telefono_soporte': 'Teléfono de soporte',
+            'token_ia_interna': 'Token global de IA',
         }
         help_texts = {
             'logo': 'PNG, JPG, WEBP o SVG de hasta 2 MB. Se muestra en el menú lateral.',
             'minutos_incluidos_mes': 'Sirve de referencia para el consumo del plan contratado.',
+        }
+        widgets = {
+            'token_ia_interna': forms.PasswordInput(render_value=True),
         }
 
     def clean_nombre_empresa(self):

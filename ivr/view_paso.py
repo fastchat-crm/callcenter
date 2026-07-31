@@ -7,6 +7,7 @@ from django.shortcuts import render
 from django.template.loader import get_template
 
 from core.custom_models import FormError
+from clientes.contexto import acotar
 from core.funciones import addData, log, secure_module
 
 from .forms import OpcionForm, PasoForm
@@ -15,7 +16,7 @@ from .models import FlujoVoz, OpcionPaso, PasoVoz
 
 @secure_module
 def paso_view(request, flujo_id):
-    flujo = FlujoVoz.objects.filter(pk=flujo_id, status=True).first()
+    flujo = acotar(FlujoVoz.objects.filter(pk=flujo_id, status=True), request).first()
     if flujo is None:
         return JsonResponse({'error': True, 'message': 'El flujo no existe.'}, status=404)
 

@@ -2,6 +2,7 @@
 from django.http import JsonResponse
 from django.shortcuts import render
 
+from clientes.contexto import acotar
 from core.funciones import addData, secure_module
 
 
@@ -9,11 +10,10 @@ from core.funciones import addData, secure_module
 def demo_view(request):
     from ivr.models import FlujoVoz
 
-    data = {'titulo': 'Demo de voz', 'modulo': 'Configuración de voz'}
+    data = {'titulo': 'Demo de voz', 'modulo': 'Centro de voz e IA'}
     addData(request, data)
-    data['flujos'] = list(
-        FlujoVoz.objects.filter(status=True, activo=True).values('id', 'nombre').order_by('nombre')
-    )
+    flujos = acotar(FlujoVoz.objects.filter(status=True, activo=True), request)
+    data['flujos'] = list(flujos.values('id', 'nombre').order_by('nombre'))
     data['url_websocket'] = _url_websocket(request)
     return render(request, 'voz/demo.html', data)
 

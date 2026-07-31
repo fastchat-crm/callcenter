@@ -5,21 +5,23 @@
     <title>{{ titulo }} · {{ configuracion.nombre_empresa|default:nombre_sistema }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#2f6bff">
-    <link rel="stylesheet" href="/static/css/base.css?v1.2">
+    <link rel="stylesheet" href="/static/css/base.css?v1.3">
     {% block head %}{% endblock %}
 </head>
 <body>
 <div class="aplicacion">
     <aside class="menu-lateral">
         <div class="marca">
-            {% if configuracion.logo %}
+            {% if cliente.logo %}
+                <img class="marca-imagen" src="{{ cliente.logo.url }}" alt="{{ cliente.nombre }}">
+            {% elif configuracion.logo %}
                 <img class="marca-imagen" src="{{ configuracion.logo.url }}" alt="{{ configuracion.nombre_empresa }}">
             {% else %}
-                <div class="marca-logo">{{ configuracion.nombre_empresa|default:nombre_sistema|slice:":2"|upper }}</div>
+                <div class="marca-logo">{{ cliente.iniciales|default:nombre_sistema|slice:":2"|upper }}</div>
             {% endif %}
             <div>
-                <div class="marca-nombre">{{ configuracion.nombre_empresa|default:nombre_sistema }}</div>
-                <div class="marca-sub">Voz con inteligencia artificial</div>
+                <div class="marca-nombre">{{ cliente.nombre|default:configuracion.nombre_empresa|default:nombre_sistema }}</div>
+                <div class="marca-sub">{% if cliente %}{{ configuracion.nombre_empresa|default:nombre_sistema }}{% else %}Voz con inteligencia artificial{% endif %}</div>
             </div>
         </div>
         {% for grupo in menu %}
@@ -40,6 +42,18 @@
             </div>
             <div class="barra-acciones">
                 <button class="boton boton-sutil boton-sm" id="alternar-menu" type="button">Menú</button>
+                {% if puede_cambiar_cliente %}
+                    <form class="selector-cliente" method="get" action="/clientes/cambiar/">
+                        <input type="hidden" name="siguiente" value="{{ request.path }}">
+                        <select class="campo campo-select campo-sm" name="cliente" onchange="this.form.submit()">
+                            {% for elegible in clientes_elegibles %}
+                                <option value="{{ elegible.id }}" {% if elegible.id == cliente.id %}selected{% endif %}>{{ elegible.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                {% elif cliente %}
+                    <span class="etiqueta etiqueta-info">{{ cliente.nombre }}</span>
+                {% endif %}
                 <a class="boton boton-sutil boton-sm" href="/perfilpanel/">{{ request.user.nombre_completo|default:request.user.username }}</a>
                 <div class="avatar">{{ request.user.iniciales }}</div>
                 <a class="boton boton-sm" href="/logout/">Salir</a>
@@ -70,7 +84,7 @@
 
 <div class="avisos" id="avisos"></div>
 <form id="formulario-csrf">{% csrf_token %}</form>
-<script src="/static/js/app.js?v1.2"></script>
+<script src="/static/js/app.js?v1.3"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

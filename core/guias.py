@@ -124,6 +124,14 @@ GUIAS = {
                    'navegador, sin gastar una llamada real ni depender del carrier.',
         'doc': ('arquitectura', 'Arquitectura'),
     },
+    '/clientes/listado/': {
+        'centro': CENTRO_SEGURIDAD,
+        'titulo': 'Clientes',
+        'resumen': 'Cada cliente es dueño de sus números, flujos, agentes, base de conocimiento y '
+                   'asesores: lo que se configura dentro de uno no existe para los demás. Con '
+                   '«Trabajar aquí» el panel entero pasa a ese cliente.',
+        'doc': ('guia-de-uso', 'Guía de uso'),
+    },
     '/configuracion/': {
         'centro': CENTRO_SEGURIDAD,
         'titulo': 'Configuración general',

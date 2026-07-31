@@ -35,6 +35,9 @@ ROL_TURNO_CHOICES = (
 
 
 class Llamada(ModeloBase):
+    cliente = models.ForeignKey('clientes.Cliente', on_delete=models.PROTECT, null=True,
+                                related_name='llamadas', db_index=True,
+                                help_text='Se copia del número al iniciar la llamada.')
     sentido = models.CharField(max_length=10, choices=SENTIDO_CHOICES, default='entrante')
     numero = models.ForeignKey('telefonia.NumeroTelefonico', on_delete=models.SET_NULL, blank=True,
                                null=True, related_name='llamadas')

@@ -1,15 +1,28 @@
-"""Consultas agregadas para el panel y los reportes de llamadas."""
+"""Consultas agregadas para el panel y los reportes de llamadas.
+
+Todas aceptan `cliente`: con uno, los números salen acotados a ese cliente; sin
+él (None) no devuelven nada, para que una pantalla que se olvide de pasarlo no
+muestre por error los datos de todos.
+"""
 from datetime import timedelta
 
 from django.db.models import Avg, Count, Q, Sum
 from django.utils import timezone
 
 
-def metricas_generales(dias=30):
+def _base(modelo, cliente, prefijo=''):
+    """Queryset vivo del modelo, ya acotado al cliente."""
+    consulta = modelo.objects.filter(status=True)
+    if cliente is None:
+        return consulta.none()
+    return consulta.filter(**{f'{prefijo}cliente': cliente})
+
+
+def metricas_generales(dias=30, cliente=None):
     from llamadas.models import Llamada
 
     desde = timezone.now() - timedelta(days=dias)
-    base = Llamada.objects.filter(status=True, fecha_inicio__gte=desde)
+    base = _base(Llamada, cliente).filter(fecha_inicio__gte=desde)
     agregados = base.aggregate(
         total=Count('id'),
         minutos=Sum('duracion_segundos'),
@@ -30,18 +43,18 @@ def metricas_generales(dias=30):
         'resueltas_ia': agregados['resueltas'] or 0,
         'abandonadas': agregados['abandonadas'] or 0,
         'tasa_resolucion': round(100 * (agregados['resueltas'] or 0) / total, 1) if total else 0,
-        'en_curso': Llamada.objects.filter(status=True, estado='en_curso').count(),
+        'en_curso': _base(Llamada, cliente).filter(estado='en_curso').count(),
     }
 
 
-def llamadas_por_dia(dias=14):
+def llamadas_por_dia(dias=14, cliente=None):
     from django.db.models.functions import TruncDate
 
     from llamadas.models import Llamada
 
     desde = timezone.now() - timedelta(days=dias)
     filas = (
-        Llamada.objects.filter(status=True, fecha_inicio__gte=desde)
+        _base(Llamada, cliente).filter(fecha_inicio__gte=desde)
         .annotate(dia=TruncDate('fecha_inicio'))
         .values('dia')
         .annotate(total=Count('id'), minutos=Sum('duracion_segundos'))
@@ -55,34 +68,34 @@ def llamadas_por_dia(dias=14):
     ]
 
 
-def top_paises(limite=8):
+def top_paises(limite=8, cliente=None):
     from llamadas.models import Llamada
 
     filas = (
-        Llamada.objects.filter(status=True).exclude(pais_iso='')
+        _base(Llamada, cliente).exclude(pais_iso='')
         .values('pais_iso').annotate(total=Count('id')).order_by('-total')[:limite]
     )
     return list(filas)
 
 
-def motivos_transferencia():
+def motivos_transferencia(cliente=None):
     from llamadas.models import TransferenciaLlamada
 
     filas = (
-        TransferenciaLlamada.objects.filter(status=True)
+        _base(TransferenciaLlamada, cliente, prefijo='llamada__')
         .values('motivo').annotate(total=Count('id')).order_by('-total')
     )
     return list(filas)
 
 
-def costo_estimado_mes(costo_minuto=0.02):
+def costo_estimado_mes(costo_minuto=0.02, cliente=None):
     """Costo del carrier del mes en curso. Con Asterisk auto-hospedado es 0."""
     from llamadas.models import Llamada
 
     ahora = timezone.now()
     segundos = (
-        Llamada.objects.filter(status=True, fecha_inicio__year=ahora.year,
-                               fecha_inicio__month=ahora.month)
+        _base(Llamada, cliente)
+        .filter(fecha_inicio__year=ahora.year, fecha_inicio__month=ahora.month)
         .aggregate(total=Sum('duracion_segundos'))['total'] or 0
     )
     minutos = segundos / 60

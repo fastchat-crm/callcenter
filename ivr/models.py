@@ -39,6 +39,8 @@ MODO_CAPTURA_CHOICES = (
 
 
 class FlujoVoz(ModeloBase):
+    cliente = models.ForeignKey('clientes.Cliente', on_delete=models.PROTECT, null=True,
+                                related_name='flujos')
     nombre = models.CharField(max_length=120)
     descripcion = models.TextField(blank=True, null=True)
     idioma = models.CharField(max_length=10, default='es')

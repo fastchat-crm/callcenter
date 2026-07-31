@@ -98,6 +98,8 @@ class TroncalSIP(ModeloBase):
 
 
 class NumeroTelefonico(ModeloBase):
+    cliente = models.ForeignKey('clientes.Cliente', on_delete=models.PROTECT, null=True,
+                                related_name='numeros', help_text='Dueño de este número.')
     numero = models.CharField(max_length=20, unique=True, validators=[validar_e164],
                               help_text='Formato internacional E.164, ejemplo +593987654321.')
     pais_iso = models.CharField(max_length=2, default='EC', help_text='ISO 3166-1 alfa-2: EC, US, ES, MX, CO.')
@@ -146,6 +148,8 @@ HORARIO_CHOICES = (
 class AsesorHumano(ModeloBase):
     """Destino de la transferencia cuando la IA decide escalar."""
 
+    cliente = models.ForeignKey('clientes.Cliente', on_delete=models.PROTECT, null=True,
+                                related_name='asesores')
     nombre = models.CharField(max_length=120)
     numero_destino = models.CharField(max_length=20, blank=True, null=True, validators=[validar_e164],
                                       help_text='Celular o fijo en E.164 al que se reenvía la llamada.')

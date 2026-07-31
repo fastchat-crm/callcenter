@@ -7,6 +7,7 @@ from django.shortcuts import render
 from django.template.loader import get_template
 
 from core.custom_models import FormError
+from clientes.contexto import acotar
 from core.funciones import addData, log, paginador, secure_module
 
 from .forms import ColeccionForm, DocumentoForm
@@ -26,7 +27,7 @@ def conocimiento_view(request):
                     if accion == 'add':
                         formulario = ColeccionForm(request.POST)
                     else:
-                        instancia = ColeccionConocimiento.objects.get(pk=int(request.POST['pk']))
+                        instancia = acotar(ColeccionConocimiento.objects.all(), request).get(pk=int(request.POST['pk']))
                         formulario = ColeccionForm(request.POST, instance=instancia)
                     if not formulario.is_valid():
                         raise FormError(formulario)
@@ -36,7 +37,7 @@ def conocimiento_view(request):
                     respuesta.append({'error': False, 'reload': True})
 
                 elif accion == 'delete':
-                    coleccion = ColeccionConocimiento.objects.get(pk=int(request.POST['id']))
+                    coleccion = acotar(ColeccionConocimiento.objects.all(), request).get(pk=int(request.POST['id']))
                     coleccion.status = False
                     coleccion.save(request)
                     respuesta.append({'error': False, 'reload': True})
@@ -51,13 +52,15 @@ def conocimiento_view(request):
                     respuesta.append({'error': False, 'reload': True})
 
                 elif accion == 'delete_documento':
-                    documento = DocumentoConocimiento.objects.get(pk=int(request.POST['id']))
+                    documento = DocumentoConocimiento.objects.filter(
+                        coleccion__in=acotar(ColeccionConocimiento.objects.all(), request)
+                    ).get(pk=int(request.POST['id']))
                     documento.status = False
                     documento.save(request)
                     respuesta.append({'error': False, 'reload': True})
 
                 elif accion == 'reindexar':
-                    coleccion = ColeccionConocimiento.objects.get(pk=int(request.POST['id']))
+                    coleccion = acotar(ColeccionConocimiento.objects.all(), request).get(pk=int(request.POST['id']))
                     total = coleccion.reindexar()
                     log(f'Reindexó la colección {coleccion}', request, 'change', obj=coleccion.id)
                     return JsonResponse({
@@ -69,7 +72,7 @@ def conocimiento_view(request):
                 elif accion == 'buscar':
                     from .rag import buscar_en_coleccion
 
-                    coleccion = ColeccionConocimiento.objects.get(pk=int(request.POST['id']))
+                    coleccion = acotar(ColeccionConocimiento.objects.all(), request).get(pk=int(request.POST['id']))
                     resultados = buscar_en_coleccion(coleccion, request.POST.get('consulta') or '', 5)
                     return JsonResponse({'error': False, 'resultados': resultados})
 
@@ -93,26 +96,26 @@ def conocimiento_view(request):
                 return JsonResponse({'result': True,
                                      'data': get_template('agentes_ia/coleccion_form.html').render(data, request)})
             if accion == 'change':
-                coleccion = ColeccionConocimiento.objects.get(pk=int(request.GET['id']))
+                coleccion = acotar(ColeccionConocimiento.objects.all(), request).get(pk=int(request.GET['id']))
                 data['filtro'] = coleccion
                 data['form'] = ColeccionForm(instance=coleccion)
                 return JsonResponse({'result': True,
                                      'data': get_template('agentes_ia/coleccion_form.html').render(data, request)})
             if accion == 'add_documento':
-                coleccion = ColeccionConocimiento.objects.get(pk=int(request.GET['id']))
+                coleccion = acotar(ColeccionConocimiento.objects.all(), request).get(pk=int(request.GET['id']))
                 data['form'] = DocumentoForm(initial={'coleccion': coleccion})
                 data['coleccion'] = coleccion
                 return JsonResponse({'result': True,
                                      'data': get_template('agentes_ia/documento_form.html').render(data, request)})
             if accion == 'ver':
-                coleccion = ColeccionConocimiento.objects.get(pk=int(request.GET['id']))
+                coleccion = acotar(ColeccionConocimiento.objects.all(), request).get(pk=int(request.GET['id']))
                 data['filtro'] = coleccion
                 data['documentos'] = coleccion.documentos.filter(status=True).order_by('titulo')
                 return render(request, 'agentes_ia/coleccion_detalle.html', data)
         except Exception as ex:
             return JsonResponse({'result': False, 'message': str(ex)})
 
-    listado = ColeccionConocimiento.objects.filter(status=True).order_by('nombre')
+    listado = acotar(ColeccionConocimiento.objects.filter(status=True), request).order_by('nombre')
     criterio = (request.GET.get('criterio') or '').strip()
     if criterio:
         listado = listado.filter(nombre__icontains=criterio)

@@ -76,24 +76,50 @@ necesita tocarse.
 Abre `http://<IP-DEL-SERVIDOR>:<PUERTO>/login/` con el usuario y la contraseña que te
 entregaron. Cambia la contraseña de inmediato desde *Mi perfil → Cambiar contraseña*.
 
-### 2. Poner la identidad de la empresa
+### 2. Poner la identidad del operador
 
 *Centro de seguridad → Configuración general*
 
-El nombre de la empresa, el logo y los datos de contacto. Lo que cargues aquí reemplaza la
-marca por defecto en el menú lateral, en la pestaña del navegador y en la pantalla de
-ingreso. El logo acepta PNG, JPG, WEBP o SVG de hasta 2 MB.
+El nombre de tu empresa, el logo y los datos de contacto: la marca del sistema, la que se ve
+en la pantalla de ingreso. El logo acepta PNG, JPG, WEBP o SVG de hasta 2 MB.
 
-Los **minutos incluidos al mes** son la referencia del plan contratado: sirven para comparar
-contra el consumo real en el panel.
+Aquí también va el **token global de IA**, el del operador. No es la llave de ningún cliente:
+lo usan las funciones internas del sistema —resumir la llamada al cerrarla, detectar los datos
+de quien llamó, clasificar el motivo de una transferencia—.
 
-### 3. Revisar el estado del motor
+### 3. Dar de alta el cliente
+
+*Centro de seguridad → Clientes*
+
+**El sistema trabaja por cliente.** Cada cliente es dueño de sus números, sus flujos, sus
+agentes, su base de conocimiento y sus asesores: lo que se configura dentro de uno no existe
+para los demás, ni aparece en sus listados ni se puede abrir escribiendo su dirección a mano.
+
+Un cliente puede tener **N números**, todos apuntando al flujo que le corresponda.
+
+Cómo se decide qué ves al entrar al panel:
+
+| Usuario | Qué ve |
+|---|---|
+| Con un cliente asignado | Solo ese cliente. No puede cambiarlo ni sabe que hay otros. |
+| Sin cliente (del operador) | Todos. Elige con cuál trabajar en el selector de la barra superior. |
+
+El cliente asignado se pone en *Centro de seguridad → Usuarios*, en el campo **Cliente**.
+Dejarlo vacío convierte al usuario en operador.
+
+Con el cliente elegido, su nombre y su logo pasan a encabezar el menú lateral, así siempre
+sabes dentro de cuál estás parado.
+
+Los **minutos incluidos al mes** son la referencia del plan contratado de ese cliente: sirven
+para comparar contra su consumo real.
+
+### 4. Revisar el estado del motor
 
 El **Panel** muestra arriba a la derecha qué componentes están listos: reconocimiento de voz,
 síntesis de voz y agentes de IA. Si alguno aparece en rojo, la llamada no va a funcionar
 completa. Debajo dice exactamente qué falta.
 
-### 4. Cargar el conocimiento de la empresa
+### 5. Cargar el conocimiento de la empresa
 
 *Centro de voz e IA → Base de conocimiento*
 
@@ -108,7 +134,7 @@ Para comprobar que quedó bien, entra a la colección y usa el buscador: escribe
 como haría un cliente y mira qué fragmentos aparecen. Si el fragmento correcto no aparece
 ahí, el agente tampoco lo va a encontrar — el problema está en el documento, no en la IA.
 
-### 5. Crear el agente
+### 6. Crear el agente
 
 *Centro de voz e IA → Agentes IA → Nuevo agente*
 
@@ -120,7 +146,7 @@ ahí, el agente tampoco lo va a encontrar — el problema está en el documento,
 Botón **Probar**: hazle una pregunta real y mira la respuesta, la latencia y el modelo que
 respondió. Es la forma rápida de saber si el agente está listo.
 
-### 6. Diseñar el flujo
+### 7. Diseñar el flujo
 
 *Centro de voz e IA → Flujos IVR → Diseñar*
 
@@ -137,7 +163,7 @@ saludo
 Cada paso hace una sola cosa: hablar, ofrecer opciones, capturar un dato, conversar con la
 IA, transferir o colgar. Detalle completo en la documentación del **Motor IVR**.
 
-### 7. Probar sin gastar un minuto de teléfono
+### 8. Probar sin gastar un minuto de teléfono
 
 Dos formas:
 
@@ -148,7 +174,7 @@ Dos formas:
   navegador contra el mismo motor que atiende las llamadas reales. Es la prueba de verdad:
   micrófono → reconocimiento → agente → voz.
 
-### 8. Conectar el número
+### 9. Conectar el número
 
 *Centro de telefonía → Números → Nuevo número*
 

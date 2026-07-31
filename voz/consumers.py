@@ -67,19 +67,30 @@ class BaseVozConsumer:
     # --- Helpers ORM (se ejecutan con sync_to_async) ---
     def _crear_llamada(self, **campos):
         from llamadas.models import Llamada
+
+        # El dueño de la llamada se hereda del número marcado; si es el demo por
+        # navegador, del flujo elegido. Sin esto la llamada queda sin cliente y
+        # no aparece en el listado de nadie.
+        if campos.get('cliente') is None:
+            origen = campos.get('numero') or campos.get('flujo')
+            campos['cliente'] = getattr(origen, 'cliente', None)
         return Llamada.objects.create(**campos)
 
     def _resolver_flujo(self, numero_destino):
         from ivr.models import FlujoVoz
         from telefonia.models import NumeroTelefonico
 
-        numero = NumeroTelefonico.objects.select_related('flujo').filter(
+        numero = NumeroTelefonico.objects.select_related('flujo', 'cliente').filter(
             numero=numero_destino, status=True, activo=True,
         ).first()
         if numero is not None and numero.flujo_id and numero.flujo.activo:
             return numero, numero.flujo
-        flujo = FlujoVoz.objects.filter(status=True, activo=True).order_by('id').first()
-        return numero, flujo
+
+        # El respaldo se busca dentro del mismo cliente: nunca se atiende una
+        # llamada con el flujo de otro.
+        respaldo = FlujoVoz.objects.filter(status=True, activo=True)
+        respaldo = respaldo.filter(cliente=numero.cliente) if numero is not None else respaldo.none()
+        return numero, respaldo.order_by('id').first()
 
     def _construir_orquestador(self, llamada, flujo):
         from voz.orquestador import OrquestadorLlamada

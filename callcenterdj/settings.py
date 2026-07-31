@@ -84,6 +84,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     # APPS LOCALES
     'core.apps.CoreConfig',
+    'clientes.apps.ClientesConfig',
     'autenticacion.apps.AutenticacionConfig',
     'seguridad.apps.SeguridadConfig',
     'panel.apps.PanelConfig',
@@ -122,6 +123,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.datos_sistema',
+                'core.context_processors.cliente_panel',
                 'core.context_processors.guia_pantalla',
             ],
         },

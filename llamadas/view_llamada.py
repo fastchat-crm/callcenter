@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import render
 
+from clientes.contexto import acotar, cliente_actual
 from core.funciones import addData, paginador, secure_module
 
 from .models import Llamada, TransferenciaLlamada
@@ -12,12 +13,13 @@ from .models import Llamada, TransferenciaLlamada
 
 @secure_module
 def llamada_view(request):
-    data = {'titulo': 'Llamadas', 'modulo': 'Operación'}
+    data = {'titulo': 'Llamadas', 'modulo': 'Centro de operación'}
     addData(request, data)
 
     if 'action' in request.GET and request.GET['action'] == 'ver':
         llamada = (
-            Llamada.objects.select_related('flujo', 'agente_ia', 'numero')
+            acotar(Llamada.objects.all(), request)
+            .select_related('flujo', 'agente_ia', 'numero')
             .prefetch_related('turnos', 'transferencias')
             .filter(pk=int(request.GET['id'])).first()
         )
@@ -27,7 +29,7 @@ def llamada_view(request):
         data['turnos'] = llamada.turnos.filter(status=True).order_by('fecha', 'id')
         return render(request, 'llamadas/llamada_detalle.html', data)
 
-    filtros = Q(status=True)
+    filtros = Q(status=True) & Q(cliente=cliente_actual(request))
     url_vars = ''
     criterio = (request.GET.get('criterio') or '').strip()
     estado = (request.GET.get('estado') or '').strip()
@@ -74,7 +76,8 @@ def monitor_view(request):
     """Llamadas en curso, con refresco por AJAX."""
     if request.GET.get('action') == 'datos':
         en_curso = (
-            Llamada.objects.filter(status=True, estado__in=('iniciando', 'en_curso', 'transfiriendo'))
+            acotar(Llamada.objects.filter(status=True), request)
+            .filter(estado__in=('iniciando', 'en_curso', 'transfiriendo'))
             .select_related('flujo', 'agente_ia')
             .order_by('-fecha_inicio')
         )
@@ -97,17 +100,17 @@ def monitor_view(request):
             ],
         })
 
-    data = {'titulo': 'Monitor en vivo', 'modulo': 'Operación'}
+    data = {'titulo': 'Monitor en vivo', 'modulo': 'Centro de operación'}
     addData(request, data)
     return render(request, 'llamadas/monitor.html', data)
 
 
 @secure_module
 def transferencia_view(request):
-    data = {'titulo': 'Transferencias', 'modulo': 'Operación'}
+    data = {'titulo': 'Transferencias', 'modulo': 'Centro de operación'}
     addData(request, data)
 
-    filtros = Q(status=True)
+    filtros = Q(status=True) & Q(llamada__cliente=cliente_actual(request))
     url_vars = ''
     estado = (request.GET.get('estado') or '').strip()
     if estado:

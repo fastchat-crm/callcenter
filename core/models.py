@@ -47,6 +47,10 @@ class Configuracion(ModeloBase):
     minutos_incluidos_mes = models.IntegerField(default=3500)
     correo_notificaciones = models.EmailField(blank=True, null=True)
     telefono_soporte = models.CharField(max_length=30, blank=True, null=True)
+    token_ia_interna = models.CharField(
+        max_length=300, blank=True, null=True, verbose_name='Token global de IA',
+        help_text='Token del operador para las funciones internas de IA (resúmenes, detección de '
+                  'datos, clasificación). No es la llave de ningún cliente.')
 
     class Meta:
         verbose_name = 'Configuración'

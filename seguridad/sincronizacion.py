@@ -15,7 +15,7 @@ logger = logging.getLogger('seguridad')
 PREFIJOS_IGNORADOS = (
     '/admin/', '/static/', '/media/', '/ajaxrequest/', '/health/', '/login/',
     '/logout/', '/changepass/', '/telefonia/webhook/', '/agentes-ia/estado/',
-    '/voz/estado/',
+    '/voz/estado/', '/clientes/cambiar/',
 )
 
 # Nombre legible para las rutas que el descubridor no puede nombrar solo.
@@ -24,6 +24,7 @@ NOMBRES = {
     '/perfilpanel/': 'Mi perfil',
     '/doc/': 'Documentación',
     '/configuracion/': 'Configuración general',
+    '/clientes/listado/': 'Clientes',
     '/llamadas/listado/': 'Llamadas',
     '/llamadas/monitor/': 'Monitor en vivo',
     '/llamadas/transferencias/': 'Transferencias',

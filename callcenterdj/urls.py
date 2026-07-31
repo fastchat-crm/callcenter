@@ -36,6 +36,7 @@ urlpatterns = [
     path('ajaxrequest/<slug:accion>', ConsultasAjax.as_view(), name='ajax_consultas_accion'),
     path('ajaxrequest/<slug:accion>/<str:pk>', ConsultasAjax.as_view(), name='ajax_consultas_pk'),
 
+    path('clientes/', include('clientes.urls')),
     path('seguridad/', include('seguridad.urls')),
     path('telefonia/', include('telefonia.urls')),
     path('ivr/', include('ivr.urls')),

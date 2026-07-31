@@ -6,13 +6,16 @@ from .models import AgenteIA, ApiKeyIA, ColeccionConocimiento, DocumentoConocimi
 class ApiKeyForm(FormularioBase):
     class Meta:
         model = ApiKeyIA
-        fields = ('alias', 'proveedor', 'clave', 'modelo', 'modelo_embeddings', 'base_url',
-                  'limite_mensual_llamadas', 'activo')
+        fields = ('cliente', 'alias', 'proveedor', 'clave', 'modelo', 'modelo_embeddings',
+                  'base_url', 'limite_mensual_llamadas', 'activo')
         labels = {
-            'alias': 'Alias', 'proveedor': 'Proveedor', 'clave': 'Clave API',
+            'cliente': 'Cliente', 'alias': 'Alias', 'proveedor': 'Proveedor', 'clave': 'Clave API',
             'modelo': 'Modelo', 'modelo_embeddings': 'Modelo de embeddings',
             'base_url': 'URL base (opcional)',
             'limite_mensual_llamadas': 'Límite mensual de llamadas', 'activo': 'Activa',
+        }
+        help_texts = {
+            'cliente': 'Vacío: llave por defecto que pueden usar todos los clientes.',
         }
 
 

@@ -20,12 +20,16 @@ class UsuarioForm(FormularioBase):
     class Meta:
         model = Usuario
         fields = ('username', 'first_name', 'last_name', 'email', 'cedula', 'telefono',
-                  'perfil', 'is_active', 'is_staff', 'is_superuser', 'cambiar_clave')
+                  'cliente', 'perfil', 'is_active', 'is_staff', 'is_superuser', 'cambiar_clave')
         labels = {
             'username': 'Usuario', 'first_name': 'Nombres', 'last_name': 'Apellidos',
-            'email': 'Correo', 'cedula': 'Cédula', 'telefono': 'Teléfono', 'perfil': 'Perfil',
+            'email': 'Correo', 'cedula': 'Cédula', 'telefono': 'Teléfono',
+            'cliente': 'Cliente', 'perfil': 'Perfil',
             'is_active': 'Activo', 'is_staff': 'Accede al panel', 'is_superuser': 'Superusuario',
             'cambiar_clave': 'Debe cambiar la contraseña al ingresar',
+        }
+        help_texts = {
+            'cliente': 'Vacío: usuario del operador, ve y administra todos los clientes.',
         }
 
     def __init__(self, *args, **kwargs):
