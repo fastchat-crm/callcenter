@@ -220,3 +220,59 @@ service callcenter restart            # reinicio directo, sin migrar ni collects
 - [ ] `/health/` responde `ok: true` desde afuera
 - [ ] Demo de voz funciona desde un navegador ajeno al servidor
 - [ ] Respaldo de PostgreSQL programado en cron
+
+## 9. Dominio con HTTPS
+
+Este servidor ya sirve el callcenter de dos maneras a la vez, y nginx enruta por
+`server_name`, así que conviven sin conflicto con fastchatdj y chatpdf:
+
+| Acceso | Para qué |
+|---|---|
+| `https://callcenter.integrasoluc.net` | Producción. Es el único que aceptan los carriers |
+| `http://145.223.79.221:9000` | Pruebas. No depende del DNS |
+
+Las reglas comunes (estáticos, WebSocket, timeouts) viven en un único
+`/etc/nginx/snippets/callcenter-comun.conf` que ambos bloques incluyen, para que un
+cambio valga para los dos y no se desincronicen.
+
+```bash
+sudo cp deploy/callcenter-comun.conf /etc/nginx/snippets/
+sudo cp deploy/callcenter.nginx.conf /etc/nginx/sites-available/callcenter
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d callcenter.integrasoluc.net
+```
+
+Certbot edita el archivo del sitio para agregar el bloque 443 y la redirección desde el 80.
+Si vuelves a copiar el archivo del repositorio, **hay que volver a correr certbot**. La
+renovación es automática (`systemctl list-timers | grep certbot`).
+
+En `credenciales.json`, las cuatro claves que hacen que el sistema se reconozca en el dominio:
+
+```json
+{
+  "USE_SSL": true,
+  "DOMINIO_GENERAL": "callcenter.integrasoluc.net",
+  "VOZ_PUBLIC_HOST": "callcenter.integrasoluc.net",
+  "ALLOWED_HOSTS": ["145.223.79.221", "localhost", "127.0.0.1",
+                    "callcenter.integrasoluc.net", ".integrasoluc.net"],
+  "CSRF_TRUSTED_ORIGINS": ["https://callcenter.integrasoluc.net",
+                           "http://145.223.79.221:9000"]
+}
+```
+
+`ALLOWED_HOSTS` va **sin esquema ni puerto**: Django compara solo el host. `CSRF_TRUSTED_ORIGINS`
+va **con esquema**, porque son URL completas. Si falta el origen, el panel carga pero el
+formulario de ingreso responde 403.
+
+Con `USE_SSL: true`, `VOZ_WS_ESQUEMA` pasa a `wss` y el XML que recibe el carrier queda:
+
+```xml
+<Stream url="wss://callcenter.integrasoluc.net/ws/voz/stream/">
+```
+
+Que es exactamente lo que Twilio y Telnyx exigen.
+
+**Ojo al apagar DEBUG:** `SECURE_SSL_REDIRECT` se activa (`USE_SSL and not DEBUG`) y entonces
+`http://145.223.79.221:9000` empezará a redirigir a `https://145.223.79.221:9000`, que no tiene
+certificado. Si quieres conservar el acceso por IP, deja de usarlo o publica también ese puerto
+por el dominio.

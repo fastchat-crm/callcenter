@@ -1,4 +1,6 @@
 credenciales.json
+# Cualquier respaldo también: llevan las mismas claves dentro.
+credenciales.json.*
 *.pyc
 __pycache__/
 venv/
