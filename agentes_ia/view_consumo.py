@@ -17,7 +17,7 @@ RANGOS = ((7, 'Últimos 7 días'), (30, 'Últimos 30 días'), (90, 'Últimos 90 
 
 @secure_module
 def consumo_view(request):
-    data = {'titulo': 'Consumo de IA', 'modulo': 'Configuración de voz'}
+    data = {'titulo': 'Consumo de IA', 'modulo': 'Centro de voz e IA'}
     addData(request, data)
 
     try:

@@ -13,6 +13,14 @@ def extraer_texto(ruta: str) -> str:
     extension = os.path.splitext(ruta)[1].lower()
     if extension in ('.txt', '.md', '.csv'):
         return _leer_plano(ruta)
+
+    # Tika primero cuando está configurado: entiende más formatos y saca mejor
+    # el texto de PDF escaneados o con maquetación rara que pypdf. Si no
+    # responde, se sigue con los extractores locales en vez de fallar.
+    texto = _leer_con_tika(ruta)
+    if texto:
+        return texto
+
     if extension == '.pdf':
         return _leer_pdf(ruta)
     if extension in ('.docx',):
@@ -21,6 +29,34 @@ def extraer_texto(ruta: str) -> str:
         return _leer_html(ruta)
     logger.warning('[rag] formato no soportado: %s', extension)
     return ''
+
+
+def _leer_con_tika(ruta):
+    """Texto según Apache Tika, o cadena vacía si no está configurado o falla."""
+    try:
+        import requests
+
+        from core.models import Configuracion
+
+        configuracion = Configuracion.get_instancia()
+        if not configuracion.tika_activo:
+            return ''
+        url = (configuracion.tika_url or '').strip().rstrip('/')
+        if not url:
+            logger.warning('[rag] Tika está activo pero sin URL configurada')
+            return ''
+
+        with open(ruta, 'rb') as archivo:
+            respuesta = requests.put(f'{url}/tika', data=archivo,
+                                     headers={'Accept': 'text/plain'}, timeout=60)
+        if respuesta.status_code >= 400:
+            logger.warning('[rag] Tika respondió HTTP %s; se usan los extractores locales',
+                           respuesta.status_code)
+            return ''
+        return (respuesta.text or '').strip()
+    except Exception as ex:
+        logger.warning('[rag] Tika no respondió (%s); se usan los extractores locales', ex)
+        return ''
 
 
 def _leer_plano(ruta):

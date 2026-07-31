@@ -57,6 +57,13 @@ class Configuracion(ModeloBase):
     modelo_ia_interna = models.CharField(
         max_length=120, blank=True, null=True, verbose_name='Modelo del token global',
         help_text='Vacío usa el modelo por defecto del proveedor.')
+    tika_activo = models.BooleanField(
+        default=False, verbose_name='Usar Apache Tika',
+        help_text='Extrae el texto de los documentos al indexar la base de conocimiento. '
+                  'Apagado usa solo los extractores locales (pypdf, python-docx).')
+    tika_url = models.CharField(
+        max_length=200, blank=True, null=True, verbose_name='URL de Apache Tika',
+        help_text='Ejemplo: https://tika.tu-dominio.com. Se le agrega /tika al llamar.')
 
     class Meta:
         verbose_name = 'Configuración'

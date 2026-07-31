@@ -172,4 +172,33 @@
         </div>
     </div>
 </div>
+
+<div class="tarjeta mt-2">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">Servicios externos</div>
+            <div class="tarjeta-nota">De qué depende el sistema y si responde ahora mismo.</div>
+        </div>
+    </div>
+    <div class="tarjeta-cuerpo">
+        <div class="lista-datos">
+            {% for servicio in servicios %}
+                <div class="fila">
+                    <span>{{ servicio.nombre }}<div class="texto-tenue texto-pequeno">{{ servicio.detalle }}</div></span>
+                    {% if servicio.activo %}
+                        <span class="etiqueta etiqueta-exito">Responde</span>
+                    {% elif servicio.activo == None %}
+                        <span class="etiqueta">No se usa</span>
+                    {% elif servicio.requerido %}
+                        <span class="etiqueta etiqueta-peligro">Caído</span>
+                    {% else %}
+                        <span class="etiqueta etiqueta-alerta">No responde</span>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <div class="texto-tenue texto-pequeno">No se pudo consultar el estado.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
 {% endblock %}

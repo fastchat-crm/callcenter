@@ -34,6 +34,7 @@ def index_view(request):
     data['estado_motores'] = estado_motores()
     data['estado_rag'] = _estado_rag(request)
     data['estado_telefonia'] = _estado_telefonia()
+    data['servicios'] = _estado_servicios()
     data['numeros'] = acotar(
         NumeroTelefonico.objects.filter(status=True, activo=True), request
     ).select_related('flujo')[:8]
@@ -44,6 +45,17 @@ def index_view(request):
         .select_related('flujo').order_by('-fecha_inicio')[:8]
     )
     return render(request, 'panel/index.html', data)
+
+
+def _estado_servicios():
+    """Servicios externos. Consultarlos sale a la red, así que nunca debe
+    tumbar el tablero si uno no responde."""
+    from core.servicios import estado_servicios
+
+    try:
+        return estado_servicios()
+    except Exception:
+        return []
 
 
 def _estado_telefonia():

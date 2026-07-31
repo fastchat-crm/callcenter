@@ -1,25 +1,30 @@
 {% extends 'base.html' %}
 
 {% block contenido %}
+<div class="fila-flex entre mb-2">
+    <span class="texto-tenue texto-pequeno">Los indicadores se actualizan solos cada 5 segundos.</span>
+    <span class="etiqueta etiqueta-exito" id="latido"><span class="punto"></span>En vivo</span>
+</div>
+
 <div class="rejilla rejilla-4 mb-3">
     <div class="tarjeta indicador">
         <div class="indicador-etiqueta">Turnos de IA</div>
-        <div class="indicador-valor">{{ totales.turnos }}</div>
-        <div class="indicador-pie">{{ totales.fallidos }} con error</div>
+        <div class="indicador-valor" id="v-turnos">{{ totales.turnos }}</div>
+        <div class="indicador-pie"><span id="v-fallidos">{{ totales.fallidos }}</span> con error</div>
     </div>
     <div class="tarjeta indicador">
         <div class="indicador-etiqueta">Tokens consumidos</div>
-        <div class="indicador-valor">{{ totales.tokens_total }}</div>
-        <div class="indicador-pie">{{ totales.tokens_entrada }} entrada · {{ totales.tokens_salida }} salida</div>
+        <div class="indicador-valor" id="v-tokens">{{ totales.tokens_total }}</div>
+        <div class="indicador-pie"><span id="v-entrada">{{ totales.tokens_entrada }}</span> entrada · <span id="v-salida">{{ totales.tokens_salida }}</span> salida</div>
     </div>
     <div class="tarjeta indicador">
         <div class="indicador-etiqueta">Costo estimado</div>
-        <div class="indicador-valor">${{ totales.costo_usd }}</div>
+        <div class="indicador-valor">$<span id="v-costo">{{ totales.costo_usd }}</span></div>
         <div class="indicador-pie">Últimos {{ dias }} días</div>
     </div>
     <div class="tarjeta indicador">
         <div class="indicador-etiqueta">Latencia media</div>
-        <div class="indicador-valor">{{ totales.latencia_ms }}<span class="texto-tenue" style="font-size:1rem"> ms</span></div>
+        <div class="indicador-valor"><span id="v-latencia">{{ totales.latencia_ms }}</span><span class="texto-tenue" style="font-size:1rem"> ms</span></div>
         <div class="indicador-pie">Por turno del agente</div>
     </div>
 </div>
@@ -152,4 +157,39 @@
     </div>
     {% include 'componentes/paginacion.html' %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const PARAMS_CONSUMO = window.location.search.replace(/^\?/, '');
+
+function pintarConsumo() {
+    fetch('/agentes-ia/consumo/?action=datos' + (PARAMS_CONSUMO ? '&' + PARAMS_CONSUMO : ''))
+        .then((respuesta) => respuesta.json())
+        .then((datos) => {
+            const t = datos.totales || {};
+            const poner = (id, valor) => {
+                const nodo = document.getElementById(id);
+                if (nodo && valor !== undefined && String(valor) !== nodo.textContent) {
+                    nodo.textContent = valor;
+                    nodo.classList.add('valor-cambiado');
+                    window.setTimeout(() => nodo.classList.remove('valor-cambiado'), 900);
+                }
+            };
+            poner('v-turnos', t.turnos);
+            poner('v-fallidos', t.fallidos);
+            poner('v-tokens', t.tokens_total);
+            poner('v-entrada', t.tokens_entrada);
+            poner('v-salida', t.tokens_salida);
+            poner('v-costo', t.costo_usd);
+            poner('v-latencia', t.latencia_ms);
+            document.getElementById('latido').className = 'etiqueta etiqueta-exito';
+        })
+        .catch(() => {
+            document.getElementById('latido').className = 'etiqueta etiqueta-alerta';
+        });
+}
+pintarConsumo();
+window.setInterval(pintarConsumo, 5000);
+</script>
 {% endblock %}

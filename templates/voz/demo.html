@@ -1,41 +1,56 @@
 {% extends 'base.html' %}
 
 {% block contenido %}
-<div class="rejilla rejilla-2">
-    <div class="tarjeta">
-        <div class="tarjeta-encabezado">
-            <div>
-                <div class="tarjeta-titulo">Hablar con el agente</div>
-                <div class="tarjeta-nota">Mismo motor que la llamada telefónica, sin carrier ni costos.</div>
-            </div>
-            <span class="etiqueta" id="estado-conexion">Desconectado</span>
-        </div>
+<div id="aviso-inseguro" class="aviso aviso-error mb-2 oculto">
+    <strong>El micrófono no está disponible por esta dirección.</strong>
+    Los navegadores solo lo entregan en conexiones seguras.
+    Abre <a id="enlace-seguro" href="#">la versión con HTTPS</a> para usar el demo.
+</div>
+
+<div class="demo">
+    <div class="tarjeta demo-voz">
         <div class="tarjeta-cuerpo">
-            <div class="grupo-campo">
+            <div class="orbe" id="orbe">
+                <span class="orbe-onda"></span>
+                <span class="orbe-onda"></span>
+                <span class="orbe-nucleo">
+                    <svg class="ico ico-grande"><use href="#ico-microfono"></use></svg>
+                </span>
+            </div>
+
+            <div class="demo-estado" id="estado">Listo para empezar</div>
+            <div class="demo-pista texto-tenue texto-pequeno" id="pista">
+                Elige el flujo y pulsa Iniciar. Permite el micrófono cuando el navegador lo pida.
+            </div>
+
+            <div class="grupo-campo demo-flujo">
                 <label for="flujo">Flujo IVR</label>
-                <select class="campo-select" id="flujo">
+                <select class="campo campo-select" id="flujo">
                     <option value="">Sin flujo (conversación libre con la IA)</option>
                     {% for flujo in flujos %}
                         <option value="{{ flujo.id }}">{{ flujo.nombre }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="fila-flex">
+
+            <div class="fila-flex demo-botones">
                 <button class="boton boton-primario" id="conectar" type="button">Iniciar llamada</button>
-                <button class="boton" id="colgar" type="button" disabled>Colgar</button>
-                <button class="boton boton-sutil" id="fin-turno" type="button" disabled>Terminé de hablar</button>
+                <button class="boton" id="fin-turno" type="button" disabled>Terminé de hablar</button>
+                <button class="boton boton-peligro" id="colgar" type="button" disabled>Colgar</button>
             </div>
-            <div class="medidor mt-2"><span id="nivel" style="width:0"></span></div>
-            <div class="texto-tenue texto-pequeno mt-1" id="pista">Permite el micrófono cuando el navegador lo solicite.</div>
         </div>
     </div>
 
-    <div class="tarjeta">
-        <div class="tarjeta-encabezado"><div class="tarjeta-titulo">Conversación</div></div>
-        <div class="tarjeta-cuerpo">
-            <div class="conversacion" id="conversacion">
-                <div class="texto-tenue texto-pequeno">Aún no hay turnos. Inicia la llamada y habla con normalidad.</div>
+    <div class="tarjeta demo-transcripcion">
+        <div class="tarjeta-encabezado">
+            <div>
+                <div class="tarjeta-titulo">Transcripción en vivo</div>
+                <div class="tarjeta-nota">Lo que el motor entiende y lo que responde, turno por turno.</div>
             </div>
+            <span class="etiqueta" id="cronometro">0:00</span>
+        </div>
+        <div class="tarjeta-cuerpo conversacion" id="conversacion">
+            <div class="vacio"><strong>Sin turnos todavía</strong>Inicia la llamada y habla con normalidad.</div>
         </div>
     </div>
 </div>
@@ -44,66 +59,130 @@
 {% block scripts %}
 <script>
 const URL_WS = '{{ url_websocket }}';
-let socket = null;
-let contexto = null;
-let fuente = null;
-let procesador = null;
-let flujoAudio = null;
-let reproduciendo = 0;
+let socket = null, contexto = null, fuente = null, procesador = null, flujoAudio = null;
+let reproduciendo = 0, inicio = 0, cronometro = null;
 
-function pintarTurno(rol, texto, meta) {
-    const contenedor = document.getElementById('conversacion');
-    if (contenedor.querySelector('.texto-tenue')) contenedor.innerHTML = '';
-    const fila = document.createElement('div');
-    fila.className = 'turno turno-' + rol;
-    fila.innerHTML = `<div class="turno-avatar">${rol === 'ia' ? 'IA' : 'CL'}</div>
-        <div><div class="turno-burbuja">${texto}</div>${meta ? `<div class="turno-meta">${meta}</div>` : ''}</div>`;
-    contenedor.appendChild(fila);
-    contenedor.scrollTop = contenedor.scrollHeight;
-}
+const orbe = document.getElementById('orbe');
+const conversacion = document.getElementById('conversacion');
 
 function estado(texto, clase) {
-    const nodo = document.getElementById('estado-conexion');
-    nodo.textContent = texto;
-    nodo.className = 'etiqueta ' + (clase || '');
+    document.getElementById('estado').textContent = texto;
+    orbe.className = 'orbe ' + (clase || '');
+}
+
+function pista(texto) {
+    document.getElementById('pista').textContent = texto;
+}
+
+function hora() {
+    return new Date().toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function escapar(texto) {
+    const caja = document.createElement('div');
+    caja.textContent = texto || '';
+    return caja.innerHTML;
+}
+
+function pintarTurno(rol, texto, meta) {
+    if (conversacion.querySelector('.vacio')) conversacion.innerHTML = '';
+    const fila = document.createElement('div');
+    fila.className = 'turno';
+    fila.innerHTML = `
+        <span class="etiqueta ${rol === 'ia' ? 'etiqueta-info' : 'etiqueta-acento'}">${rol === 'ia' ? 'IA' : 'Tú'}</span>
+        <div class="turno-burbuja">${escapar(texto)}
+            <div class="texto-tenue texto-pequeno">${hora()}${meta ? ' · ' + escapar(meta) : ''}</div>
+        </div>`;
+    conversacion.appendChild(fila);
+    conversacion.scrollTop = conversacion.scrollHeight;
+}
+
+function fallo(mensaje) {
+    estado('No se pudo iniciar', 'orbe-error');
+    pista(mensaje);
+    if (window.App && App.aviso) App.aviso(mensaje, 'error');
+}
+
+function arrancarCronometro() {
+    inicio = Date.now();
+    cronometro = window.setInterval(() => {
+        const s = Math.floor((Date.now() - inicio) / 1000);
+        document.getElementById('cronometro').textContent =
+            Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+    }, 1000);
+}
+
+function hayMicrofono() {
+    return window.isSecureContext && navigator.mediaDevices && navigator.mediaDevices.getUserMedia;
 }
 
 async function conectar() {
+    if (!hayMicrofono()) {
+        fallo('El navegador no entrega el micrófono en conexiones sin HTTPS.');
+        document.getElementById('aviso-inseguro').classList.remove('oculto');
+        return;
+    }
+    document.getElementById('conectar').disabled = true;
+    estado('Conectando…', 'orbe-esperando');
+    try {
+        await iniciarMicrofono();
+    } catch (error) {
+        document.getElementById('conectar').disabled = false;
+        fallo('No se pudo abrir el micrófono: ' + (error && error.name ? error.name : error));
+        return;
+    }
+    abrirSocket();
+}
+
+function abrirSocket() {
     const flujo = document.getElementById('flujo').value;
     socket = new WebSocket(URL_WS + (flujo ? '?flujo_id=' + flujo : ''));
     socket.binaryType = 'arraybuffer';
 
     socket.onopen = () => {
-        estado('Conectado', 'etiqueta-exito');
+        estado('Escuchando', 'orbe-escuchando');
+        pista('Habla con normalidad. Cuando te detengas, el motor procesa el turno.');
         document.getElementById('colgar').disabled = false;
         document.getElementById('fin-turno').disabled = false;
-        document.getElementById('conectar').disabled = true;
+        arrancarCronometro();
         socket.send(JSON.stringify({ event: 'iniciar_conversacion' }));
     };
+
+    socket.onerror = () => fallo('Se perdió la conexión con el motor de voz.');
 
     socket.onmessage = (evento) => {
         if (typeof evento.data !== 'string') { reproducirPcm(evento.data); return; }
         const datos = JSON.parse(evento.data);
         if (datos.event === 'transcript') pintarTurno('cliente', datos.texto);
-        if (datos.event === 'reply') pintarTurno('ia', datos.texto, datos.latencia_ms ? datos.latencia_ms + ' ms' : '');
-        if (datos.event === 'transferencia') pintarTurno('ia', 'Transfiriendo con ' + datos.asesor + ' (' + datos.destino + ')');
+        if (datos.event === 'reply') {
+            pintarTurno('ia', datos.texto, datos.latencia_ms ? datos.latencia_ms + ' ms' : '');
+            estado('Respondiendo', 'orbe-hablando');
+        }
+        if (datos.event === 'transferencia') {
+            pintarTurno('ia', 'Transfiriendo con ' + datos.asesor + ' (' + datos.destino + ')');
+        }
         if (datos.event === 'fin_llamada') colgar();
-        if (datos.event === 'vad') document.getElementById('pista').textContent = datos.hablando ? 'Escuchando…' : 'Procesando turno…';
+        if (datos.event === 'vad') {
+            estado(datos.hablando ? 'Escuchando' : 'Pensando', datos.hablando ? 'orbe-escuchando' : 'orbe-esperando');
+        }
     };
 
     socket.onclose = () => {
-        estado('Desconectado', '');
+        estado('Llamada terminada', '');
+        pista('Pulsa Iniciar para probar de nuevo.');
         document.getElementById('conectar').disabled = false;
         document.getElementById('colgar').disabled = true;
         document.getElementById('fin-turno').disabled = true;
+        window.clearInterval(cronometro);
     };
-
-    await iniciarMicrofono();
 }
 
 async function iniciarMicrofono() {
-    flujoAudio = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } });
+    flujoAudio = await navigator.mediaDevices.getUserMedia({
+        audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
+    });
     contexto = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+    if (contexto.state === 'suspended') await contexto.resume();
     fuente = contexto.createMediaStreamSource(flujoAudio);
     procesador = contexto.createScriptProcessor(1024, 1, 1);
     fuente.connect(procesador);
@@ -118,7 +197,7 @@ async function iniciarMicrofono() {
             pcm[i] = muestra < 0 ? muestra * 0x8000 : muestra * 0x7FFF;
             pico = Math.max(pico, Math.abs(muestra));
         }
-        document.getElementById('nivel').style.width = Math.min(100, pico * 160) + '%';
+        orbe.style.setProperty('--nivel', Math.min(1, pico * 2.2).toFixed(2));
         socket.send(pcm.buffer);
     };
 }
@@ -144,13 +223,22 @@ function colgar() {
     if (fuente) fuente.disconnect();
     if (flujoAudio) flujoAudio.getTracks().forEach((pista) => pista.stop());
     if (socket) socket.close();
-    document.getElementById('nivel').style.width = '0';
+    orbe.style.setProperty('--nivel', 0);
 }
 
 document.getElementById('conectar').addEventListener('click', conectar);
 document.getElementById('colgar').addEventListener('click', colgar);
 document.getElementById('fin-turno').addEventListener('click', () => {
     if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ event: 'fin_turno' }));
+    estado('Pensando', 'orbe-esperando');
 });
+
+if (!hayMicrofono()) {
+    const aviso = document.getElementById('aviso-inseguro');
+    aviso.classList.remove('oculto');
+    document.getElementById('enlace-seguro').href =
+        'https://' + window.location.hostname + window.location.pathname;
+    pista('Esta dirección no permite usar el micrófono.');
+}
 </script>
 {% endblock %}
