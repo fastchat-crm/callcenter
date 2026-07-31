@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="tarjeta mb-3">
+    <div class="tarjeta-cuerpo">
+        <div class="tarjeta-titulo">Proveedores con capa gratuita</div>
+        <div class="texto-suave texto-pequeno mb-2">
+            Gemini (AI Studio) y Groq entregan cuota gratuita diaria; Ollama local corre en este mismo servidor sin costo ni salida de datos.
+        </div>
+        <div class="fila-flex">
+            {% for nombre in proveedores_gratuitos %}<span class="etiqueta etiqueta-exito">{{ nombre }}</span>{% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="tarjeta">
+    <div class="tarjeta-encabezado">
+        <div class="tarjeta-titulo">Llaves configuradas</div>
+        <button class="boton boton-primario" data-accion="add" data-titulo="Nueva llave">Nueva llave</button>
+    </div>
+    <div class="tarjeta-cuerpo">{% include 'componentes/buscador.html' with placeholder='Alias o modelo…' %}</div>
+    <div class="tabla-envoltura">
+        <table class="tabla">
+            <thead><tr><th>Alias</th><th>Proveedor</th><th>Modelo</th><th>Clave</th><th>Consumo</th><th>Estado</th><th class="celda-acciones">Acciones</th></tr></thead>
+            <tbody>
+            {% for filtro in listado %}
+                <tr>
+                    <td><strong>{{ filtro.alias }}</strong></td>
+                    <td>{{ filtro.get_proveedor_display }}</td>
+                    <td class="celda-mono">{{ filtro.modelo|default:"por defecto" }}</td>
+                    <td class="celda-mono texto-pequeno">{{ filtro.clave_enmascarada }}</td>
+                    <td class="texto-pequeno">{{ filtro.consumo_tokens_entrada }} in / {{ filtro.consumo_tokens_salida }} out</td>
+                    <td>
+                        {% if filtro.activo %}<span class="etiqueta etiqueta-exito">Activa</span>
+                        {% else %}<span class="etiqueta">Inactiva</span>{% endif %}
+                    </td>
+                    <td class="celda-acciones">
+                        <button class="boton boton-sm" onclick="probarLlave({{ filtro.id }})" type="button">Probar</button>
+                        <button class="boton boton-sm" data-accion="change" data-id="{{ filtro.id }}" data-titulo="Editar llave">Editar</button>
+                        <button class="boton boton-sm boton-peligro" data-accion="delete" data-id="{{ filtro.id }}"
+                                data-mensaje="¿Eliminar la llave {{ filtro.alias }}?">Eliminar</button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="7" class="vacio"><strong>Sin llaves registradas</strong>Con Ollama local ni siquiera necesitas una clave: deja el campo vacío.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'componentes/paginacion.html' %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function probarLlave(id) {
+    const cuerpo = new FormData();
+    cuerpo.append('action', 'probar');
+    cuerpo.append('id', id);
+    cuerpo.append('csrfmiddlewaretoken', App.token());
+    App.aviso('Probando conexión…', 'alerta');
+    fetch(window.location.pathname, { method: 'POST', body: cuerpo })
+        .then((respuesta) => respuesta.json())
+        .then((datos) => App.aviso(datos.message, datos.error ? 'error' : 'exito'));
+}
+</script>
+{% endblock %}

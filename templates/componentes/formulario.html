@@ -1,0 +1,28 @@
+<form data-ajax method="post" enctype="multipart/form-data" action="{{ accion_url|default:ruta }}">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="{% if filtro %}{{ accion_editar|default:'change' }}{% else %}{{ accion_crear|default:'add' }}{% endif %}">
+    {% if filtro %}<input type="hidden" name="pk" value="{{ filtro.pk }}">{% endif %}
+
+    <div class="rejilla-form">
+        {% for campo in form %}
+            {% if campo.field.widget.input_type == 'checkbox' %}
+                <div class="grupo-check">{{ campo }}<label for="{{ campo.id_for_label }}">{{ campo.label }}</label></div>
+            {% else %}
+                <div class="grupo-campo">
+                    <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                    {{ campo }}
+                    {% if campo.help_text %}<div class="ayuda">{{ campo.help_text }}</div>{% endif %}
+                    {% for error in campo.errors %}<div class="error">{{ error }}</div>{% endfor %}
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="fila-flex entre mt-2">
+        <span class="texto-tenue texto-pequeno">Los campos marcados son obligatorios.</span>
+        <div class="fila-flex">
+            <button class="boton" type="button" data-cerrar-modal>Cancelar</button>
+            <button class="boton boton-primario" type="submit">Guardar</button>
+        </div>
+    </div>
+</form>

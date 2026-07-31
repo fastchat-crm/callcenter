@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block head %}<link rel="stylesheet" href="/static/css/doc.css?v1.0">{% endblock %}
+
+{% block contenido %}
+<div class="doc-disposicion">
+    <nav class="tarjeta doc-indice">
+        <div class="tarjeta-cuerpo">
+            {% for grupo in indice %}
+                <div class="menu-grupo">
+                    <div class="menu-grupo-titulo">{{ grupo.grupo }}</div>
+                    {% for item in grupo.items %}
+                        <a class="doc-enlace {% if item.slug == slug_actual %}activo{% endif %}" href="/doc/{{ item.slug }}/">
+                            <span class="doc-enlace-titulo">{{ item.titulo }}</span>
+                            {% if item.descripcion %}<span class="doc-enlace-nota">{{ item.descripcion }}</span>{% endif %}
+                        </a>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+    </nav>
+
+    <article class="tarjeta">
+        <div class="tarjeta-encabezado">
+            <div>
+                <div class="tarjeta-titulo">{{ titulo_documento }}</div>
+                <div class="tarjeta-nota texto-mono">docs/{{ archivo }}</div>
+            </div>
+        </div>
+        <div class="tarjeta-cuerpo doc-contenido">
+            {{ contenido }}
+        </div>
+    </article>
+</div>
+{% endblock %}

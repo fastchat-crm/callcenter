@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="tarjeta">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">Llamadas en curso</div>
+            <div class="tarjeta-nota">Se actualiza cada 4 segundos.</div>
+        </div>
+        <span class="etiqueta etiqueta-exito" id="contador"><span class="punto"></span>0 activas</span>
+    </div>
+    <div class="tabla-envoltura">
+        <table class="tabla">
+            <thead><tr><th>Inicio</th><th>Origen</th><th>Flujo</th><th>Paso</th><th>Último turno</th><th>Estado</th></tr></thead>
+            <tbody id="cuerpo-monitor">
+                <tr><td colspan="6" class="vacio">Cargando…</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function pintarMonitor() {
+    fetch('/llamadas/monitor/?action=datos')
+        .then((respuesta) => respuesta.json())
+        .then((datos) => {
+            const cuerpo = document.getElementById('cuerpo-monitor');
+            const llamadas = datos.llamadas || [];
+            document.getElementById('contador').innerHTML =
+                '<span class="punto"></span>' + llamadas.length + ' activa' + (llamadas.length === 1 ? '' : 's');
+            if (!llamadas.length) {
+                cuerpo.innerHTML = '<tr><td colspan="6" class="vacio"><strong>Ninguna llamada activa</strong>El motor está en espera.</td></tr>';
+                return;
+            }
+            cuerpo.innerHTML = llamadas.map((llamada) => `
+                <tr>
+                    <td class="texto-pequeno">${llamada.inicio}</td>
+                    <td class="celda-mono">${llamada.origen || '—'}</td>
+                    <td>${llamada.flujo || '—'}</td>
+                    <td><span class="etiqueta">${llamada.paso || '—'}</span></td>
+                    <td class="texto-suave">${llamada.ultimo_turno || ''}</td>
+                    <td><span class="etiqueta etiqueta-info">${llamada.estado}</span></td>
+                </tr>`).join('');
+        });
+}
+pintarMonitor();
+window.setInterval(pintarMonitor, 4000);
+</script>
+{% endblock %}

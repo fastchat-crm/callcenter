@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="tarjeta">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">{{ filtro.nombre }}</div>
+            <div class="tarjeta-nota">{{ filtro.fragmentos_indexados }} fragmentos indexados · {{ filtro.descripcion|default:"sin descripción" }}</div>
+        </div>
+        <div class="fila-flex">
+            <a class="boton boton-sm" href="/agentes-ia/conocimiento/">Volver</a>
+            <button class="boton boton-primario boton-sm" data-accion="add_documento" data-id="{{ filtro.id }}" data-titulo="Cargar documento">Cargar documento</button>
+        </div>
+    </div>
+    <div class="tarjeta-cuerpo">
+        <div class="grupo-campo">
+            <label for="consulta">Probar búsqueda semántica</label>
+            <div class="fila-flex">
+                <input class="campo" id="consulta" placeholder="¿Cuánto cuesta el plan empresarial?" style="flex:1">
+                <button class="boton" type="button" onclick="buscarRag({{ filtro.id }})">Buscar</button>
+            </div>
+        </div>
+        <div id="resultados-rag"></div>
+    </div>
+    <div class="tabla-envoltura">
+        <table class="tabla">
+            <thead><tr><th>Documento</th><th>Archivo</th><th>Caracteres</th><th class="celda-acciones">Acciones</th></tr></thead>
+            <tbody>
+            {% for documento in documentos %}
+                <tr>
+                    <td><strong>{{ documento.titulo }}</strong></td>
+                    <td class="texto-pequeno">{% if documento.archivo %}<a href="{{ documento.archivo.url }}">descargar</a>{% else %}texto directo{% endif %}</td>
+                    <td>{{ documento.contenido|length }}</td>
+                    <td class="celda-acciones">
+                        <button class="boton boton-sm boton-peligro" data-accion="delete_documento" data-id="{{ documento.id }}"
+                                data-mensaje="¿Eliminar el documento {{ documento.titulo }}?">Eliminar</button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="4" class="vacio"><strong>Colección vacía</strong>Sube el primer documento para alimentar al agente.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function buscarRag(id) {
+    const cuerpo = new FormData();
+    cuerpo.append('action', 'buscar');
+    cuerpo.append('id', id);
+    cuerpo.append('consulta', document.getElementById('consulta').value);
+    cuerpo.append('csrfmiddlewaretoken', App.token());
+    fetch('/agentes-ia/conocimiento/', { method: 'POST', body: cuerpo })
+        .then((respuesta) => respuesta.json())
+        .then((datos) => {
+            const contenedor = document.getElementById('resultados-rag');
+            const resultados = datos.resultados || [];
+            if (!resultados.length) {
+                contenedor.innerHTML = '<p class="texto-tenue texto-pequeno">Sin coincidencias. ¿Ya indexaste la colección?</p>';
+                return;
+            }
+            contenedor.innerHTML = resultados.map((item) =>
+                `<div class="turno-burbuja mb-1" style="max-width:100%">
+                    <div class="texto-tenue texto-pequeno">${item.titulo} · similitud ${item.similitud.toFixed(2)}</div>
+                    ${item.texto}
+                 </div>`).join('');
+        });
+}
+</script>
+{% endblock %}

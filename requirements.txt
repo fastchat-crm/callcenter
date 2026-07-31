@@ -1,0 +1,42 @@
+# ---------------------------------------------------------------
+# Núcleo — imprescindible para levantar el panel y el motor IVR
+# ---------------------------------------------------------------
+Django==4.2.15
+channels==4.2.2
+channels-redis==4.2.0
+daphne==4.1.2
+psycopg2-binary==2.9.9
+redis==5.0.8
+requests==2.32.3
+Pillow==10.4.0
+python-dateutil==2.9.0.post0
+# audioop salió de la biblioteca estándar en Python 3.13; en 3.11/3.12 no hace falta
+audioop-lts==0.2.1; python_version >= "3.13"
+
+# ---------------------------------------------------------------
+# Voz — reconocimiento y síntesis, todo gratuito y local
+# ---------------------------------------------------------------
+faster-whisper==1.0.3
+piper-tts==1.2.0
+# Alternativas de TTS sin costo:
+#   espeak-ng   → apt install espeak-ng   (no requiere paquete pip)
+#   edge-tts    → voces neuronales gratuitas de Microsoft
+edge-tts==6.1.12
+
+# ---------------------------------------------------------------
+# RAG — embeddings locales, sin costo por API
+# ---------------------------------------------------------------
+sentence-transformers==3.0.1
+numpy==1.26.4
+
+# ---------------------------------------------------------------
+# Lectura de documentos para la base de conocimiento (opcional)
+# ---------------------------------------------------------------
+pypdf==4.3.1
+python-docx==1.1.2
+
+# ---------------------------------------------------------------
+# Opcionales
+# ---------------------------------------------------------------
+# vosk==0.3.45          # STT alternativo, más liviano que Whisper
+# gunicorn==22.0.0      # solo si se sirve WSGI aparte del ASGI

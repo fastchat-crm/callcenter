@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="tarjeta">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">Agentes IA</div>
+            <div class="tarjeta-nota">El cerebro de la llamada: responde con tu base de conocimiento y decide cuándo escalar.</div>
+        </div>
+        <button class="boton boton-primario" data-accion="add" data-titulo="Nuevo agente">Nuevo agente</button>
+    </div>
+    <div class="tarjeta-cuerpo">{% include 'componentes/buscador.html' with placeholder='Nombre del agente…' %}</div>
+    <div class="tabla-envoltura">
+        <table class="tabla">
+            <thead>
+            <tr><th>Agente</th><th>Proveedor</th><th>Conocimiento</th><th>Respuesta</th><th>Estado</th><th class="celda-acciones">Acciones</th></tr>
+            </thead>
+            <tbody>
+            {% for filtro in listado %}
+                <tr>
+                    <td><strong>{{ filtro.nombre }}</strong><div class="texto-tenue texto-pequeno">{{ filtro.descripcion|default:""|truncatechars:60 }}</div></td>
+                    <td>
+                        <span class="etiqueta etiqueta-acento">{{ filtro.apikey.get_proveedor_display }}</span>
+                        <div class="texto-tenue texto-pequeno celda-mono">{{ filtro.apikey.modelo|default:"modelo por defecto" }}</div>
+                    </td>
+                    <td>
+                        {% if filtro.coleccion %}
+                            {{ filtro.coleccion.nombre }}
+                            <div class="texto-tenue texto-pequeno">{{ filtro.coleccion.fragmentos_indexados }} fragmentos</div>
+                        {% else %}<span class="texto-tenue">sin RAG</span>{% endif %}
+                    </td>
+                    <td class="texto-pequeno">{{ filtro.maximo_oraciones }} oraciones · temp {{ filtro.temperatura }}</td>
+                    <td>
+                        {% if filtro.activo %}<span class="etiqueta etiqueta-exito">Activo</span>
+                        {% else %}<span class="etiqueta">Inactivo</span>{% endif %}
+                    </td>
+                    <td class="celda-acciones">
+                        <button class="boton boton-sm" onclick="probarAgente({{ filtro.id }})" type="button">Probar</button>
+                        <button class="boton boton-sm" data-accion="change" data-id="{{ filtro.id }}" data-titulo="Editar agente">Editar</button>
+                        <button class="boton boton-sm boton-peligro" data-accion="delete" data-id="{{ filtro.id }}"
+                                data-mensaje="¿Eliminar el agente {{ filtro.nombre }}?">Eliminar</button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="vacio"><strong>Sin agentes creados</strong>Crea una llave gratuita (Gemini, Groq u Ollama local) y luego tu primer agente.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'componentes/paginacion.html' %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function probarAgente(id) {
+    const pregunta = window.prompt('¿Qué le preguntamos al agente?', '¿Qué servicios ofrecen y cuánto cuestan?');
+    if (!pregunta) return;
+    const cuerpo = new FormData();
+    cuerpo.append('action', 'probar');
+    cuerpo.append('id', id);
+    cuerpo.append('pregunta', pregunta);
+    cuerpo.append('csrfmiddlewaretoken', App.token());
+    App.aviso('Consultando al agente…', 'alerta');
+    fetch(window.location.pathname, { method: 'POST', body: cuerpo })
+        .then((respuesta) => respuesta.json())
+        .then((datos) => {
+            if (datos.error) { App.aviso(datos.message || 'Falló la consulta.', 'error'); return; }
+            App.aviso(`${datos.respuesta}  (${datos.latencia_ms} ms · ${datos.modelo})`, 'exito');
+        });
+}
+</script>
+{% endblock %}

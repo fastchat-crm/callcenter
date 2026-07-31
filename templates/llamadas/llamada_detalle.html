@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="rejilla rejilla-3 mb-3">
+    <div class="tarjeta indicador">
+        <div class="indicador-etiqueta">Duración</div>
+        <div class="indicador-valor">{{ filtro.duracion_texto }}</div>
+        <div class="indicador-pie">{{ filtro.minutos }} minutos facturables</div>
+    </div>
+    <div class="tarjeta indicador">
+        <div class="indicador-etiqueta">Resultado</div>
+        <div class="indicador-valor" style="font-size:1.15rem">{{ filtro.get_resultado_display }}</div>
+        <div class="indicador-pie">Estado: {{ filtro.get_estado_display }}</div>
+    </div>
+    <div class="tarjeta indicador">
+        <div class="indicador-etiqueta">Latencia media</div>
+        <div class="indicador-valor">{{ filtro.latencia_promedio_ms }}<span class="texto-tenue" style="font-size:1rem"> ms</span></div>
+        <div class="indicador-pie">Agente: {{ filtro.agente_ia.nombre|default:"—" }}</div>
+    </div>
+</div>
+
+<div class="rejilla rejilla-2">
+    <div class="tarjeta">
+        <div class="tarjeta-encabezado">
+            <div class="tarjeta-titulo">Conversación</div>
+            <a class="boton boton-sm" href="/llamadas/listado/">Volver</a>
+        </div>
+        <div class="tarjeta-cuerpo">
+            <div class="conversacion">
+                {% for turno in turnos %}
+                    <div class="turno turno-{{ turno.rol }}">
+                        <div class="turno-avatar">{% if turno.rol == 'ia' %}IA{% elif turno.rol == 'cliente' %}CL{% else %}SY{% endif %}</div>
+                        <div>
+                            <div class="turno-burbuja">{{ turno.texto|default:"(sin texto)" }}</div>
+                            <div class="turno-meta">
+                                {{ turno.fecha|date:"H:i:s" }}
+                                {% if turno.paso_codigo %} · paso {{ turno.paso_codigo }}{% endif %}
+                                {% if turno.dtmf %} · tecla {{ turno.dtmf }}{% endif %}
+                                {% if turno.latencia_ms %} · {{ turno.latencia_ms }} ms{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="vacio"><strong>Sin turnos registrados</strong>La llamada no llegó a intercambiar audio.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <div class="tarjeta mb-2">
+            <div class="tarjeta-encabezado"><div class="tarjeta-titulo">Datos de la llamada</div></div>
+            <div class="tarjeta-cuerpo lista-datos">
+                <div class="fila"><span>Origen</span><span class="texto-mono">{{ filtro.numero_origen|default:"—" }}</span></div>
+                <div class="fila"><span>Destino</span><span class="texto-mono">{{ filtro.numero_destino|default:"—" }}</span></div>
+                <div class="fila"><span>País</span><span>{{ filtro.pais_iso|default:"—" }}</span></div>
+                <div class="fila"><span>Driver</span><span>{{ filtro.driver }}</span></div>
+                <div class="fila"><span>Flujo</span><span>{{ filtro.flujo.nombre|default:"—" }}</span></div>
+                <div class="fila"><span>Identificador carrier</span><span class="texto-mono texto-pequeno">{{ filtro.call_id|default:"—" }}</span></div>
+            </div>
+        </div>
+
+        <div class="tarjeta mb-2">
+            <div class="tarjeta-encabezado"><div class="tarjeta-titulo">Datos capturados</div></div>
+            <div class="tarjeta-cuerpo lista-datos">
+                {% for clave, valor in filtro.datos_capturados.items %}
+                    <div class="fila"><span>{{ clave }}</span><span>{{ valor }}</span></div>
+                {% empty %}
+                    <div class="texto-tenue texto-pequeno">El flujo no capturó variables en esta llamada.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if filtro.transferencias.exists %}
+        <div class="tarjeta">
+            <div class="tarjeta-encabezado"><div class="tarjeta-titulo">Transferencias</div></div>
+            <div class="tarjeta-cuerpo lista-datos">
+                {% for transferencia in filtro.transferencias.all %}
+                    <div class="fila">
+                        <span>{{ transferencia.asesor.nombre|default:transferencia.destino }}</span>
+                        <span class="etiqueta">{{ transferencia.get_estado_display }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

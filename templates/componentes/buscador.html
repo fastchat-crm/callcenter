@@ -1,0 +1,9 @@
+<form class="filtros" method="get">
+    <div>
+        <label class="texto-pequeno texto-tenue" for="criterio">Buscar</label>
+        <input class="campo" type="text" id="criterio" name="criterio" value="{{ criterio|default:'' }}"
+               placeholder="{{ placeholder|default:'Escribe para filtrar…' }}">
+    </div>
+    <button class="boton" type="submit">Filtrar</button>
+    {% if criterio %}<a class="boton boton-sutil" href="{{ ruta }}">Limpiar</a>{% endif %}
+</form>

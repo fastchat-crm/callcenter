@@ -1,0 +1,14 @@
+{% if paginator.num_pages > 1 or total_registros %}
+<div class="paginacion">
+    <div>{{ total_registros }} registro{{ total_registros|pluralize:"s" }} · página {{ page_obj.number }} de {{ paginator.num_pages }}</div>
+    <div class="paginacion-enlaces">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{{ url_vars }}">Anterior</a>
+        {% endif %}
+        <span class="actual">{{ page_obj.number }}</span>
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{{ url_vars }}">Siguiente</a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}

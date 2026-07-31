@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="rejilla rejilla-4 mb-3">
+    <div class="tarjeta indicador">
+        <div class="indicador-etiqueta">Turnos de IA</div>
+        <div class="indicador-valor">{{ totales.turnos }}</div>
+        <div class="indicador-pie">{{ totales.fallidos }} con error</div>
+    </div>
+    <div class="tarjeta indicador">
+        <div class="indicador-etiqueta">Tokens consumidos</div>
+        <div class="indicador-valor">{{ totales.tokens_total }}</div>
+        <div class="indicador-pie">{{ totales.tokens_entrada }} entrada · {{ totales.tokens_salida }} salida</div>
+    </div>
+    <div class="tarjeta indicador">
+        <div class="indicador-etiqueta">Costo estimado</div>
+        <div class="indicador-valor">${{ totales.costo_usd }}</div>
+        <div class="indicador-pie">Últimos {{ dias }} días</div>
+    </div>
+    <div class="tarjeta indicador">
+        <div class="indicador-etiqueta">Latencia media</div>
+        <div class="indicador-valor">{{ totales.latencia_ms }}<span class="texto-tenue" style="font-size:1rem"> ms</span></div>
+        <div class="indicador-pie">Por turno del agente</div>
+    </div>
+</div>
+
+<div class="tarjeta mb-3">
+    <div class="tarjeta-cuerpo">
+        <form class="filtros" method="get">
+            <div>
+                <label class="texto-pequeno texto-tenue" for="dias">Rango</label>
+                <select class="campo-select" name="dias" id="dias">
+                    {% for valor, etiqueta in rangos %}
+                        <option value="{{ valor }}" {% if dias == valor %}selected{% endif %}>{{ etiqueta }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="texto-pequeno texto-tenue" for="agente">Agente</label>
+                <select class="campo-select" name="agente" id="agente">
+                    <option value="">Todos</option>
+                    {% for item in agentes %}
+                        <option value="{{ item.id }}" {% if agente_id == item.id %}selected{% endif %}>{{ item.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="grupo-check" style="margin:0 0 0 .3rem">
+                <input class="campo-check" type="checkbox" name="errores" value="1" id="errores"
+                       {% if solo_errores %}checked{% endif %}>
+                <label for="errores">Solo con error</label>
+            </div>
+            <button class="boton" type="submit">Filtrar</button>
+            <a class="boton boton-sutil" href="/agentes-ia/consumo/">Limpiar</a>
+        </form>
+    </div>
+</div>
+
+<div class="rejilla rejilla-2 mb-3">
+    <div class="tarjeta">
+        <div class="tarjeta-encabezado">
+            <div class="tarjeta-titulo">Por modelo</div>
+            <span class="tarjeta-nota">Costo estimado según tarifario público</span>
+        </div>
+        <div class="tabla-envoltura">
+            <table class="tabla">
+                <thead><tr><th>Modelo</th><th>Proveedor</th><th>Turnos</th><th>Tokens</th><th>Latencia</th><th>Costo</th></tr></thead>
+                <tbody>
+                {% for fila in por_modelo %}
+                    <tr>
+                        <td class="celda-mono">{{ fila.modelo }}</td>
+                        <td><span class="etiqueta etiqueta-acento">{{ fila.proveedor }}</span></td>
+                        <td>{{ fila.turnos }}</td>
+                        <td>{{ fila.total }}</td>
+                        <td>{{ fila.latencia_ms }} ms</td>
+                        <td class="celda-mono">${{ fila.costo_usd|floatformat:4 }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="6" class="vacio"><strong>Sin consumo en el rango</strong>Prueba un agente para generar el primer turno.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="tarjeta">
+        <div class="tarjeta-encabezado"><div class="tarjeta-titulo">Por agente</div></div>
+        <div class="tabla-envoltura">
+            <table class="tabla">
+                <thead><tr><th>Agente</th><th>Turnos</th><th>Tokens</th><th>Latencia</th><th>Costo</th></tr></thead>
+                <tbody>
+                {% for fila in por_agente %}
+                    <tr>
+                        <td>{{ fila.agente }}</td>
+                        <td>{{ fila.turnos }}</td>
+                        <td>{{ fila.total }}</td>
+                        <td>{{ fila.latencia_ms }} ms</td>
+                        <td class="celda-mono">${{ fila.costo_usd|floatformat:4 }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="5" class="vacio">Sin datos.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if serie %}
+<div class="tarjeta mb-3">
+    <div class="tarjeta-encabezado"><div class="tarjeta-titulo">Turnos por día</div></div>
+    <div class="tarjeta-cuerpo">
+        <div class="barras">
+            {% for punto in serie %}
+                <div class="barra" style="height: {% widthratio punto.turnos maximo_serie 100 %}%"
+                     title="{{ punto.dia }}: {{ punto.turnos }} turnos · ${{ punto.costo }}"></div>
+            {% endfor %}
+        </div>
+        <div class="barras-ejes">
+            <span>{{ serie.0.dia }}</span>
+            <span>{{ serie|last }}</span>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="tarjeta">
+    <div class="tarjeta-encabezado"><div class="tarjeta-titulo">Detalle de turnos</div></div>
+    <div class="tabla-envoltura">
+        <table class="tabla">
+            <thead><tr><th>Fecha</th><th>Agente</th><th>Modelo</th><th>Llamada</th><th>Tokens</th><th>Latencia</th><th>Costo</th><th>Estado</th></tr></thead>
+            <tbody>
+            {% for filtro in listado %}
+                <tr>
+                    <td class="texto-pequeno">{{ filtro.fecha|date:"d/m H:i:s" }}</td>
+                    <td>{{ filtro.agente.nombre }}</td>
+                    <td class="celda-mono texto-pequeno">{{ filtro.modelo|default:"—" }}</td>
+                    <td>{% if filtro.llamada_id %}<a href="/llamadas/listado/?action=ver&id={{ filtro.llamada_id }}">#{{ filtro.llamada_id }}</a>{% else %}<span class="texto-tenue">prueba</span>{% endif %}</td>
+                    <td class="texto-pequeno">{{ filtro.tokens_entrada }} / {{ filtro.tokens_salida }}</td>
+                    <td>{{ filtro.latencia_ms }} ms</td>
+                    <td class="celda-mono">${{ filtro.costo_usd|floatformat:6 }}</td>
+                    <td>
+                        {% if filtro.error %}<span class="etiqueta etiqueta-peligro" title="{{ filtro.error }}">Error</span>
+                        {% elif filtro.uso_rag %}<span class="etiqueta etiqueta-exito">Con RAG</span>
+                        {% else %}<span class="etiqueta">Sin RAG</span>{% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="8" class="vacio"><strong>Sin turnos registrados</strong>El consumo aparece apenas un agente responde.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'componentes/paginacion.html' %}
+</div>
+{% endblock %}

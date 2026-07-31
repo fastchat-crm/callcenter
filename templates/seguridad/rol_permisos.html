@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<form method="post">
+    {% csrf_token %}
+    <div class="tarjeta">
+        <div class="tarjeta-encabezado">
+            <div>
+                <div class="tarjeta-titulo">{{ filtro.group.name }}</div>
+                <div class="tarjeta-nota">{{ filtro.total_usuarios }} usuario{{ filtro.total_usuarios|pluralize:"s" }} con este rol · marca los módulos que puede abrir</div>
+            </div>
+            <div class="fila-flex">
+                <a class="boton boton-sm" href="/seguridad/roles/">Volver</a>
+                <button class="boton boton-primario" type="submit">Guardar permisos</button>
+            </div>
+        </div>
+        <div class="tarjeta-cuerpo">
+            <div class="fila-flex mb-2">
+                <button class="boton boton-sm" type="button" onclick="marcarTodo(true)">Marcar todo</button>
+                <button class="boton boton-sm" type="button" onclick="marcarTodo(false)">Desmarcar todo</button>
+            </div>
+
+            {% for seccion in secciones %}
+                <h3>{{ seccion.nombre }}</h3>
+                <div class="rejilla rejilla-3 mb-2">
+                    {% for item in seccion.modulos %}
+                        <label class="permiso">
+                            <input type="checkbox" class="campo-check" name="modulos" value="{{ item.obj.id }}"
+                                   {% if item.marcado %}checked{% endif %}>
+                            <span>
+                                <strong>{{ item.obj.nombre }}</strong>
+                                <span class="texto-tenue texto-pequeno celda-mono">{{ item.obj.url }}</span>
+                            </span>
+                        </label>
+                    {% endfor %}
+                </div>
+            {% empty %}
+                <div class="vacio">
+                    <strong>No hay módulos registrados</strong>
+                    Ve a <a href="/seguridad/modulos/">Módulos del sistema</a> y usa «Sincronizar con las URLs».
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block head %}
+<style>
+.permiso { display: flex; gap: .6rem; align-items: flex-start; padding: .55rem .7rem;
+    border: 1px solid var(--borde); border-radius: var(--radio-sm); background: var(--fondo-elevado); cursor: pointer; }
+.permiso:hover { border-color: var(--primario); }
+.permiso span { display: flex; flex-direction: column; }
+.permiso strong { font-size: .87rem; font-weight: 600; }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function marcarTodo(valor) {
+    document.querySelectorAll('input[name=modulos]').forEach((casilla) => { casilla.checked = valor; });
+}
+</script>
+{% endblock %}

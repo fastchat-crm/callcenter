@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="rejilla rejilla-2">
+    <div class="tarjeta">
+        <div class="tarjeta-encabezado">
+            <div>
+                <div class="tarjeta-titulo">Hablar con el agente</div>
+                <div class="tarjeta-nota">Mismo motor que la llamada telefónica, sin carrier ni costos.</div>
+            </div>
+            <span class="etiqueta" id="estado-conexion">Desconectado</span>
+        </div>
+        <div class="tarjeta-cuerpo">
+            <div class="grupo-campo">
+                <label for="flujo">Flujo IVR</label>
+                <select class="campo-select" id="flujo">
+                    <option value="">Sin flujo (conversación libre con la IA)</option>
+                    {% for flujo in flujos %}
+                        <option value="{{ flujo.id }}">{{ flujo.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="fila-flex">
+                <button class="boton boton-primario" id="conectar" type="button">Iniciar llamada</button>
+                <button class="boton" id="colgar" type="button" disabled>Colgar</button>
+                <button class="boton boton-sutil" id="fin-turno" type="button" disabled>Terminé de hablar</button>
+            </div>
+            <div class="medidor mt-2"><span id="nivel" style="width:0"></span></div>
+            <div class="texto-tenue texto-pequeno mt-1" id="pista">Permite el micrófono cuando el navegador lo solicite.</div>
+        </div>
+    </div>
+
+    <div class="tarjeta">
+        <div class="tarjeta-encabezado"><div class="tarjeta-titulo">Conversación</div></div>
+        <div class="tarjeta-cuerpo">
+            <div class="conversacion" id="conversacion">
+                <div class="texto-tenue texto-pequeno">Aún no hay turnos. Inicia la llamada y habla con normalidad.</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const URL_WS = '{{ url_websocket }}';
+let socket = null;
+let contexto = null;
+let fuente = null;
+let procesador = null;
+let flujoAudio = null;
+let reproduciendo = 0;
+
+function pintarTurno(rol, texto, meta) {
+    const contenedor = document.getElementById('conversacion');
+    if (contenedor.querySelector('.texto-tenue')) contenedor.innerHTML = '';
+    const fila = document.createElement('div');
+    fila.className = 'turno turno-' + rol;
+    fila.innerHTML = `<div class="turno-avatar">${rol === 'ia' ? 'IA' : 'CL'}</div>
+        <div><div class="turno-burbuja">${texto}</div>${meta ? `<div class="turno-meta">${meta}</div>` : ''}</div>`;
+    contenedor.appendChild(fila);
+    contenedor.scrollTop = contenedor.scrollHeight;
+}
+
+function estado(texto, clase) {
+    const nodo = document.getElementById('estado-conexion');
+    nodo.textContent = texto;
+    nodo.className = 'etiqueta ' + (clase || '');
+}
+
+async function conectar() {
+    const flujo = document.getElementById('flujo').value;
+    socket = new WebSocket(URL_WS + (flujo ? '?flujo_id=' + flujo : ''));
+    socket.binaryType = 'arraybuffer';
+
+    socket.onopen = () => {
+        estado('Conectado', 'etiqueta-exito');
+        document.getElementById('colgar').disabled = false;
+        document.getElementById('fin-turno').disabled = false;
+        document.getElementById('conectar').disabled = true;
+        socket.send(JSON.stringify({ event: 'iniciar_conversacion' }));
+    };
+
+    socket.onmessage = (evento) => {
+        if (typeof evento.data !== 'string') { reproducirPcm(evento.data); return; }
+        const datos = JSON.parse(evento.data);
+        if (datos.event === 'transcript') pintarTurno('cliente', datos.texto);
+        if (datos.event === 'reply') pintarTurno('ia', datos.texto, datos.latencia_ms ? datos.latencia_ms + ' ms' : '');
+        if (datos.event === 'transferencia') pintarTurno('ia', 'Transfiriendo con ' + datos.asesor + ' (' + datos.destino + ')');
+        if (datos.event === 'fin_llamada') colgar();
+        if (datos.event === 'vad') document.getElementById('pista').textContent = datos.hablando ? 'Escuchando…' : 'Procesando turno…';
+    };
+
+    socket.onclose = () => {
+        estado('Desconectado', '');
+        document.getElementById('conectar').disabled = false;
+        document.getElementById('colgar').disabled = true;
+        document.getElementById('fin-turno').disabled = true;
+    };
+
+    await iniciarMicrofono();
+}
+
+async function iniciarMicrofono() {
+    flujoAudio = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } });
+    contexto = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+    fuente = contexto.createMediaStreamSource(flujoAudio);
+    procesador = contexto.createScriptProcessor(1024, 1, 1);
+    fuente.connect(procesador);
+    procesador.connect(contexto.destination);
+    procesador.onaudioprocess = (evento) => {
+        if (!socket || socket.readyState !== WebSocket.OPEN) return;
+        const entrada = evento.inputBuffer.getChannelData(0);
+        const pcm = new Int16Array(entrada.length);
+        let pico = 0;
+        for (let i = 0; i < entrada.length; i++) {
+            const muestra = Math.max(-1, Math.min(1, entrada[i]));
+            pcm[i] = muestra < 0 ? muestra * 0x8000 : muestra * 0x7FFF;
+            pico = Math.max(pico, Math.abs(muestra));
+        }
+        document.getElementById('nivel').style.width = Math.min(100, pico * 160) + '%';
+        socket.send(pcm.buffer);
+    };
+}
+
+function reproducirPcm(buffer) {
+    if (!contexto) return;
+    const pcm = new Int16Array(buffer);
+    const audio = contexto.createBuffer(1, pcm.length, 16000);
+    const canal = audio.getChannelData(0);
+    for (let i = 0; i < pcm.length; i++) canal[i] = pcm[i] / 0x8000;
+    const nodo = contexto.createBufferSource();
+    nodo.buffer = audio;
+    nodo.connect(contexto.destination);
+    const ahora = contexto.currentTime;
+    if (reproduciendo < ahora) reproduciendo = ahora;
+    nodo.start(reproduciendo);
+    reproduciendo += audio.duration;
+}
+
+function colgar() {
+    if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ event: 'stop' }));
+    if (procesador) procesador.disconnect();
+    if (fuente) fuente.disconnect();
+    if (flujoAudio) flujoAudio.getTracks().forEach((pista) => pista.stop());
+    if (socket) socket.close();
+    document.getElementById('nivel').style.width = '0';
+}
+
+document.getElementById('conectar').addEventListener('click', conectar);
+document.getElementById('colgar').addEventListener('click', colgar);
+document.getElementById('fin-turno').addEventListener('click', () => {
+    if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ event: 'fin_turno' }));
+});
+</script>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="tarjeta">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">Auditoría</div>
+            <div class="tarjeta-nota">Cada alta, edición, eliminación e ingreso al sistema, con su IP.</div>
+        </div>
+    </div>
+    <div class="tarjeta-cuerpo">
+        <form class="filtros" method="get">
+            <div>
+                <label class="texto-pequeno texto-tenue" for="criterio">Buscar</label>
+                <input class="campo" type="text" id="criterio" name="criterio" value="{{ criterio|default:'' }}"
+                       placeholder="Descripción, ruta o IP…">
+            </div>
+            <div>
+                <label class="texto-pequeno texto-tenue" for="usuario">Usuario</label>
+                <select class="campo-select" name="usuario" id="usuario">
+                    <option value="">Todos</option>
+                    {% for item in usuarios %}
+                        <option value="{{ item.id }}" {% if usuario == item.id %}selected{% endif %}>{{ item.nombre_completo|default:item.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="texto-pequeno texto-tenue" for="accion">Acción</label>
+                <select class="campo-select" name="accion" id="accion">
+                    <option value="">Todas</option>
+                    {% for valor, etiqueta in acciones %}
+                        <option value="{{ valor }}" {% if accion == valor %}selected{% endif %}>{{ etiqueta }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="texto-pequeno texto-tenue" for="desde">Desde</label>
+                <input class="campo" type="date" id="desde" name="desde" value="{{ desde|default:'' }}">
+            </div>
+            <div>
+                <label class="texto-pequeno texto-tenue" for="hasta">Hasta</label>
+                <input class="campo" type="date" id="hasta" name="hasta" value="{{ hasta|default:'' }}">
+            </div>
+            <button class="boton" type="submit">Filtrar</button>
+            <a class="boton boton-sutil" href="/seguridad/auditoria/">Limpiar</a>
+        </form>
+    </div>
+    <div class="tabla-envoltura">
+        <table class="tabla">
+            <thead><tr><th>Fecha</th><th>Usuario</th><th>Acción</th><th>Descripción</th><th>Ruta</th><th>IP</th></tr></thead>
+            <tbody>
+            {% for filtro in listado %}
+                <tr>
+                    <td class="texto-pequeno">{{ filtro.fecha|date:"d/m/Y H:i:s" }}</td>
+                    <td>{{ filtro.usuario.nombre_completo|default:filtro.usuario.username|default:"sistema" }}</td>
+                    <td>
+                        {% if filtro.accion == 'add' %}<span class="etiqueta etiqueta-exito">Creación</span>
+                        {% elif filtro.accion == 'change' %}<span class="etiqueta etiqueta-info">Edición</span>
+                        {% elif filtro.accion == 'del' %}<span class="etiqueta etiqueta-peligro">Eliminación</span>
+                        {% elif filtro.accion == 'error' %}<span class="etiqueta etiqueta-peligro">Error</span>
+                        {% else %}<span class="etiqueta">{{ filtro.get_accion_display }}</span>{% endif %}
+                    </td>
+                    <td class="texto-suave">{{ filtro.descripcion }}</td>
+                    <td class="celda-mono texto-pequeno">{{ filtro.ruta|default:"—" }}</td>
+                    <td class="celda-mono texto-pequeno">{{ filtro.ip|default:"—" }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="vacio"><strong>Sin registros en el rango</strong>La bitácora se llena sola con la actividad del panel.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'componentes/paginacion.html' %}
+</div>
+{% endblock %}

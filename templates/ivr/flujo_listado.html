@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="tarjeta">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">Flujos IVR</div>
+            <div class="tarjeta-nota">Cada flujo define qué dice la IA, qué datos captura y cuándo transfiere.</div>
+        </div>
+        <button class="boton boton-primario" data-accion="add" data-titulo="Nuevo flujo">Nuevo flujo</button>
+    </div>
+    <div class="tarjeta-cuerpo">{% include 'componentes/buscador.html' with placeholder='Nombre del flujo…' %}</div>
+    <div class="tabla-envoltura">
+        <table class="tabla">
+            <thead>
+            <tr><th>Flujo</th><th>Agente IA</th><th>Pasos</th><th>Respaldo</th><th>Estado</th><th class="celda-acciones">Acciones</th></tr>
+            </thead>
+            <tbody>
+            {% for filtro in listado %}
+                <tr>
+                    <td><strong>{{ filtro.nombre }}</strong><div class="texto-tenue texto-pequeno">{{ filtro.descripcion|default:""|truncatechars:70 }}</div></td>
+                    <td>{{ filtro.agente_ia.nombre|default:"—" }}</td>
+                    <td>{{ filtro.pasos.count }}</td>
+                    <td>{{ filtro.asesor_respaldo.nombre|default:"sin asesor" }}</td>
+                    <td>
+                        {% if filtro.activo %}<span class="etiqueta etiqueta-exito">Activo</span>
+                        {% else %}<span class="etiqueta">Inactivo</span>{% endif %}
+                    </td>
+                    <td class="celda-acciones">
+                        <a class="boton boton-sm" href="/ivr/flujos/{{ filtro.id }}/pasos/">Diseñar</a>
+                        <button class="boton boton-sm" data-accion="change" data-id="{{ filtro.id }}" data-titulo="Editar flujo">Editar</button>
+                        <button class="boton boton-sm boton-peligro" data-accion="delete" data-id="{{ filtro.id }}"
+                                data-mensaje="¿Eliminar el flujo {{ filtro.nombre }}?">Eliminar</button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="vacio"><strong>Sin flujos configurados</strong>Crea el primero: saludo, menú, captura de cédula, agente IA y transferencia.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'componentes/paginacion.html' %}
+</div>
+{% endblock %}

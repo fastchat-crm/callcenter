@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="tarjeta">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">Asesores humanos</div>
+            <div class="tarjeta-nota">Destinos de transferencia cuando la IA decide escalar la llamada.</div>
+        </div>
+        <button class="boton boton-primario" data-accion="add" data-titulo="Nuevo asesor">Nuevo asesor</button>
+    </div>
+    <div class="tarjeta-cuerpo">{% include 'componentes/buscador.html' with placeholder='Nombre, departamento o número…' %}</div>
+    <div class="tabla-envoltura">
+        <table class="tabla">
+            <thead>
+            <tr><th>Asesor</th><th>Destino</th><th>Departamento</th><th>Horario</th><th>Prioridad</th><th>Estado</th><th class="celda-acciones">Acciones</th></tr>
+            </thead>
+            <tbody>
+            {% for filtro in listado %}
+                <tr>
+                    <td><strong>{{ filtro.nombre }}</strong><div class="texto-tenue texto-pequeno">{{ filtro.correo|default:"—" }}</div></td>
+                    <td class="celda-mono">{{ filtro.numero_destino|default:filtro.extension_sip|default:"—" }}</td>
+                    <td>{{ filtro.departamento|default:"—" }}</td>
+                    <td>{{ filtro.get_horario_display }}</td>
+                    <td>{{ filtro.prioridad }}</td>
+                    <td>
+                        {% if filtro.disponible %}<span class="etiqueta etiqueta-exito">Disponible</span>
+                        {% else %}<span class="etiqueta etiqueta-alerta">Ocupado</span>{% endif %}
+                    </td>
+                    <td class="celda-acciones">
+                        <button class="boton boton-sm" data-accion="change" data-id="{{ filtro.id }}" data-titulo="Editar asesor">Editar</button>
+                        <button class="boton boton-sm boton-peligro" data-accion="delete" data-id="{{ filtro.id }}"
+                                data-mensaje="¿Eliminar a {{ filtro.nombre }}?">Eliminar</button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="7" class="vacio"><strong>Sin asesores</strong>Sin un asesor de respaldo, la IA cierra la llamada en lugar de transferir.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'componentes/paginacion.html' %}
+</div>
+{% endblock %}

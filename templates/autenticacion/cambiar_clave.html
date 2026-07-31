@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="tarjeta" style="max-width:520px">
+    <div class="tarjeta-encabezado"><div class="tarjeta-titulo">Cambiar contraseña</div></div>
+    <div class="tarjeta-cuerpo">
+        {% for mensaje in messages %}<div class="aviso aviso-error mb-2">{{ mensaje }}</div>{% endfor %}
+        <form method="post">
+            {% csrf_token %}
+            {% for campo in form %}
+                <div class="grupo-campo">
+                    <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                    <input class="campo" type="password" name="{{ campo.name }}" id="{{ campo.id_for_label }}" required>
+                    {% for error in campo.errors %}<div class="error">{{ error }}</div>{% endfor %}
+                </div>
+            {% endfor %}
+            {% for error in form.non_field_errors %}<div class="error mb-1">{{ error }}</div>{% endfor %}
+            <button class="boton boton-primario" type="submit">Actualizar contraseña</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

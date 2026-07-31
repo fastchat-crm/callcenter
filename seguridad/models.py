@@ -1,0 +1,114 @@
+"""Seguridad: qué existe en el sistema y quién puede entrar a cada cosa.
+
+Mismo esquema que `seguridad` en fastchatdj:
+
+  Modulo       — una URL del sistema. Es la unidad de permiso.
+  ModuloGrupo  — agrupación visual: arma el menú lateral.
+  GroupModulo  — qué módulos puede usar cada rol (grupo de Django).
+
+Un usuario entra a una URL si es superusuario, o si alguno de sus roles tiene el
+módulo cuya `url` es prefijo de la ruta pedida.
+"""
+from django.contrib.auth.models import Group
+from django.db import models
+
+from core.custom_models import ModeloBase
+
+
+class Modulo(ModeloBase):
+    nombre = models.CharField(max_length=120)
+    url = models.CharField(max_length=140, unique=True,
+                           help_text='Ruta del sistema, con barra inicial y final: /llamadas/listado/')
+    descripcion = models.CharField(max_length=250, blank=True, null=True)
+    icono = models.CharField(max_length=60, blank=True, null=True)
+    orden = models.IntegerField(default=0)
+    visible_menu = models.BooleanField(default=True,
+                                       help_text='Desmarcado, el módulo sigue protegido pero no '
+                                                 'aparece en el menú lateral.')
+
+    class Meta:
+        verbose_name = 'Módulo (URL)'
+        verbose_name_plural = 'Módulos (URLs)'
+        ordering = ['orden', 'nombre']
+
+    def __str__(self):
+        return f'{self.nombre} ({self.url})'
+
+    @property
+    def roles(self):
+        return GroupModulo.objects.filter(status=True, modulos=self).count()
+
+
+class ModuloGrupo(ModeloBase):
+    """Sección del menú lateral."""
+
+    nombre = models.CharField(max_length=120)
+    icono = models.CharField(max_length=60, blank=True, null=True)
+    prioridad = models.IntegerField(default=10, help_text='Menor número, más arriba en el menú.')
+    modulos = models.ManyToManyField(Modulo, blank=True, related_name='grupos_menu')
+
+    class Meta:
+        verbose_name = 'Sección del menú'
+        verbose_name_plural = 'Secciones del menú'
+        ordering = ['prioridad', 'nombre']
+
+    def __str__(self):
+        return self.nombre
+
+    def modulos_visibles(self):
+        return self.modulos.filter(status=True, visible_menu=True).order_by('orden', 'nombre')
+
+
+class GroupModulo(ModeloBase):
+    """Permisos de un rol: los módulos que puede abrir."""
+
+    group = models.OneToOneField(Group, on_delete=models.CASCADE, related_name='permisos')
+    modulos = models.ManyToManyField(Modulo, blank=True, related_name='roles_asignados')
+    descripcion = models.CharField(max_length=250, blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Permisos del rol'
+        verbose_name_plural = 'Permisos de los roles'
+        ordering = ['group__name']
+
+    def __str__(self):
+        return self.group.name
+
+    @property
+    def total_modulos(self):
+        return self.modulos.filter(status=True).count()
+
+    @property
+    def total_usuarios(self):
+        return self.group.user_set.count()
+
+
+def modulos_de_usuario(usuario):
+    """URLs que el usuario puede abrir. Los superusuarios ven todo."""
+    if not getattr(usuario, 'is_authenticated', False):
+        return Modulo.objects.none()
+    if usuario.is_superuser:
+        return Modulo.objects.filter(status=True)
+    return Modulo.objects.filter(
+        status=True, roles_asignados__group__in=usuario.groups.all(),
+    ).distinct()
+
+
+def puede_entrar(usuario, ruta):
+    """¿El usuario tiene permiso para esta ruta?
+
+    Si todavía no se cargó ningún módulo, no se bloquea a nadie: un sistema recién
+    instalado sin módulos dejaría al administrador fuera de su propio panel.
+    """
+    if not getattr(usuario, 'is_authenticated', False):
+        return False
+    if usuario.is_superuser:
+        return True
+    if not Modulo.objects.filter(status=True).exists():
+        return True
+
+    ruta = ruta or '/'
+    for url in modulos_de_usuario(usuario).values_list('url', flat=True):
+        if url and ruta.startswith(url):
+            return True
+    return False

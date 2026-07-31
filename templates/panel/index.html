@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="rejilla rejilla-4 mb-3">
+    <div class="tarjeta indicador">
+        <div class="indicador-etiqueta">Llamadas ({{ metricas.dias }} días)</div>
+        <div class="indicador-valor">{{ metricas.total_llamadas }}</div>
+        <div class="indicador-pie">{{ metricas.en_curso }} en curso ahora</div>
+    </div>
+    <div class="tarjeta indicador">
+        <div class="indicador-etiqueta">Minutos consumidos</div>
+        <div class="indicador-valor">{{ metricas.minutos_consumidos }}</div>
+        <div class="indicador-pie">Promedio {{ metricas.duracion_promedio_seg }} s por llamada</div>
+    </div>
+    <div class="tarjeta indicador">
+        <div class="indicador-etiqueta">Resueltas por la IA</div>
+        <div class="indicador-valor">{{ metricas.tasa_resolucion }}%</div>
+        <div class="indicador-pie">{{ metricas.transferidas }} transferidas a asesor</div>
+    </div>
+    <div class="tarjeta indicador">
+        <div class="indicador-etiqueta">Latencia media por turno</div>
+        <div class="indicador-valor">{{ metricas.latencia_promedio_ms }}<span class="texto-tenue" style="font-size:1rem"> ms</span></div>
+        <div class="indicador-pie">Costo carrier del mes: USD {{ costo_mes.costo_usd }}</div>
+    </div>
+</div>
+
+<div class="rejilla rejilla-2 mb-3">
+    <div class="tarjeta">
+        <div class="tarjeta-encabezado">
+            <div>
+                <div class="tarjeta-titulo">Llamadas por día</div>
+                <div class="tarjeta-nota">Últimas dos semanas</div>
+            </div>
+        </div>
+        <div class="tarjeta-cuerpo">
+            {% if serie_dias %}
+                <div class="barras">
+                    {% for punto in serie_dias %}
+                        <div class="barra" style="height: {% widthratio punto.total maximo_serie 100 %}%"
+                             title="{{ punto.dia }}: {{ punto.total }} llamadas"></div>
+                    {% endfor %}
+                </div>
+                <div class="barras-ejes">
+                    <span>{{ serie_inicio }}</span>
+                    <span>{{ serie_fin }}</span>
+                </div>
+            {% else %}
+                <div class="vacio"><strong>Sin llamadas registradas</strong>Cuando entre la primera llamada verás la curva aquí.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="tarjeta">
+        <div class="tarjeta-encabezado">
+            <div>
+                <div class="tarjeta-titulo">Estado del motor de voz</div>
+                <div class="tarjeta-nota">Componentes instalados en este servidor</div>
+            </div>
+        </div>
+        <div class="tarjeta-cuerpo">
+            <div class="lista-datos">
+                <div class="fila">
+                    <span>Reconocimiento de voz ({{ estado_motores.stt_motor }})</span>
+                    <span class="etiqueta {% if estado_motores.stt_listo %}etiqueta-exito{% else %}etiqueta-peligro{% endif %}">
+                        {% if estado_motores.stt_listo %}Listo{% else %}Falta instalar{% endif %}
+                    </span>
+                </div>
+                <div class="fila">
+                    <span>Síntesis de voz ({{ estado_motores.tts_motor }})</span>
+                    <span class="etiqueta {% if estado_motores.tts_listo %}etiqueta-exito{% else %}etiqueta-peligro{% endif %}">
+                        {% if estado_motores.tts_listo %}Listo{% else %}Falta modelo{% endif %}
+                    </span>
+                </div>
+                <div class="fila">
+                    <span>Agentes IA configurados</span>
+                    <span class="etiqueta {% if estado_motores.llm_listo %}etiqueta-exito{% else %}etiqueta-alerta{% endif %}">
+                        {{ agentes_activos }} activo{{ agentes_activos|pluralize:"s" }}
+                    </span>
+                </div>
+                <div class="fila">
+                    <span>Flujos IVR activos</span>
+                    <span>{{ flujos_activos }}</span>
+                </div>
+                <div class="fila">
+                    <span>Base de conocimiento</span>
+                    <span class="etiqueta {% if estado_rag.fragmentos %}etiqueta-exito{% else %}etiqueta-alerta{% endif %}">
+                        {{ estado_rag.fragmentos }} fragmento{{ estado_rag.fragmentos|pluralize:"s" }}
+                    </span>
+                </div>
+                {% if estado_rag.usa_weaviate %}
+                <div class="fila">
+                    <span>Weaviate</span>
+                    <span class="etiqueta {% if estado_rag.weaviate_ok %}etiqueta-exito{% else %}etiqueta-peligro{% endif %}"
+                          title="{{ estado_rag.weaviate_detalle }}">
+                        {% if estado_rag.weaviate_ok %}Conectado{% else %}Sin conexión{% endif %}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+            {% if estado_motores.detalle %}
+                <div class="mt-2">
+                    {% for nota in estado_motores.detalle %}
+                        <div class="texto-pequeno texto-tenue">· {{ nota }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="rejilla rejilla-2">
+    <div class="tarjeta">
+        <div class="tarjeta-encabezado">
+            <div class="tarjeta-titulo">Últimas llamadas</div>
+            <a class="boton boton-sm" href="/llamadas/listado/">Ver todas</a>
+        </div>
+        <div class="tabla-envoltura">
+            <table class="tabla">
+                <thead><tr><th>Origen</th><th>Flujo</th><th>Estado</th><th>Duración</th></tr></thead>
+                <tbody>
+                {% for llamada in ultimas_llamadas %}
+                    <tr>
+                        <td class="celda-mono">{{ llamada.numero_origen|default:"—" }}</td>
+                        <td>{{ llamada.flujo.nombre|default:"—" }}</td>
+                        <td><span class="etiqueta">{{ llamada.get_estado_display }}</span></td>
+                        <td>{{ llamada.duracion_texto }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="4" class="vacio"><strong>Todavía no hay llamadas</strong>Prueba el demo de voz desde el menú lateral.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="tarjeta">
+        <div class="tarjeta-encabezado">
+            <div class="tarjeta-titulo">Números activos</div>
+            <a class="boton boton-sm" href="/telefonia/numeros/">Administrar</a>
+        </div>
+        <div class="tabla-envoltura">
+            <table class="tabla">
+                <thead><tr><th>Número</th><th>País</th><th>Flujo</th><th>Concurrencia</th></tr></thead>
+                <tbody>
+                {% for numero in numeros %}
+                    <tr>
+                        <td class="celda-mono">{{ numero.numero }}</td>
+                        <td><span class="etiqueta">{{ numero.pais_iso }}</span></td>
+                        <td>{{ numero.flujo.nombre|default:"sin flujo" }}</td>
+                        <td>{{ numero.concurrencia_maxima }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="4" class="vacio"><strong>Sin números cargados</strong>Registra tu primer número o usa el demo por navegador.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

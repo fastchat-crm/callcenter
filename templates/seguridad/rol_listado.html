@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="tarjeta">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">Roles de usuario</div>
+            <div class="tarjeta-nota">Cada rol abre un conjunto de módulos. Hay {{ total_modulos }} módulo{{ total_modulos|pluralize:"s" }} en el sistema.</div>
+        </div>
+        <div class="fila-flex">
+            <a class="boton boton-sm" href="/seguridad/usuarios/">Usuarios</a>
+            <button class="boton boton-primario" data-accion="add" data-titulo="Nuevo rol">Nuevo rol</button>
+        </div>
+    </div>
+    <div class="tarjeta-cuerpo">{% include 'componentes/buscador.html' with placeholder='Nombre del rol…' %}</div>
+    <div class="tabla-envoltura">
+        <table class="tabla">
+            <thead><tr><th>Rol</th><th>Descripción</th><th>Módulos permitidos</th><th>Usuarios</th><th class="celda-acciones">Acciones</th></tr></thead>
+            <tbody>
+            {% for filtro in listado %}
+                <tr>
+                    <td><strong>{{ filtro.name }}</strong></td>
+                    <td class="texto-suave texto-pequeno">{{ filtro.permisos.descripcion|default:"—" }}</td>
+                    <td>
+                        <span class="etiqueta {% if filtro.permisos.total_modulos %}etiqueta-exito{% else %}etiqueta-alerta{% endif %}">
+                            {{ filtro.permisos.total_modulos|default:0 }} de {{ total_modulos }}
+                        </span>
+                    </td>
+                    <td>{{ filtro.user_set.count }}</td>
+                    <td class="celda-acciones">
+                        <a class="boton boton-sm boton-primario" href="/seguridad/roles/{{ filtro.id }}/permisos/">Permisos</a>
+                        <button class="boton boton-sm" data-accion="change" data-id="{{ filtro.id }}" data-titulo="Editar rol">Editar</button>
+                        <button class="boton boton-sm boton-peligro" data-accion="delete" data-id="{{ filtro.id }}"
+                                data-mensaje="¿Eliminar el rol {{ filtro.name }}?">Eliminar</button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5" class="vacio"><strong>Sin roles</strong>Crea roles como Supervisor, Asesor o Auditor y asígnales módulos.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'componentes/paginacion.html' %}
+</div>
+{% endblock %}

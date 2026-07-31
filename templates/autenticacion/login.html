@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>Ingreso · {{ nombre_sistema }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/css/base.css?v1.0">
+</head>
+<body>
+<div class="ingreso">
+    <div class="ingreso-panel">
+        <div class="ingreso-formulario">
+            <div class="marca mb-3">
+                <div class="marca-logo">CI</div>
+                <div>
+                    <div class="marca-nombre">{{ nombre_sistema }}</div>
+                    <div class="marca-sub">Panel de operación</div>
+                </div>
+            </div>
+            <h1>Ingresa a tu cuenta</h1>
+            <p class="texto-suave mb-2">Administra flujos, agentes y llamadas del callcenter.</p>
+
+            {% for mensaje in messages %}
+                <div class="aviso aviso-error mb-2">{{ mensaje }}</div>
+            {% endfor %}
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="grupo-campo">
+                    <label for="id_username">Usuario</label>
+                    <input class="campo" type="text" name="username" id="id_username" autofocus required>
+                </div>
+                <div class="grupo-campo">
+                    <label for="id_password">Contraseña</label>
+                    <input class="campo" type="password" name="password" id="id_password" required>
+                </div>
+                <button class="boton boton-primario" style="width:100%" type="submit">Ingresar</button>
+            </form>
+            <p class="texto-tenue texto-pequeno mt-3">Servidor {{ ip_publica }} · zona horaria configurada en credenciales.json</p>
+        </div>
+    </div>
+
+    <div class="ingreso-arte">
+        <div>
+            <span class="etiqueta" style="background:rgba(255,255,255,.15);color:#fff">Voz IA · Inbound</span>
+            <h2 class="mt-2">Recepción telefónica con inteligencia artificial</h2>
+            <p>Contesta en segundos, entiende al cliente, responde con tu base de conocimiento y transfiere a un asesor cuando hace falta.</p>
+            <div class="ingreso-lista">
+                <div><span class="punto" style="width:6px;height:6px;border-radius:50%;background:#fff;display:inline-block"></span> Números internacionales E.164</div>
+                <div><span class="punto" style="width:6px;height:6px;border-radius:50%;background:#fff;display:inline-block"></span> STT, LLM y TTS con servicios gratuitos</div>
+                <div><span class="punto" style="width:6px;height:6px;border-radius:50%;background:#fff;display:inline-block"></span> Flujos IVR configurables sin programar</div>
+                <div><span class="punto" style="width:6px;height:6px;border-radius:50%;background:#fff;display:inline-block"></span> Grabación, transcripción y métricas</div>
+            </div>
+        </div>
+        <p class="texto-pequeno" style="color:rgba(255,255,255,.7)">Django · Channels · PostgreSQL · Redis</p>
+    </div>
+</div>
+</body>
+</html>

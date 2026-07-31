@@ -1,0 +1,68 @@
+from core.custom_forms import FormularioBase
+
+from .models import AgenteIA, ApiKeyIA, ColeccionConocimiento, DocumentoConocimiento
+
+
+class ApiKeyForm(FormularioBase):
+    class Meta:
+        model = ApiKeyIA
+        fields = ('alias', 'proveedor', 'clave', 'modelo', 'modelo_embeddings', 'base_url',
+                  'limite_mensual_llamadas', 'activo')
+        labels = {
+            'alias': 'Alias', 'proveedor': 'Proveedor', 'clave': 'Clave API',
+            'modelo': 'Modelo', 'modelo_embeddings': 'Modelo de embeddings',
+            'base_url': 'URL base (opcional)',
+            'limite_mensual_llamadas': 'Límite mensual de llamadas', 'activo': 'Activa',
+        }
+
+
+class AgenteForm(FormularioBase):
+    class Meta:
+        model = AgenteIA
+        fields = ('nombre', 'descripcion', 'apikey', 'coleccion', 'prompt_sistema', 'tono',
+                  'idioma', 'temperatura', 'max_tokens_respuesta', 'maximo_oraciones',
+                  'usar_rag', 'fragmentos_contexto', 'activo')
+        labels = {
+            'nombre': 'Nombre', 'descripcion': 'Descripción del negocio', 'apikey': 'Llave de IA',
+            'coleccion': 'Base de conocimiento', 'prompt_sistema': 'Instrucciones del sistema',
+            'tono': 'Tono', 'idioma': 'Idioma', 'temperatura': 'Temperatura',
+            'max_tokens_respuesta': 'Máximo de tokens', 'maximo_oraciones': 'Máximo de oraciones',
+            'usar_rag': 'Usar base de conocimiento', 'fragmentos_contexto': 'Fragmentos de contexto',
+            'activo': 'Activo',
+        }
+
+
+class ColeccionForm(FormularioBase):
+    class Meta:
+        model = ColeccionConocimiento
+        fields = ('nombre', 'descripcion', 'backend', 'motor_embeddings', 'apikey_embeddings')
+        labels = {
+            'nombre': 'Nombre', 'descripcion': 'Descripción',
+            'backend': 'Dónde se guarda el índice',
+            'motor_embeddings': 'Motor de embeddings',
+            'apikey_embeddings': 'Llave para embeddings',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Solo tiene sentido ofrecer llaves de proveedores que generen embeddings.
+        self.fields['apikey_embeddings'].queryset = ApiKeyIA.objects.filter(
+            status=True, proveedor=1,
+        ).order_by('-activo', 'alias')
+
+    def clean(self):
+        datos = super().clean()
+        if datos.get('motor_embeddings') == 'gemini' and not datos.get('apikey_embeddings'):
+            self.add_error('apikey_embeddings',
+                           'Con embeddings de Gemini hay que elegir la llave que los genera.')
+        return datos
+
+
+class DocumentoForm(FormularioBase):
+    class Meta:
+        model = DocumentoConocimiento
+        fields = ('coleccion', 'titulo', 'archivo', 'contenido')
+        labels = {
+            'coleccion': 'Colección', 'titulo': 'Título', 'archivo': 'Archivo',
+            'contenido': 'Texto (opcional si subes archivo)',
+        }

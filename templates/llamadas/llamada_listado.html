@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="tarjeta">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">Historial de llamadas</div>
+            <div class="tarjeta-nota">Transcripción completa, datos capturados y latencias por turno.</div>
+        </div>
+        <a class="boton boton-sm" href="/llamadas/monitor/">Monitor en vivo</a>
+    </div>
+    <div class="tarjeta-cuerpo">
+        <form class="filtros" method="get">
+            <div>
+                <label class="texto-pequeno texto-tenue" for="criterio">Buscar</label>
+                <input class="campo" type="text" id="criterio" name="criterio" value="{{ criterio|default:'' }}" placeholder="Número o palabra de la transcripción…">
+            </div>
+            <div>
+                <label class="texto-pequeno texto-tenue" for="estado">Estado</label>
+                <select class="campo-select" name="estado" id="estado">
+                    <option value="">Todos</option>
+                    {% for valor, etiqueta in estados %}
+                        <option value="{{ valor }}" {% if estado == valor %}selected{% endif %}>{{ etiqueta }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="texto-pequeno texto-tenue" for="resultado">Resultado</label>
+                <select class="campo-select" name="resultado" id="resultado">
+                    <option value="">Todos</option>
+                    {% for valor, etiqueta in resultados %}
+                        <option value="{{ valor }}" {% if resultado == valor %}selected{% endif %}>{{ etiqueta }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="texto-pequeno texto-tenue" for="desde">Desde</label>
+                <input class="campo" type="date" id="desde" name="desde" value="{{ desde|default:'' }}">
+            </div>
+            <div>
+                <label class="texto-pequeno texto-tenue" for="hasta">Hasta</label>
+                <input class="campo" type="date" id="hasta" name="hasta" value="{{ hasta|default:'' }}">
+            </div>
+            <button class="boton" type="submit">Filtrar</button>
+            <a class="boton boton-sutil" href="/llamadas/listado/">Limpiar</a>
+        </form>
+    </div>
+    <div class="tabla-envoltura">
+        <table class="tabla">
+            <thead>
+            <tr><th>Inicio</th><th>Origen</th><th>Destino</th><th>Flujo</th><th>Duración</th><th>Resultado</th><th class="celda-acciones">Acciones</th></tr>
+            </thead>
+            <tbody>
+            {% for filtro in listado %}
+                <tr>
+                    <td class="texto-pequeno">{{ filtro.fecha_inicio|date:"d/m/Y H:i" }}</td>
+                    <td class="celda-mono">{{ filtro.numero_origen|default:"—" }}</td>
+                    <td class="celda-mono">{{ filtro.numero_destino|default:"—" }}</td>
+                    <td>{{ filtro.flujo.nombre|default:"—" }}</td>
+                    <td>{{ filtro.duracion_texto }}</td>
+                    <td>
+                        {% if filtro.resultado == 'resuelta_ia' %}<span class="etiqueta etiqueta-exito">Resuelta por IA</span>
+                        {% elif filtro.resultado == 'transferida' %}<span class="etiqueta etiqueta-info">Transferida</span>
+                        {% elif filtro.resultado == 'abandonada' %}<span class="etiqueta etiqueta-alerta">Abandonada</span>
+                        {% elif filtro.resultado == 'error' %}<span class="etiqueta etiqueta-peligro">Error</span>
+                        {% else %}<span class="etiqueta">{{ filtro.get_resultado_display }}</span>{% endif %}
+                    </td>
+                    <td class="celda-acciones">
+                        <a class="boton boton-sm" href="?action=ver&id={{ filtro.id }}">Ver</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="7" class="vacio"><strong>Sin llamadas en el rango seleccionado</strong>Cuando entre la primera llamada aparecerá aquí con su transcripción.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'componentes/paginacion.html' %}
+</div>
+{% endblock %}

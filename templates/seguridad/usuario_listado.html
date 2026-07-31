@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="tarjeta">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">Usuarios del panel</div>
+            <div class="tarjeta-nota">Los permisos se otorgan por rol, no usuario por usuario.</div>
+        </div>
+        <div class="fila-flex">
+            <a class="boton boton-sm" href="/seguridad/roles/">Roles</a>
+            <button class="boton boton-primario" data-accion="add" data-titulo="Nuevo usuario">Nuevo usuario</button>
+        </div>
+    </div>
+    <div class="tarjeta-cuerpo">
+        <form class="filtros" method="get">
+            <div>
+                <label class="texto-pequeno texto-tenue" for="criterio">Buscar</label>
+                <input class="campo" type="text" id="criterio" name="criterio" value="{{ criterio|default:'' }}"
+                       placeholder="Usuario, nombre, correo o cédula…">
+            </div>
+            <div>
+                <label class="texto-pequeno texto-tenue" for="rol">Rol</label>
+                <select class="campo-select" name="rol" id="rol">
+                    <option value="">Todos</option>
+                    {% for item in roles %}
+                        <option value="{{ item.id }}" {% if rol == item.id %}selected{% endif %}>{{ item.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="texto-pequeno texto-tenue" for="estado">Estado</label>
+                <select class="campo-select" name="estado" id="estado">
+                    <option value="">Todos</option>
+                    <option value="activos" {% if estado == 'activos' %}selected{% endif %}>Activos</option>
+                    <option value="inactivos" {% if estado == 'inactivos' %}selected{% endif %}>Inactivos</option>
+                </select>
+            </div>
+            <button class="boton" type="submit">Filtrar</button>
+            <a class="boton boton-sutil" href="/seguridad/usuarios/">Limpiar</a>
+        </form>
+    </div>
+    <div class="tabla-envoltura">
+        <table class="tabla">
+            <thead>
+            <tr><th>Usuario</th><th>Correo</th><th>Roles</th><th>Perfil</th><th>Último ingreso</th><th>Estado</th><th class="celda-acciones">Acciones</th></tr>
+            </thead>
+            <tbody>
+            {% for filtro in listado %}
+                <tr>
+                    <td>
+                        <div class="fila-flex">
+                            <div class="avatar">{{ filtro.iniciales }}</div>
+                            <div>
+                                <strong>{{ filtro.nombre_completo|default:filtro.username }}</strong>
+                                <div class="texto-tenue texto-pequeno celda-mono">{{ filtro.username }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="texto-pequeno">{{ filtro.email|default:"—" }}</td>
+                    <td>
+                        {% for grupo in filtro.groups.all %}
+                            <span class="etiqueta etiqueta-acento">{{ grupo.name }}</span>
+                        {% empty %}
+                            {% if filtro.is_superuser %}
+                                <span class="etiqueta etiqueta-info">acceso total</span>
+                            {% else %}
+                                <span class="texto-tenue texto-pequeno">sin rol</span>
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td class="texto-pequeno">{{ filtro.get_perfil_display }}</td>
+                    <td class="texto-pequeno">{{ filtro.last_login|date:"d/m/Y H:i"|default:"nunca" }}</td>
+                    <td>
+                        {% if filtro.is_active %}<span class="etiqueta etiqueta-exito">Activo</span>
+                        {% else %}<span class="etiqueta etiqueta-peligro">Inactivo</span>{% endif %}
+                        {% if filtro.cambiar_clave %}<span class="etiqueta etiqueta-alerta">Debe cambiar clave</span>{% endif %}
+                    </td>
+                    <td class="celda-acciones">
+                        <button class="boton boton-sm" data-accion="change" data-id="{{ filtro.id }}" data-titulo="Editar usuario">Editar</button>
+                        <button class="boton boton-sm" type="button" onclick="accionUsuario({{ filtro.id }}, 'activar')">
+                            {% if filtro.is_active %}Desactivar{% else %}Activar{% endif %}
+                        </button>
+                        <button class="boton boton-sm" type="button" onclick="accionUsuario({{ filtro.id }}, 'resetear_clave')">Resetear clave</button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="7" class="vacio"><strong>Sin usuarios</strong>Crea el primero y asígnale un rol.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'componentes/paginacion.html' %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function accionUsuario(id, accion) {
+    if (accion === 'resetear_clave' && !window.confirm('¿Generar una contraseña temporal para este usuario?')) return;
+    const cuerpo = new FormData();
+    cuerpo.append('action', accion);
+    cuerpo.append('id', id);
+    cuerpo.append('csrfmiddlewaretoken', App.token());
+    fetch(window.location.pathname, { method: 'POST', body: cuerpo })
+        .then((respuesta) => respuesta.json())
+        .then((datos) => {
+            App.aviso(datos.message || 'Listo.', datos.error ? 'error' : 'exito');
+            if (!datos.error && accion === 'activar') window.setTimeout(() => window.location.reload(), 700);
+        });
+}
+</script>
+{% endblock %}

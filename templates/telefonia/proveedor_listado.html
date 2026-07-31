@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="tarjeta">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">Proveedores configurados</div>
+            <div class="tarjeta-nota">{{ total_gratuitos }} de ellos son auto-hospedados y no generan costo por minuto.</div>
+        </div>
+        <button class="boton boton-primario" data-accion="add" data-titulo="Nuevo proveedor">Nuevo proveedor</button>
+    </div>
+    <div class="tarjeta-cuerpo">{% include 'componentes/buscador.html' with placeholder='Nombre o tecnología…' %}</div>
+    <div class="tabla-envoltura">
+        <table class="tabla">
+            <thead>
+            <tr><th>Nombre</th><th>Tecnología</th><th>Números</th><th>Costo minuto</th><th>Estado</th><th class="celda-acciones">Acciones</th></tr>
+            </thead>
+            <tbody>
+            {% for filtro in listado %}
+                <tr>
+                    <td><strong>{{ filtro.nombre }}</strong><div class="texto-tenue texto-pequeno">{{ filtro.base_url|default:"sin API remota" }}</div></td>
+                    <td>
+                        <span class="etiqueta {% if filtro.es_gratuito %}etiqueta-exito{% else %}etiqueta-info{% endif %}">{{ filtro.get_driver_display }}</span>
+                        {% if filtro.soporta_media_streams %}<span class="etiqueta">Media Streams</span>{% endif %}
+                    </td>
+                    <td>{{ filtro.numeros.count }}</td>
+                    <td class="celda-mono">USD {{ filtro.costo_minuto_entrante }}</td>
+                    <td>
+                        {% if filtro.activo %}<span class="etiqueta etiqueta-exito">Activo</span>
+                        {% else %}<span class="etiqueta">Inactivo</span>{% endif %}
+                    </td>
+                    <td class="celda-acciones">
+                        <button class="boton boton-sm" data-accion="change" data-id="{{ filtro.id }}" data-titulo="Editar proveedor">Editar</button>
+                        <button class="boton boton-sm boton-peligro" data-accion="delete" data-id="{{ filtro.id }}"
+                                data-mensaje="¿Eliminar el proveedor {{ filtro.nombre }}?">Eliminar</button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="vacio"><strong>Sin proveedores</strong>Empieza con Asterisk auto-hospedado: cuesta cero y usa el mismo motor de voz.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'componentes/paginacion.html' %}
+</div>
+{% endblock %}

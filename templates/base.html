@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <title>{{ titulo }} · {{ nombre_sistema }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#2f6bff">
+    <link rel="stylesheet" href="/static/css/base.css?v1.0">
+    {% block head %}{% endblock %}
+</head>
+<body>
+<div class="aplicacion">
+    <aside class="menu-lateral">
+        <div class="marca">
+            <div class="marca-logo">CI</div>
+            <div>
+                <div class="marca-nombre">{{ nombre_sistema }}</div>
+                <div class="marca-sub">Voz con inteligencia artificial</div>
+            </div>
+        </div>
+        {% for grupo in menu %}
+            <div class="menu-grupo">
+                <div class="menu-grupo-titulo">{{ grupo.grupo }}</div>
+                {% for item in grupo.items %}
+                    <a class="menu-item" href="{{ item.url }}"><span class="punto"></span>{{ item.nombre }}</a>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </aside>
+
+    <main class="contenido">
+        <header class="barra-superior">
+            <div>
+                <div class="ruta-modulo">{{ modulo }}</div>
+                <h1>{{ titulo }}</h1>
+            </div>
+            <div class="barra-acciones">
+                <button class="boton boton-sutil boton-sm" id="alternar-menu" type="button">Menú</button>
+                <a class="boton boton-sutil boton-sm" href="/perfilpanel/">{{ request.user.nombre_completo|default:request.user.username }}</a>
+                <div class="avatar">{{ request.user.iniciales }}</div>
+                <a class="boton boton-sm" href="/logout/">Salir</a>
+            </div>
+        </header>
+
+        <div class="lienzo">
+            {% if messages %}
+                {% for mensaje in messages %}
+                    <div class="aviso aviso-{{ mensaje.tags }} mb-2">{{ mensaje }}</div>
+                {% endfor %}
+            {% endif %}
+            {% block contenido %}{% endblock %}
+        </div>
+    </main>
+</div>
+
+<div class="modal-fondo" id="modal-fondo">
+    <div class="modal {% block modal_clase %}{% endblock %}">
+        <div class="modal-encabezado">
+            <h2 id="modal-titulo">Formulario</h2>
+            <button class="boton boton-sutil boton-sm" type="button" data-cerrar-modal>Cerrar</button>
+        </div>
+        <div class="modal-cuerpo" id="modal-cuerpo"></div>
+    </div>
+</div>
+
+<div class="avisos" id="avisos"></div>
+<form id="formulario-csrf">{% csrf_token %}</form>
+<script src="/static/js/app.js?v1.0"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

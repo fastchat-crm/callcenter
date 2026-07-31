@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="tarjeta">
+    <div class="tarjeta-encabezado">
+        <div class="tarjeta-titulo">{{ filtro.nombre }}</div>
+        <a class="boton boton-sm" href="/ivr/flujos/{{ filtro.id }}/pasos/">Diseñar pasos</a>
+    </div>
+    <div class="tarjeta-cuerpo">
+        <div class="lista-datos">
+            <div class="fila"><span>Saludo</span><span class="texto-suave">{{ filtro.saludo }}</span></div>
+            <div class="fila"><span>Despedida</span><span class="texto-suave">{{ filtro.despedida }}</span></div>
+            <div class="fila"><span>Mensaje de error</span><span class="texto-suave">{{ filtro.mensaje_error }}</span></div>
+            <div class="fila"><span>Idioma</span><span>{{ filtro.idioma }}</span></div>
+            <div class="fila"><span>Grabación</span><span>{% if filtro.grabar_llamada %}Activada{% else %}Desactivada{% endif %}</span></div>
+        </div>
+        <h3 class="mt-3">Pasos</h3>
+        <div class="tabla-envoltura">
+            <table class="tabla">
+                <thead><tr><th>Orden</th><th>Paso</th><th>Tipo</th><th>Texto</th></tr></thead>
+                <tbody>
+                {% for paso in pasos %}
+                    <tr>
+                        <td>{{ paso.orden }}</td>
+                        <td>{{ paso.nombre }}</td>
+                        <td>{{ paso.get_tipo_display }}</td>
+                        <td class="texto-suave">{{ paso.texto|default:""|truncatechars:80 }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="4" class="vacio">Sin pasos configurados.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

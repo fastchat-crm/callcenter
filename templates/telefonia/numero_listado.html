@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="tarjeta mb-3">
+    <div class="tarjeta-cuerpo fila-flex entre">
+        <div>
+            <div class="tarjeta-titulo">Webhook de llamada entrante</div>
+            <div class="texto-tenue texto-pequeno">Configura esta URL en tu carrier para que las llamadas lleguen al motor de voz.</div>
+        </div>
+        <code class="texto-mono texto-pequeno">{{ url_webhook }}</code>
+    </div>
+</div>
+
+<div class="tarjeta">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">Números telefónicos</div>
+            <div class="tarjeta-nota">Formato internacional E.164: el mismo motor atiende Ecuador, EE. UU., España o México.</div>
+        </div>
+        <button class="boton boton-primario" data-accion="add" data-titulo="Nuevo número">Nuevo número</button>
+    </div>
+    <div class="tarjeta-cuerpo">
+        <form class="filtros" method="get">
+            <div>
+                <label class="texto-pequeno texto-tenue" for="criterio">Buscar</label>
+                <input class="campo" type="text" id="criterio" name="criterio" value="{{ criterio|default:'' }}" placeholder="Número o ciudad…">
+            </div>
+            <div>
+                <label class="texto-pequeno texto-tenue" for="pais">País</label>
+                <select class="campo-select" name="pais" id="pais">
+                    <option value="">Todos</option>
+                    {% for iso in paises %}
+                        <option value="{{ iso }}" {% if pais == iso %}selected{% endif %}>{{ iso }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button class="boton" type="submit">Filtrar</button>
+        </form>
+    </div>
+    <div class="tabla-envoltura">
+        <table class="tabla">
+            <thead>
+            <tr><th>Número</th><th>País</th><th>Proveedor</th><th>Flujo IVR</th><th>Idioma</th><th>Concurrencia</th><th class="celda-acciones">Acciones</th></tr>
+            </thead>
+            <tbody>
+            {% for filtro in listado %}
+                <tr>
+                    <td class="celda-mono"><strong>{{ filtro.numero }}</strong><div class="texto-tenue texto-pequeno">{{ filtro.ciudad|default:"—" }} · {{ filtro.get_tipo_display }}</div></td>
+                    <td><span class="etiqueta etiqueta-acento">{{ filtro.pais_iso }}</span></td>
+                    <td>{{ filtro.proveedor.nombre }}</td>
+                    <td>{{ filtro.flujo.nombre|default:"sin asignar" }}</td>
+                    <td>{{ filtro.idioma }}</td>
+                    <td>{{ filtro.llamadas_en_curso }} / {{ filtro.concurrencia_maxima }}</td>
+                    <td class="celda-acciones">
+                        <button class="boton boton-sm" data-accion="change" data-id="{{ filtro.id }}" data-titulo="Editar número">Editar</button>
+                        <button class="boton boton-sm boton-peligro" data-accion="delete" data-id="{{ filtro.id }}"
+                                data-mensaje="¿Eliminar el número {{ filtro.numero }}?">Eliminar</button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="7" class="vacio"><strong>Sin números registrados</strong>Puedes probar todo el sistema con el demo por navegador antes de comprar un DID.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'componentes/paginacion.html' %}
+</div>
+{% endblock %}

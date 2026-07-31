@@ -1,0 +1,17 @@
+# Instalación mínima: panel, motor IVR y agentes de IA por API.
+# NO incluye el motor de voz local (faster-whisper, piper, sentence-transformers),
+# que arrastra PyTorch y pesa ~2 GB. Para eso: pip install -r requirements.txt
+#
+#   python3 -m venv venv
+#   ./venv/bin/pip install -r requirements-base.txt
+
+Django==4.2.15
+channels==4.2.2
+channels-redis==4.2.0
+daphne==4.1.2
+psycopg2-binary==2.9.9
+redis==5.0.8
+requests==2.32.3
+Pillow==10.4.0
+markdown==3.7
+audioop-lts==0.2.1; python_version >= "3.13"

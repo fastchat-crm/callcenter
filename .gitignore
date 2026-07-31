@@ -1,0 +1,16 @@
+credenciales.json
+*.pyc
+__pycache__/
+venv/
+.env
+media/grabaciones/
+media/turnos/
+media/vectorstore/
+media/piper/*.onnx
+media/piper/*.onnx.json
+media/conocimiento/
+*.log
+.idea/
+.vscode/
+db.sqlite3
+static/CACHE/

@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="tarjeta">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">Base de conocimiento</div>
+            <div class="tarjeta-nota">PDF, Word, texto o markdown. La indexación usa embeddings locales, sin costo por API.</div>
+        </div>
+        <button class="boton boton-primario" data-accion="add" data-titulo="Nueva colección">Nueva colección</button>
+    </div>
+    <div class="tarjeta-cuerpo">{% include 'componentes/buscador.html' with placeholder='Nombre de la colección…' %}</div>
+    <div class="tabla-envoltura">
+        <table class="tabla">
+            <thead><tr><th>Colección</th><th>Documentos</th><th>Fragmentos</th><th>Última indexación</th><th class="celda-acciones">Acciones</th></tr></thead>
+            <tbody>
+            {% for filtro in listado %}
+                <tr>
+                    <td><strong>{{ filtro.nombre }}</strong><div class="texto-tenue texto-pequeno celda-mono">{{ filtro.slug }}</div></td>
+                    <td>{{ filtro.documentos.count }}</td>
+                    <td>{{ filtro.fragmentos_indexados }}</td>
+                    <td class="texto-pequeno">{{ filtro.fecha_indexacion|date:"d/m/Y H:i"|default:"nunca" }}</td>
+                    <td class="celda-acciones">
+                        <a class="boton boton-sm" href="?action=ver&id={{ filtro.id }}">Ver</a>
+                        <button class="boton boton-sm" data-accion="add_documento" data-id="{{ filtro.id }}" data-titulo="Cargar documento">Documento</button>
+                        <button class="boton boton-sm boton-primario" onclick="reindexar({{ filtro.id }})" type="button">Indexar</button>
+                        <button class="boton boton-sm boton-peligro" data-accion="delete" data-id="{{ filtro.id }}"
+                                data-mensaje="¿Eliminar la colección {{ filtro.nombre }}?">Eliminar</button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5" class="vacio"><strong>Sin colecciones</strong>Carga el tarifario o el catálogo de servicios y el agente dejará de improvisar.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'componentes/paginacion.html' %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function reindexar(id) {
+    const cuerpo = new FormData();
+    cuerpo.append('action', 'reindexar');
+    cuerpo.append('id', id);
+    cuerpo.append('csrfmiddlewaretoken', App.token());
+    App.aviso('Indexando… la primera vez descarga el modelo de embeddings.', 'alerta');
+    fetch(window.location.pathname, { method: 'POST', body: cuerpo })
+        .then((respuesta) => respuesta.json())
+        .then((datos) => {
+            App.aviso(datos.message || 'Listo.', datos.error ? 'error' : 'exito');
+            if (!datos.error) window.setTimeout(() => window.location.reload(), 900);
+        });
+}
+</script>
+{% endblock %}

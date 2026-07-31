@@ -1,0 +1,678 @@
+<title>Propuesta comercial · Sistema de voz con IA para callcenter</title>
+<style>
+  :root {
+    --papel: #f3f5f4;
+    --papel-alto: #ffffff;
+    --papel-hundido: #e7ebe9;
+    --tinta: #0f1a1c;
+    --tinta-media: #43555a;
+    --tinta-tenue: #77898c;
+    --linea: #0f6b62;
+    --linea-suave: #d9e8e5;
+    --senal: #c2661d;
+    --senal-suave: #f9ebdd;
+    --verde: #2f7d52;
+    --verde-suave: #e2f0e7;
+    --borde: #d3dbd9;
+    --borde-fuerte: #b6c2bf;
+
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+    --medida: 68ch;
+    --ancho: 1180px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --papel: #0c1416;
+      --papel-alto: #121d20;
+      --papel-hundido: #17252a;
+      --tinta: #e6edeb;
+      --tinta-media: #a3b5b6;
+      --tinta-tenue: #7b8e90;
+      --linea: #4fbfae;
+      --linea-suave: #14332f;
+      --senal: #e9944a;
+      --senal-suave: #2c1e12;
+      --verde: #5cc38a;
+      --verde-suave: #14291f;
+      --borde: #22343a;
+      --borde-fuerte: #33484f;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --papel: #0c1416;
+    --papel-alto: #121d20;
+    --papel-hundido: #17252a;
+    --tinta: #e6edeb;
+    --tinta-media: #a3b5b6;
+    --tinta-tenue: #7b8e90;
+    --linea: #4fbfae;
+    --linea-suave: #14332f;
+    --senal: #e9944a;
+    --senal-suave: #2c1e12;
+    --verde: #5cc38a;
+    --verde-suave: #14291f;
+    --borde: #22343a;
+    --borde-fuerte: #33484f;
+  }
+
+  :root[data-theme="light"] {
+    --papel: #f3f5f4;
+    --papel-alto: #ffffff;
+    --papel-hundido: #e7ebe9;
+    --tinta: #0f1a1c;
+    --tinta-media: #43555a;
+    --tinta-tenue: #77898c;
+    --linea: #0f6b62;
+    --linea-suave: #d9e8e5;
+    --senal: #c2661d;
+    --senal-suave: #f9ebdd;
+    --verde: #2f7d52;
+    --verde-suave: #e2f0e7;
+    --borde: #d3dbd9;
+    --borde-fuerte: #b6c2bf;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--papel);
+    color: var(--tinta);
+    font-family: var(--sans);
+    font-size: 16.5px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .envoltura { max-width: var(--ancho); margin: 0 auto; padding: 0 clamp(1.1rem, 4vw, 3rem); }
+
+  /* ---------- Portada ---------- */
+  .portada {
+    padding: clamp(3rem, 9vw, 6.5rem) 0 clamp(2.5rem, 6vw, 4rem);
+    border-bottom: 1px solid var(--borde);
+  }
+
+  .cintillo {
+    display: flex; align-items: center; gap: .8rem;
+    font-family: var(--mono); font-size: .72rem; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--linea);
+  }
+  .cintillo::after {
+    content: ""; flex: 1; height: 1px;
+    background: linear-gradient(90deg, var(--linea), transparent);
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(2.3rem, 6vw, 4.1rem);
+    line-height: 1.03;
+    letter-spacing: -.022em;
+    font-weight: 500;
+    text-wrap: balance;
+    margin: 1.4rem 0 0;
+    max-width: 20ch;
+  }
+
+  .bajada {
+    max-width: var(--medida);
+    margin-top: 1.2rem;
+    font-size: 1.1rem;
+    color: var(--tinta-media);
+  }
+
+  .cifras {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1px;
+    margin-top: 2.6rem;
+    background: var(--borde);
+    border: 1px solid var(--borde);
+  }
+  .cifra { background: var(--papel-alto); padding: 1.1rem 1.2rem; }
+  .cifra dt {
+    font-family: var(--mono); font-size: .68rem; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--tinta-tenue);
+  }
+  .cifra dd {
+    margin: .3rem 0 0;
+    font-family: var(--serif);
+    font-size: 1.72rem;
+    letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .cifra .nota { display: block; font-family: var(--sans); font-size: .78rem; color: var(--tinta-tenue); letter-spacing: 0; }
+
+  /* ---------- Secciones ---------- */
+  section { padding: clamp(2.6rem, 6vw, 4.2rem) 0; border-bottom: 1px solid var(--borde); }
+  section:last-of-type { border-bottom: none; }
+
+  .encabezado-seccion {
+    display: grid;
+    grid-template-columns: 3.2rem 1fr;
+    gap: 1rem;
+    align-items: baseline;
+    margin-bottom: 1.6rem;
+  }
+  .numero {
+    font-family: var(--mono);
+    font-size: .78rem;
+    color: var(--senal);
+    letter-spacing: .08em;
+    padding-top: .45rem;
+  }
+  h2 {
+    font-family: var(--serif);
+    font-size: clamp(1.55rem, 3.4vw, 2.15rem);
+    line-height: 1.14;
+    letter-spacing: -.018em;
+    font-weight: 500;
+    margin: 0;
+    text-wrap: balance;
+  }
+  h3 {
+    font-family: var(--sans);
+    font-size: .82rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--linea);
+    margin: 2rem 0 .7rem;
+    font-weight: 650;
+  }
+
+  .cuerpo { max-width: var(--medida); margin-left: 4.2rem; }
+  .cuerpo p { margin: 0 0 1rem; }
+  .cuerpo p:last-child { margin-bottom: 0; }
+  .cuerpo strong { font-weight: 650; }
+
+  @media (max-width: 720px) {
+    .encabezado-seccion { grid-template-columns: 1fr; gap: .2rem; }
+    .numero { padding-top: 0; }
+    .cuerpo { margin-left: 0; }
+  }
+
+  /* ---------- Tablas ---------- */
+  .tabla-envoltura {
+    overflow-x: auto;
+    margin: 1.6rem 0 0;
+    border: 1px solid var(--borde);
+    background: var(--papel-alto);
+  }
+  table { width: 100%; border-collapse: collapse; font-size: .91rem; min-width: 540px; }
+  th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--tinta-tenue);
+    font-weight: 600;
+    padding: .75rem 1rem;
+    border-bottom: 1px solid var(--borde-fuerte);
+    background: var(--papel-hundido);
+    white-space: nowrap;
+  }
+  td { padding: .7rem 1rem; border-bottom: 1px solid var(--borde); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tfoot td { font-weight: 650; background: var(--papel-hundido); border-top: 1px solid var(--borde-fuerte); }
+  .entregable { font-weight: 600; }
+
+  /* ---------- Niveles ---------- */
+  .niveles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-top: 1.8rem;
+  }
+  .nivel {
+    background: var(--papel-alto);
+    border: 1px solid var(--borde);
+    padding: 1.3rem 1.3rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+  .nivel.destacado {
+    border-color: var(--senal);
+    box-shadow: 0 0 0 1px var(--senal);
+  }
+  .nivel-etiqueta {
+    font-family: var(--mono); font-size: .68rem; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--tinta-tenue);
+    display: flex; justify-content: space-between; align-items: center; gap: .5rem;
+  }
+  .marca-recomendado {
+    color: var(--senal); border: 1px solid var(--senal);
+    padding: .1rem .4rem; letter-spacing: .08em;
+  }
+  .nivel h4 {
+    font-family: var(--serif); font-size: 1.35rem; font-weight: 500;
+    letter-spacing: -.015em; margin: .2rem 0 0;
+  }
+  .nivel .precio {
+    font-family: var(--mono); font-size: 1.05rem; color: var(--linea);
+    font-variant-numeric: tabular-nums;
+  }
+  .nivel p { margin: 0; font-size: .9rem; color: var(--tinta-media); }
+  .nivel ul { margin: .4rem 0 0; padding-left: 1.05rem; font-size: .88rem; color: var(--tinta-media); }
+  .nivel li { margin-bottom: .28rem; }
+
+  /* ---------- Detalles ---------- */
+  .destacado-linea {
+    border-left: 2px solid var(--senal);
+    background: var(--senal-suave);
+    padding: .9rem 1.1rem;
+    margin: 1.5rem 0 0 4.2rem;
+    max-width: var(--medida);
+    font-size: .93rem;
+  }
+  @media (max-width: 720px) { .destacado-linea { margin-left: 0; } }
+
+  .pastilla {
+    display: inline-block;
+    font-family: var(--mono); font-size: .68rem; letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: .12rem .45rem;
+    border: 1px solid currentColor;
+    color: var(--linea);
+  }
+  .pastilla.gratis { color: var(--verde); }
+  .pastilla.pago { color: var(--senal); }
+
+  .pasos { counter-reset: paso; list-style: none; padding: 0; margin: 1.4rem 0 0; }
+  .pasos li {
+    counter-increment: paso;
+    display: grid; grid-template-columns: 2rem 1fr; gap: .8rem;
+    padding: .7rem 0; border-bottom: 1px dashed var(--borde);
+  }
+  .pasos li:last-child { border-bottom: none; }
+  .pasos li::before {
+    content: counter(paso);
+    font-family: var(--mono); font-size: .78rem; color: var(--senal);
+    padding-top: .12rem;
+  }
+
+  .lista-limpia { list-style: none; padding: 0; margin: 1rem 0 0; }
+  .lista-limpia li {
+    padding: .38rem 0 .38rem 1.2rem;
+    position: relative;
+    color: var(--tinta-media);
+    font-size: .95rem;
+  }
+  .lista-limpia li::before {
+    content: ""; position: absolute; left: 0; top: .92rem;
+    width: 8px; height: 1px; background: var(--linea);
+  }
+
+  .pie {
+    padding: 2.6rem 0 4rem;
+    color: var(--tinta-tenue);
+    font-size: .85rem;
+    display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between;
+    border-top: 1px solid var(--borde);
+  }
+
+  a { color: var(--linea); text-underline-offset: .18em; }
+  a:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--senal); outline-offset: 3px;
+  }
+
+  @media print {
+    body { background: #fff; color: #000; font-size: 11pt; }
+    section { break-inside: avoid; }
+  }
+</style>
+
+<div class="envoltura">
+
+  <header class="portada">
+    <div class="cintillo">Propuesta comercial · Voz IA · Inbound</div>
+    <h1>Sistema de recepción telefónica con inteligencia artificial</h1>
+    <p class="bajada">
+      El cliente llama, la IA contesta en español, entiende lo que necesita, captura sus datos,
+      responde con la información real de la empresa y transfiere a un asesor cuando hace falta.
+      Arranca con un número de Ecuador y crece a números internacionales sin reescribir el sistema.
+    </p>
+
+    <dl class="cifras">
+      <div class="cifra">
+        <dt>Desarrollo</dt>
+        <dd>USD 5.000<span class="nota">Pago en tres hitos</span></dd>
+      </div>
+      <div class="cifra">
+        <dt>Mensualidad</dt>
+        <dd>USD 450<span class="nota">Plan estándar, 3.500 min</span></dd>
+      </div>
+      <div class="cifra">
+        <dt>Puesta en marcha</dt>
+        <dd>6 – 8 sem<span class="nota">Demo funcional en la semana 4</span></dd>
+      </div>
+      <div class="cifra">
+        <dt>Margen recurrente</dt>
+        <dd>~USD 340<span class="nota">Por cliente, por mes</span></dd>
+      </div>
+    </dl>
+  </header>
+
+  <section>
+    <div class="encabezado-seccion">
+      <span class="numero">01</span>
+      <h2>Qué recibe el cliente final</h2>
+    </div>
+    <div class="cuerpo">
+      <p>
+        Una línea que contesta al primer timbre, a cualquier hora, sin poner a nadie en espera.
+        El agente de IA saluda, ofrece el menú, reconoce lo que la persona dice —o lo que marca
+        en el teclado—, valida la cédula, consulta la base de conocimiento de la empresa y
+        responde sobre planes, precios, horarios y requisitos.
+      </p>
+      <p>
+        Cuando la consulta excede lo que la IA puede resolver, o cuando la persona pide hablar
+        con alguien, la llamada se transfiere a un asesor con todo el contexto ya recogido. Nada
+        se pierde: cada llamada queda con su transcripción, sus datos capturados y el motivo por
+        el que escaló.
+      </p>
+      <p>
+        Capacidad incluida: <strong>10 llamadas diarias de 10 a 15 minutos</strong>, alrededor de
+        3.000 minutos al mes.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="encabezado-seccion">
+      <span class="numero">02</span>
+      <h2>Alcance del desarrollo</h2>
+    </div>
+    <div class="cuerpo">
+      <p>Precio cerrado de <strong>USD 5.000</strong>, con estos entregables:</p>
+    </div>
+
+    <div class="tabla-envoltura">
+      <table>
+        <thead>
+          <tr><th>Entregable</th><th>Qué incluye</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="entregable">Número y carrier</td><td>Compra del DID de Ecuador, troncal SIP, webhook de entrada y de estado</td></tr>
+          <tr><td class="entregable">Motor IVR conversacional</td><td>Flujos y pasos administrables desde el panel, sin programar</td></tr>
+          <tr><td class="entregable">Audio en tiempo real</td><td>Integración Media Streams por WebSocket, lista para producción</td></tr>
+          <tr><td class="entregable">Captura híbrida</td><td>Teclado y voz para cédula, montos y opciones, con validación</td></tr>
+          <tr><td class="entregable">Agentes de IA</td><td>Respuestas sobre planes y preguntas frecuentes desde la base documental</td></tr>
+          <tr><td class="entregable">Transferencia a humano</td><td>Reenvío a celular o a cola con softphone, con motivo registrado</td></tr>
+          <tr><td class="entregable">Grabación y transcripción</td><td>Almacenamiento, buscador por texto y tablero de llamadas</td></tr>
+          <tr><td class="entregable">Un flujo IVR completo</td><td>Saludo, menú, captura, agente IA y transferencia</td></tr>
+          <tr><td class="entregable">Panel de operación</td><td>Indicadores, monitor en vivo, historial y motivos de escalamiento</td></tr>
+          <tr><td class="entregable">Arquitectura multipaís</td><td>Alta de números internacionales por configuración, sin desarrollo</td></tr>
+          <tr><td class="entregable">Pruebas reales</td><td>QA de ida y vuelta: latencia, calidad de audio, casos borde</td></tr>
+          <tr><td class="entregable">Capacitación</td><td>Dos sesiones de administración y manual operativo</td></tr>
+          <tr><td class="entregable">Soporte inicial</td><td>30 días posteriores al lanzamiento</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="destacado-linea">
+      <strong>Cronograma y pagos.</strong> Seis a ocho semanas. 40 % de anticipo, 30 % contra
+      demo funcional, 30 % contra entrega.
+    </div>
+  </section>
+
+  <section>
+    <div class="encabezado-seccion">
+      <span class="numero">03</span>
+      <h2>Cómo funciona por dentro</h2>
+    </div>
+    <div class="cuerpo">
+      <p>
+        Cuatro piezas encadenadas, cada una reemplazable sin tocar las demás. Esa separación es
+        lo que permite empezar barato y subir de calidad después, o cambiar de proveedor sin
+        rehacer el sistema.
+      </p>
+    </div>
+
+    <ol class="pasos cuerpo">
+      <li><div><strong>Telefonía.</strong> El carrier entrega el audio de la llamada en tiempo real por WebSocket. Telnyx, Twilio, Plivo y SignalWire son intercambiables; también se soporta un Asterisk propio, que elimina el costo por minuto.</div></li>
+      <li><div><strong>Reconocimiento de voz.</strong> Convierte lo que dice el cliente en texto. Whisper corriendo en el propio servidor, o Deepgram en la nube cuando la prioridad es la latencia.</div></li>
+      <li><div><strong>El cerebro.</strong> Un modelo de lenguaje entiende la intención y redacta la respuesta, apoyado en los documentos de la empresa: tarifario, preguntas frecuentes, políticas. No improvisa precios.</div></li>
+      <li><div><strong>Síntesis de voz.</strong> Convierte la respuesta en audio. Piper local, voces neuronales gratuitas o ElevenLabs, según el nivel contratado.</div></li>
+    </ol>
+
+    <div class="cuerpo">
+      <h3>Servidor y datos</h3>
+      <p>
+        Django con Channels y Daphne sobre PostgreSQL y Redis, detrás de Nginx con TLS. Las
+        llamadas, transcripciones y métricas viven en PostgreSQL; las grabaciones en disco o en
+        almacenamiento compatible con S3, según lo que exija la normativa del cliente.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="encabezado-seccion">
+      <span class="numero">04</span>
+      <h2>Tres niveles de servicio</h2>
+    </div>
+    <div class="cuerpo">
+      <p>
+        La misma plataforma, distinta calidad de componentes. El nivel se elige por cliente y se
+        puede subir en cualquier momento sin migrar nada.
+      </p>
+    </div>
+
+    <div class="niveles">
+      <article class="nivel">
+        <div class="nivel-etiqueta"><span>Nivel 1</span> <span class="pastilla gratis">Sin costo variable</span></div>
+        <h4>Gratuita</h4>
+        <div class="precio">USD 250 – 300 / mes</div>
+        <p>Todo corre en el servidor propio: reconocimiento, modelo y voz.</p>
+        <ul>
+          <li>Latencia de 2,5 a 4 segundos</li>
+          <li>Voz clara, reconociblemente sintética</li>
+          <li>2 a 4 llamadas simultáneas</li>
+          <li><strong>Los datos no salen del servidor</strong></li>
+        </ul>
+      </article>
+
+      <article class="nivel destacado">
+        <div class="nivel-etiqueta"><span>Nivel 2</span> <span class="marca-recomendado">Recomendado</span></div>
+        <h4>Estándar</h4>
+        <div class="precio">USD 400 – 500 / mes</div>
+        <p>Conversación fluida, con interrupción de la IA y voz natural.</p>
+        <ul>
+          <li>Latencia de 0,6 a 1,2 segundos</li>
+          <li>Precisión en español de 94 a 97 %</li>
+          <li>20 a 40 llamadas simultáneas</li>
+          <li>Califica leads y vende activamente</li>
+        </ul>
+      </article>
+
+      <article class="nivel">
+        <div class="nivel-etiqueta"><span>Nivel 3</span> <span class="pastilla pago">Nicho</span></div>
+        <h4>Premium</h4>
+        <div class="precio">USD 650 – 850 / mes</div>
+        <p>Voz clonada y razonamiento avanzado, indistinguible de una persona.</p>
+        <ul>
+          <li>Latencia de 0,4 a 0,9 segundos</li>
+          <li>Voz propia de la marca</li>
+          <li>Banca, clínicas premium, cuentas en EE. UU. o Europa</li>
+          <li>Rentable sobre USD 800 mensuales del cliente final</li>
+        </ul>
+      </article>
+    </div>
+
+    <div class="tabla-envoltura">
+      <table>
+        <thead>
+          <tr><th>Característica</th><th>Gratuita</th><th>Estándar</th><th>Premium</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Telefonía</td><td>Asterisk propio</td><td>Carrier con Media Streams</td><td>Carrier con Media Streams</td></tr>
+          <tr><td>Reconocimiento de voz</td><td>Whisper local</td><td>Deepgram Nova-2</td><td>Deepgram Nova-2</td></tr>
+          <tr><td>Modelo de lenguaje</td><td>Gemini Flash / Ollama local</td><td>Gemini Flash / GPT-4o-mini</td><td>GPT-4o</td></tr>
+          <tr><td>Voz</td><td>Piper local</td><td>ElevenLabs Flash</td><td>ElevenLabs Pro</td></tr>
+          <tr><td>Latencia por turno</td><td class="num">2,5 – 4 s</td><td class="num">0,6 – 1,2 s</td><td class="num">0,4 – 0,9 s</td></tr>
+          <tr><td>Precisión en español</td><td class="num">85 – 90 %</td><td class="num">94 – 97 %</td><td class="num">94 – 97 %</td></tr>
+          <tr><td>Interrumpir a la IA</td><td>No</td><td>Sí</td><td>Sí</td></tr>
+          <tr><td>Llamadas simultáneas</td><td class="num">2 – 4</td><td class="num">20 – 40</td><td class="num">20 – 40</td></tr>
+          <tr><td>Los datos salen del país</td><td>No</td><td>Sí</td><td>Sí</td></tr>
+          <tr><td>Costo de proveedor / mes</td><td class="num">USD 0 – 12</td><td class="num">USD 110</td><td class="num">USD 185</td></tr>
+          <tr><td>Margen neto mensual</td><td class="num">USD 240 – 290</td><td class="num">USD 290 – 390</td><td class="num">USD 465 – 665</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="encabezado-seccion">
+      <span class="numero">05</span>
+      <h2>Costo operativo mensual</h2>
+    </div>
+    <div class="cuerpo">
+      <p>
+        Escenario de referencia: un cliente, 10 llamadas diarias de 12,5 minutos, cerca de
+        3.000 minutos al mes, en nivel estándar.
+      </p>
+    </div>
+
+    <div class="tabla-envoltura">
+      <table>
+        <thead>
+          <tr><th>Servicio</th><th>Tarifa</th><th class="num">Mes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Número (DID) Ecuador</td><td>fijo</td><td class="num">USD 5</td></tr>
+          <tr><td>Minutos entrantes</td><td>USD 0,020 / min</td><td class="num">USD 60</td></tr>
+          <tr><td>Reconocimiento de voz</td><td>USD 0,0043 / min</td><td class="num">USD 13</td></tr>
+          <tr><td>Síntesis de voz</td><td>~USD 0,015 / min de IA</td><td class="num">USD 27</td></tr>
+          <tr><td>Modelo de lenguaje</td><td>~USD 0,001 / turno</td><td class="num">USD 3</td></tr>
+          <tr><td>Grabaciones (~9 GB)</td><td>USD 0,023 / GB</td><td class="num">USD 1</td></tr>
+          <tr><td>Servidor</td><td>ya existente</td><td class="num">USD 0</td></tr>
+        </tbody>
+        <tfoot>
+          <tr><td>Total proveedor</td><td></td><td class="num">USD 109</td></tr>
+          <tr><td>Cobro al cliente</td><td>plan estándar</td><td class="num">USD 450</td></tr>
+          <tr><td>Margen neto recurrente</td><td></td><td class="num">USD 341</td></tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="destacado-linea">
+      <strong>Antes de comprometer costos.</strong> El sistema completo puede demostrarse al
+      cliente con el nivel gratuito: reconocimiento, modelo y voz corriendo en el servidor, con
+      un gasto mensual de 6 a 12 dólares de VPS. El número público se compra recién cuando el
+      cliente firma.
+    </div>
+  </section>
+
+  <section>
+    <div class="encabezado-seccion">
+      <span class="numero">06</span>
+      <h2>Mensualidad al cliente</h2>
+    </div>
+
+    <div class="tabla-envoltura">
+      <table>
+        <thead>
+          <tr><th>Plan o adicional</th><th class="num">Mensualidad</th><th>Incluye</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="entregable">Recepcionista (estándar)</td><td class="num">USD 450</td><td>1 número, 3.500 minutos, 1 flujo, soporte en 48 h</td></tr>
+          <tr><td>Flujo IVR adicional</td><td class="num">+ USD 80</td><td>Otro árbol de atención independiente</td></tr>
+          <tr><td>Voz premium</td><td class="num">+ USD 120</td><td>Voz neuronal de gama alta</td></tr>
+          <tr><td>Integración con CRM externo</td><td class="num">+ USD 150</td><td>API contra el sistema del cliente</td></tr>
+          <tr><td>Número internacional adicional</td><td class="num">+ USD 90</td><td>DID en otro país, con idioma y flujo propios</td></tr>
+          <tr><td>Exceso de minutos</td><td class="num">USD 0,18 / min</td><td>Sobre el límite incluido</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ul class="lista-limpia cuerpo">
+      <li>Contrato mínimo de 6 meses, para amortizar el setup.</li>
+      <li>Incremento anual del 8 %, indexado a inflación y mejoras del servicio.</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="encabezado-seccion">
+      <span class="numero">07</span>
+      <h2>Crecer a números internacionales</h2>
+    </div>
+    <div class="cuerpo">
+      <p>
+        La arquitectura ya es multipaís. Cada número se describe por su formato internacional
+        E.164 y su código de país; el idioma del número define automáticamente el modelo de
+        reconocimiento y la voz. <strong>Abrir un mercado nuevo no requiere desarrollo.</strong>
+      </p>
+    </div>
+
+    <ol class="pasos cuerpo">
+      <li><div>Se compra el número en el país de destino.</div></li>
+      <li><div>Se registra en el panel con su país, idioma y zona horaria.</div></li>
+      <li><div>Se le asigna un flujo de atención propio, con su saludo y su horario.</div></li>
+    </ol>
+
+    <div class="tabla-envoltura">
+      <table>
+        <thead>
+          <tr><th>País</th><th class="num">Número / mes</th><th class="num">Minuto entrante</th><th>Idioma de atención</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Ecuador</td><td class="num">USD 5,00</td><td class="num">USD 0,020</td><td>Español</td></tr>
+          <tr><td>Estados Unidos</td><td class="num">USD 1,15</td><td class="num">USD 0,004</td><td>Español / inglés</td></tr>
+          <tr><td>España</td><td class="num">USD 3,00</td><td class="num">USD 0,012</td><td>Español</td></tr>
+          <tr><td>México</td><td class="num">USD 6,00</td><td class="num">USD 0,022</td><td>Español</td></tr>
+          <tr><td>Colombia</td><td class="num">USD 8,00</td><td class="num">USD 0,030</td><td>Español</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="destacado-linea">
+      <strong>Puesta en marcha por país adicional: USD 400.</strong> Incluye alta del número,
+      pruebas de extremo a extremo y flujo localizado. La mensualidad se suma según el cuadro
+      de la sección anterior.
+    </div>
+  </section>
+
+  <section>
+    <div class="encabezado-seccion">
+      <span class="numero">08</span>
+      <h2>Garantías y soporte</h2>
+    </div>
+    <ul class="lista-limpia cuerpo">
+      <li>Disponibilidad objetivo del 99 % mensual, excluyendo caídas del carrier o de los servicios en la nube.</li>
+      <li>Respuesta de soporte en 24 horas hábiles por correo; 4 horas en incidentes críticos.</li>
+      <li>Respaldo automático diario de transcripciones y configuración.</li>
+      <li>Treinta días de soporte incluidos tras el lanzamiento.</li>
+      <li>Dos sesiones de capacitación en línea y manual operativo escrito.</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="encabezado-seccion">
+      <span class="numero">09</span>
+      <h2>Fuera de alcance</h2>
+    </div>
+    <div class="cuerpo">
+      <p>Se cotizan aparte, y se pueden incorporar en una segunda fase:</p>
+    </div>
+    <ul class="lista-limpia cuerpo">
+      <li>Llamadas salientes automáticas con marcador predictivo.</li>
+      <li>Integración con sistemas heredados del cliente: ERP u otros CRM.</li>
+      <li>Flujos IVR adicionales más allá del primero incluido.</li>
+      <li>Voces clonadas a medida de la marca.</li>
+      <li>Reportes de inteligencia de negocio y tableros analíticos avanzados.</li>
+      <li>Cumplimiento HIPAA o PCI, que exige infraestructura separada.</li>
+    </ul>
+  </section>
+
+  <footer class="pie">
+    <span>Propuesta válida por 30 días desde su emisión.</span>
+    <span>Valores expresados en dólares de los Estados Unidos, sin impuestos.</span>
+  </footer>
+
+</div>

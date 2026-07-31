@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="rejilla rejilla-2 mb-3">
+    <div class="tarjeta">
+        <div class="tarjeta-cuerpo">
+            <div class="tarjeta-titulo">{{ flujo.nombre }}</div>
+            <div class="texto-suave texto-pequeno mb-2">{{ flujo.descripcion|default:"Sin descripción" }}</div>
+            <div class="lista-datos">
+                <div class="fila"><span>Saludo</span><span class="texto-suave">{{ flujo.saludo|truncatechars:60 }}</span></div>
+                <div class="fila"><span>Agente IA</span><span>{{ flujo.agente_ia.nombre|default:"—" }}</span></div>
+                <div class="fila"><span>Asesor de respaldo</span><span>{{ flujo.asesor_respaldo.nombre|default:"—" }}</span></div>
+                <div class="fila"><span>Reintentos</span><span>{{ flujo.max_reintentos }}</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tarjeta">
+        <div class="tarjeta-encabezado">
+            <div class="tarjeta-titulo">Simulador</div>
+            <span class="etiqueta etiqueta-info">Sin telefonía</span>
+        </div>
+        <div class="tarjeta-cuerpo">
+            <div class="grupo-campo">
+                <label for="entradas">Respuestas del cliente separadas por |</label>
+                <input class="campo" id="entradas" placeholder="1|0102030405|quiero hablar con un asesor">
+            </div>
+            <button class="boton boton-primario" type="button" id="simular">Simular conversación</button>
+            <div class="conversacion mt-2" id="resultado-simulacion"></div>
+        </div>
+    </div>
+</div>
+
+<div class="tarjeta">
+    <div class="tarjeta-encabezado">
+        <div class="tarjeta-titulo">Pasos del flujo</div>
+        <div class="fila-flex">
+            <a class="boton boton-sm" href="/ivr/flujos/">Volver</a>
+            <button class="boton boton-primario boton-sm" data-accion="add" data-titulo="Nuevo paso">Nuevo paso</button>
+        </div>
+    </div>
+    <div class="tabla-envoltura">
+        <table class="tabla">
+            <thead>
+            <tr><th>#</th><th>Paso</th><th>Tipo</th><th>Texto</th><th>Opciones</th><th>Siguiente</th><th class="celda-acciones">Acciones</th></tr>
+            </thead>
+            <tbody>
+            {% for paso in pasos %}
+                <tr>
+                    <td class="celda-mono">{{ paso.orden }}</td>
+                    <td><strong>{{ paso.nombre }}</strong><div class="texto-tenue texto-pequeno celda-mono">{{ paso.codigo }}</div></td>
+                    <td><span class="etiqueta etiqueta-info">{{ paso.get_tipo_display }}</span></td>
+                    <td class="texto-suave">{{ paso.texto|default:""|truncatechars:70 }}</td>
+                    <td>
+                        {% for opcion in paso.opciones.all %}
+                            {% if opcion.status %}
+                                <span class="etiqueta">{{ opcion.tecla|default:"voz" }} · {{ opcion.etiqueta }}</span>
+                            {% endif %}
+                        {% empty %}
+                            <span class="texto-tenue texto-pequeno">—</span>
+                        {% endfor %}
+                    </td>
+                    <td class="texto-pequeno">{{ paso.paso_siguiente.nombre|default:"fin" }}</td>
+                    <td class="celda-acciones">
+                        <button class="boton boton-sm" data-accion="add_opcion" data-id="{{ paso.id }}" data-titulo="Nueva opción">Opción</button>
+                        <button class="boton boton-sm" data-accion="change" data-id="{{ paso.id }}" data-titulo="Editar paso">Editar</button>
+                        <button class="boton boton-sm boton-peligro" data-accion="delete" data-id="{{ paso.id }}"
+                                data-mensaje="¿Eliminar el paso {{ paso.nombre }}?">Eliminar</button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="7" class="vacio"><strong>Este flujo aún no tiene pasos</strong>Empieza con un mensaje de bienvenida y un menú de opciones.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('simular').addEventListener('click', function () {
+    const cuerpo = new FormData();
+    cuerpo.append('action', 'simular');
+    cuerpo.append('historial', document.getElementById('entradas').value);
+    cuerpo.append('csrfmiddlewaretoken', App.token());
+    fetch(window.location.pathname, { method: 'POST', body: cuerpo })
+        .then((respuesta) => respuesta.json())
+        .then((datos) => {
+            const contenedor = document.getElementById('resultado-simulacion');
+            contenedor.innerHTML = '';
+            (datos.salidas || []).forEach((texto) => {
+                if (!texto) return;
+                const fila = document.createElement('div');
+                fila.className = 'turno turno-ia';
+                fila.innerHTML = '<div class="turno-avatar">IA</div><div class="turno-burbuja">' + texto + '</div>';
+                contenedor.appendChild(fila);
+            });
+            if (datos.variables && Object.keys(datos.variables).length) {
+                const nota = document.createElement('div');
+                nota.className = 'texto-tenue texto-pequeno';
+                nota.textContent = 'Variables capturadas: ' + JSON.stringify(datos.variables);
+                contenedor.appendChild(nota);
+            }
+        });
+});
+</script>
+{% endblock %}

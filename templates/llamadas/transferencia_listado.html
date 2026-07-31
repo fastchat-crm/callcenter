@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="tarjeta">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">Transferencias a asesores</div>
+            <div class="tarjeta-nota">Cada escalamiento con su motivo, para afinar el flujo y el agente IA.</div>
+        </div>
+    </div>
+    <div class="tarjeta-cuerpo">
+        <form class="filtros" method="get">
+            <div>
+                <label class="texto-pequeno texto-tenue" for="estado">Estado</label>
+                <select class="campo-select" name="estado" id="estado">
+                    <option value="">Todos</option>
+                    {% for valor, etiqueta in estados %}
+                        <option value="{{ valor }}" {% if estado == valor %}selected{% endif %}>{{ etiqueta }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button class="boton" type="submit">Filtrar</button>
+        </form>
+    </div>
+    <div class="tabla-envoltura">
+        <table class="tabla">
+            <thead><tr><th>Fecha</th><th>Llamada</th><th>Asesor</th><th>Destino</th><th>Motivo</th><th>Estado</th></tr></thead>
+            <tbody>
+            {% for filtro in listado %}
+                <tr>
+                    <td class="texto-pequeno">{{ filtro.fecha_solicitud|date:"d/m/Y H:i" }}</td>
+                    <td><a href="/llamadas/listado/?action=ver&id={{ filtro.llamada_id }}">#{{ filtro.llamada_id }}</a></td>
+                    <td>{{ filtro.asesor.nombre|default:"—" }}</td>
+                    <td class="celda-mono">{{ filtro.destino|default:"—" }}</td>
+                    <td><span class="etiqueta">{{ filtro.get_motivo_display }}</span></td>
+                    <td><span class="etiqueta etiqueta-info">{{ filtro.get_estado_display }}</span></td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="vacio"><strong>Sin transferencias</strong>La IA está resolviendo todas las llamadas por su cuenta.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'componentes/paginacion.html' %}
+</div>
+{% endblock %}

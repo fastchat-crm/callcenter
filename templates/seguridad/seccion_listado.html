@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="tarjeta">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">Secciones del menú</div>
+            <div class="tarjeta-nota">Definen cómo se agrupa el menú lateral. Menor prioridad, más arriba.</div>
+        </div>
+        <div class="fila-flex">
+            <a class="boton boton-sm" href="/seguridad/modulos/">Módulos</a>
+            <button class="boton boton-primario" data-accion="add" data-titulo="Nueva sección">Nueva sección</button>
+        </div>
+    </div>
+    <div class="tarjeta-cuerpo">{% include 'componentes/buscador.html' with placeholder='Nombre de la sección…' %}</div>
+    <div class="tabla-envoltura">
+        <table class="tabla">
+            <thead><tr><th>Prioridad</th><th>Sección</th><th>Módulos que incluye</th><th class="celda-acciones">Acciones</th></tr></thead>
+            <tbody>
+            {% for filtro in listado %}
+                <tr>
+                    <td class="celda-mono">{{ filtro.prioridad }}</td>
+                    <td><strong>{{ filtro.nombre }}</strong></td>
+                    <td>
+                        {% for modulo in filtro.modulos.all %}<span class="etiqueta">{{ modulo.nombre }}</span>{% empty %}
+                            <span class="texto-tenue texto-pequeno">sin módulos</span>
+                        {% endfor %}
+                    </td>
+                    <td class="celda-acciones">
+                        <button class="boton boton-sm" data-accion="change" data-id="{{ filtro.id }}" data-titulo="Editar sección">Editar</button>
+                        <button class="boton boton-sm boton-peligro" data-accion="delete" data-id="{{ filtro.id }}"
+                                data-mensaje="¿Eliminar la sección {{ filtro.nombre }}?">Eliminar</button>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="4" class="vacio"><strong>Sin secciones</strong>Mientras no existan, el menú usa la estructura por defecto del código.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'componentes/paginacion.html' %}
+</div>
+{% endblock %}
