@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>Ingreso · {{ configuracion.nombre_empresa|default:nombre_sistema }}</title>
+    <title>Crear cuenta · {{ configuracion.nombre_empresa|default:nombre_sistema }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/static/css/base.css?v2.8">
 </head>
@@ -18,34 +18,34 @@
                 {% endif %}
                 <div>
                     <div class="marca-nombre">{{ configuracion.nombre_empresa|default:nombre_sistema }}</div>
-                    <div class="marca-sub">Panel de operación</div>
+                    <div class="marca-sub">Crea tu cuenta</div>
                 </div>
             </div>
-            <h1>Ingresa a tu cuenta</h1>
-            <p class="texto-suave mb-2">Administra flujos, agentes y llamadas del callcenter.</p>
+            <h1>Prueba el contestador con IA</h1>
+            <p class="texto-suave mb-2">
+                Creamos tu cuenta con un flujo de ejemplo que ya funciona: en cuanto entres
+                puedes hablar con el agente desde el navegador, sin gastar un minuto de teléfono.
+            </p>
 
             {% for mensaje in messages %}
                 <div class="aviso aviso-error mb-2">{{ mensaje }}</div>
             {% endfor %}
+            {% for error in form.non_field_errors %}<div class="aviso aviso-error mb-2">{{ error }}</div>{% endfor %}
 
             <form method="post">
                 {% csrf_token %}
-                <div class="grupo-campo">
-                    <label for="id_username">Usuario</label>
-                    <input class="campo" type="text" name="username" id="id_username" autofocus required>
-                </div>
-                <div class="grupo-campo">
-                    <label for="id_password">Contraseña</label>
-                    <input class="campo" type="password" name="password" id="id_password" required>
-                </div>
-                <button class="boton boton-primario" style="width:100%" type="submit">Ingresar</button>
+                {% for campo in form %}
+                    <div class="grupo-campo">
+                        <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                        {{ campo }}
+                        {% for error in campo.errors %}<div class="error">{{ error }}</div>{% endfor %}
+                    </div>
+                {% endfor %}
+                <button class="boton boton-primario" style="width:100%" type="submit">Crear mi cuenta</button>
             </form>
-            {% if registro_abierto %}
-                <p class="texto-suave texto-pequeno mt-2">
-                    ¿No tienes cuenta? <a href="/registro/">Crea una y prueba el sistema</a>
-                </p>
-            {% endif %}
-            <p class="texto-tenue texto-pequeno mt-3">Servidor {{ ip_publica }} · zona horaria configurada en credenciales.json</p>
+            <p class="texto-tenue texto-pequeno mt-3">
+                ¿Ya tienes cuenta? <a href="/login/">Ingresa aquí</a>
+            </p>
         </div>
     </div>
 

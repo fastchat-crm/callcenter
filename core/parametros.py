@@ -27,6 +27,14 @@ class Parametro:
 
 CATALOGO = (
     Parametro(
+        'REGISTRO_ABIERTO', 'Permitir que se registren solos', tipo='booleano', defecto=False,
+        unidad='1 = sí / 0 = no', grupo='Acceso',
+        descripcion='Abre /registro/ para que un interesado cree su propia cuenta y pruebe el '
+                    'sistema: se le crea su cliente, su usuario con el rol Cliente y un flujo de '
+                    'ejemplo que ya funciona. Con esto encendido, cualquiera que tenga la '
+                    'dirección puede crear una cuenta en tu servidor, así que conviene apagarlo '
+                    'cuando termines de mostrar el producto.'),
+    Parametro(
         'VOZ_STT_MOTOR', 'Motor de reconocimiento de voz', tipo='texto', defecto='faster_whisper',
         grupo='Reconocimiento de voz',
         descripcion='«faster_whisper» transcribe en este servidor: nada sale de aquí, pero '

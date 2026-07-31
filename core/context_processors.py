@@ -20,7 +20,17 @@ def datos_sistema(request):
         'url_general': settings.URL_GENERAL,
         'ip_publica': settings.IP_PUBLICA,
         'debug_activo': settings.DEBUG,
+        'registro_abierto': _registro_abierto(),
     }
+
+
+def _registro_abierto():
+    from autenticacion.view_registro import registro_abierto
+
+    try:
+        return registro_abierto()
+    except Exception:
+        return False
 
 
 def cliente_panel(request):

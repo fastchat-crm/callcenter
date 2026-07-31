@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <title>Ingreso · {{ configuracion.nombre_empresa|default:nombre_sistema }}</title>
+    <title>Registro cerrado · {{ configuracion.nombre_empresa|default:nombre_sistema }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/static/css/base.css?v2.8">
 </head>
@@ -11,41 +11,18 @@
     <div class="ingreso-panel">
         <div class="ingreso-formulario">
             <div class="marca mb-3">
-                {% if configuracion.logo %}
-                    <img class="marca-imagen" src="{{ configuracion.logo.url }}" alt="{{ configuracion.nombre_empresa }}">
-                {% else %}
-                    <div class="marca-logo">{{ configuracion.nombre_empresa|default:nombre_sistema|slice:":2"|upper }}</div>
-                {% endif %}
+                <div class="marca-logo">{{ configuracion.nombre_empresa|default:nombre_sistema|slice:":2"|upper }}</div>
                 <div>
                     <div class="marca-nombre">{{ configuracion.nombre_empresa|default:nombre_sistema }}</div>
                     <div class="marca-sub">Panel de operación</div>
                 </div>
             </div>
-            <h1>Ingresa a tu cuenta</h1>
-            <p class="texto-suave mb-2">Administra flujos, agentes y llamadas del callcenter.</p>
-
-            {% for mensaje in messages %}
-                <div class="aviso aviso-error mb-2">{{ mensaje }}</div>
-            {% endfor %}
-
-            <form method="post">
-                {% csrf_token %}
-                <div class="grupo-campo">
-                    <label for="id_username">Usuario</label>
-                    <input class="campo" type="text" name="username" id="id_username" autofocus required>
-                </div>
-                <div class="grupo-campo">
-                    <label for="id_password">Contraseña</label>
-                    <input class="campo" type="password" name="password" id="id_password" required>
-                </div>
-                <button class="boton boton-primario" style="width:100%" type="submit">Ingresar</button>
-            </form>
-            {% if registro_abierto %}
-                <p class="texto-suave texto-pequeno mt-2">
-                    ¿No tienes cuenta? <a href="/registro/">Crea una y prueba el sistema</a>
-                </p>
-            {% endif %}
-            <p class="texto-tenue texto-pequeno mt-3">Servidor {{ ip_publica }} · zona horaria configurada en credenciales.json</p>
+            <h1>El registro está cerrado</h1>
+            <p class="texto-suave mb-2">
+                Este sistema no acepta cuentas nuevas por ahora. Si te corresponde acceso,
+                pídeselo a quien administra el servicio.
+            </p>
+            <a class="boton boton-primario" href="/login/">Ir al ingreso</a>
         </div>
     </div>
 

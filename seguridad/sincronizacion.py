@@ -14,7 +14,7 @@ logger = logging.getLogger('seguridad')
 # Rutas que no son módulos del panel: infraestructura, endpoints y públicas.
 PREFIJOS_IGNORADOS = (
     '/admin/', '/static/', '/media/', '/ajaxrequest/', '/health/', '/login/',
-    '/logout/', '/changepass/', '/telefonia/webhook/', '/agentes-ia/estado/',
+    '/logout/', '/changepass/', '/registro/', '/telefonia/webhook/', '/agentes-ia/estado/',
     '/voz/estado/', '/clientes/cambiar/', '/clientes/modo-cliente/',
 )
 

@@ -12,6 +12,7 @@ from django.views.static import serve
 
 from autenticacion.view_login import cambiar_clave_view, login_view, logout_view
 from autenticacion.view_perfil import perfil_view
+from autenticacion.view_registro import registro_view
 from callcenterdj.view_health import health_view
 from core.ajax import ConsultasAjax
 from core.view_configuracion import configuracion_view
@@ -26,6 +27,7 @@ urlpatterns = [
     path('', index_view, name='inicio'),
     path('panel/', index_view, name='panel'),
     path('login/', login_view, name='login'),
+    path('registro/', registro_view, name='registro'),
     path('logout/', logout_view, name='logout'),
     path('perfilpanel/', perfil_view, name='perfil'),
     path('configuracion/', configuracion_view, name='configuracion'),
