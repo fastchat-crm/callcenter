@@ -1,3 +1,5 @@
+from django import forms
+
 from core.custom_forms import FormularioBase
 from core.funciones import normalizar_e164
 
@@ -52,13 +54,19 @@ class NumeroForm(FormularioBase):
 class AsesorForm(FormularioBase):
     class Meta:
         model = AsesorHumano
-        fields = ('nombre', 'numero_destino', 'extension_sip', 'correo', 'departamento',
-                  'horario', 'prioridad', 'disponible')
+        fields = ('nombre', 'numero_destino', 'extension_sip', 'clave_sip', 'correo',
+                  'departamento', 'horario', 'prioridad', 'disponible')
         labels = {
             'nombre': 'Nombre', 'numero_destino': 'Número destino (E.164)',
-            'extension_sip': 'Extensión SIP', 'correo': 'Correo', 'departamento': 'Departamento',
+            'extension_sip': 'Extensión SIP', 'clave_sip': 'Clave SIP',
+            'correo': 'Correo', 'departamento': 'Departamento',
             'horario': 'Horario', 'prioridad': 'Prioridad', 'disponible': 'Disponible',
         }
+        help_texts = {
+            'clave_sip': 'Con esta clave el softphone se registra. Sin ella, la extensión '
+                         'no se genera en Asterisk.',
+        }
+        widgets = {'clave_sip': forms.PasswordInput(render_value=True)}
 
     def clean_numero_destino(self):
         numero = self.cleaned_data.get('numero_destino')

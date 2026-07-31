@@ -1,51 +1,110 @@
 {% extends 'base.html' %}
 
 {% block contenido %}
-<div class="tarjeta">
+<div class="tarjeta mb-2">
     <div class="tarjeta-encabezado">
         <div>
             <div class="tarjeta-titulo">Llamadas en curso</div>
-            <div class="tarjeta-nota">Se actualiza cada 4 segundos.</div>
+            <div class="tarjeta-nota">Se actualiza cada 3 segundos. Sirve para seguir una prueba mientras suena.</div>
         </div>
-        <span class="etiqueta etiqueta-exito" id="contador"><span class="punto"></span>0 activas</span>
+        <div class="fila-flex">
+            <span class="etiqueta" id="estado-asterisk">Asterisk…</span>
+            <span class="etiqueta" id="estado-puente">Puente…</span>
+            <span class="etiqueta etiqueta-exito" id="contador"><span class="punto"></span>0 activas</span>
+        </div>
     </div>
     <div class="tabla-envoltura">
         <table class="tabla">
-            <thead><tr><th>Inicio</th><th>Origen</th><th>Flujo</th><th>Paso</th><th>Último turno</th><th>Estado</th></tr></thead>
+            <thead><tr><th>Inicio</th><th>Duración</th><th>Origen</th><th>Vía</th><th>Flujo</th><th>Paso</th><th>Estado</th></tr></thead>
             <tbody id="cuerpo-monitor">
-                <tr><td colspan="6" class="vacio">Cargando…</td></tr>
+                <tr><td colspan="7" class="vacio">Cargando…</td></tr>
             </tbody>
         </table>
+    </div>
+</div>
+
+<div class="tarjeta">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">Conversación en vivo</div>
+            <div class="tarjeta-nota">Lo que se está diciendo, turno por turno.</div>
+        </div>
+    </div>
+    <div class="tarjeta-cuerpo" id="conversaciones">
+        <div class="vacio"><strong>Sin llamadas activas</strong>Marca 1000 desde el softphone o abre el Demo de voz.</div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
+function duracion(segundos) {
+    const minutos = Math.floor(segundos / 60);
+    return minutos + ':' + String(segundos % 60).padStart(2, '0');
+}
+
+function marcarEstado(elemento, activo, textoSi, textoNo) {
+    elemento.className = 'etiqueta ' + (activo ? 'etiqueta-exito' : 'etiqueta-alerta');
+    elemento.textContent = activo ? textoSi : textoNo;
+}
+
+function escapar(texto) {
+    const caja = document.createElement('div');
+    caja.textContent = texto || '';
+    return caja.innerHTML;
+}
+
 function pintarMonitor() {
     fetch('/llamadas/monitor/?action=datos')
         .then((respuesta) => respuesta.json())
         .then((datos) => {
-            const cuerpo = document.getElementById('cuerpo-monitor');
             const llamadas = datos.llamadas || [];
+            const telefonia = datos.telefonia || {};
+
+            marcarEstado(document.getElementById('estado-asterisk'), telefonia.asterisk_activo,
+                'Asterisk · ' + (telefonia.canales || 0) + ' canales', 'Asterisk apagado');
+            marcarEstado(document.getElementById('estado-puente'), telefonia.audiosocket,
+                'Puente listo', 'Puente apagado');
             document.getElementById('contador').innerHTML =
                 '<span class="punto"></span>' + llamadas.length + ' activa' + (llamadas.length === 1 ? '' : 's');
+
+            const cuerpo = document.getElementById('cuerpo-monitor');
+            const panel = document.getElementById('conversaciones');
             if (!llamadas.length) {
-                cuerpo.innerHTML = '<tr><td colspan="6" class="vacio"><strong>Ninguna llamada activa</strong>El motor está en espera.</td></tr>';
+                cuerpo.innerHTML = '<tr><td colspan="7" class="vacio"><strong>Ninguna llamada activa</strong>El motor está en espera.</td></tr>';
+                panel.innerHTML = '<div class="vacio"><strong>Sin llamadas activas</strong>Marca 1000 desde el softphone o abre el Demo de voz.</div>';
                 return;
             }
+
             cuerpo.innerHTML = llamadas.map((llamada) => `
                 <tr>
-                    <td class="texto-pequeno">${llamada.inicio}</td>
-                    <td class="celda-mono">${llamada.origen || '—'}</td>
-                    <td>${llamada.flujo || '—'}</td>
-                    <td><span class="etiqueta">${llamada.paso || '—'}</span></td>
-                    <td class="texto-suave">${llamada.ultimo_turno || ''}</td>
-                    <td><span class="etiqueta etiqueta-info">${llamada.estado}</span></td>
+                    <td class="texto-pequeno">${escapar(llamada.inicio)}</td>
+                    <td class="celda-mono">${duracion(llamada.segundos)}</td>
+                    <td class="celda-mono">${escapar(llamada.origen) || '—'}</td>
+                    <td><span class="etiqueta">${escapar(llamada.driver)}</span></td>
+                    <td>${escapar(llamada.flujo) || '—'}</td>
+                    <td><span class="etiqueta">${escapar(llamada.paso) || '—'}</span></td>
+                    <td><span class="etiqueta etiqueta-info">${escapar(llamada.estado)}</span></td>
                 </tr>`).join('');
-        });
+
+            panel.innerHTML = llamadas.map((llamada) => `
+                <div class="conversacion-vivo">
+                    <div class="conversacion-titulo">
+                        <strong>${escapar(llamada.origen) || 'origen desconocido'}</strong>
+                        <span class="texto-tenue texto-pequeno">${escapar(llamada.flujo)} · ${duracion(llamada.segundos)}</span>
+                    </div>
+                    <div class="conversacion">
+                        ${(llamada.turnos || []).map((turno) => `
+                            <div class="turno">
+                                <span class="etiqueta ${turno.rol === 'ia' ? 'etiqueta-info' : 'etiqueta-acento'}">${turno.rol === 'ia' ? 'IA' : 'Cliente'}</span>
+                                <div class="turno-burbuja">${escapar(turno.texto)}<div class="texto-tenue texto-pequeno">${escapar(turno.hora)}</div></div>
+                            </div>`).join('') || '<div class="texto-tenue texto-pequeno">Todavía no hay turnos.</div>'}
+                    </div>
+                </div>`).join('');
+        })
+        .catch(() => {});
 }
 pintarMonitor();
-window.setInterval(pintarMonitor, 4000);
+window.setInterval(pintarMonitor, 3000);
 </script>
 {% endblock %}

@@ -58,10 +58,13 @@ def webhook_asterisk_entrante(request):
     from llamadas.models import Llamada
     from telefonia.models import NumeroTelefonico
 
+    from ivr.models import FlujoVoz
+
     datos = request.POST if request.method == 'POST' else request.GET
     identificador = (datos.get('uuid') or '').strip()
     numero_origen = (datos.get('from') or '').strip()
     numero_destino = (datos.get('to') or '').strip()
+    flujo_pedido = (datos.get('flujo') or '').strip()
     if not identificador:
         return JsonResponse({'error': True, 'message': 'Falta el uuid de la llamada.'}, status=400)
 
@@ -70,20 +73,27 @@ def webhook_asterisk_entrante(request):
         .filter(numero=numero_destino, status=True, activo=True).first()
     )
     flujo = numero.flujo if numero is not None and numero.flujo_id else None
+
+    # Prueba desde una extensión interna: todavía no hay DID contratado, pero se
+    # quiere oír al bot. El dialplan manda el flujo directamente.
+    if flujo is None and flujo_pedido.isdigit():
+        flujo = FlujoVoz.objects.select_related('cliente').filter(
+            pk=int(flujo_pedido), status=True, activo=True).first()
+
     if flujo is None or not flujo.activo:
         logger.warning('[telefonia] %s no tiene flujo activo; se rechaza la llamada', numero_destino)
         return JsonResponse({'error': True, 'message': 'El número no tiene un flujo activo.'}, status=409)
 
     llamada = Llamada.objects.create(
-        cliente=numero.cliente,
+        cliente=numero.cliente if numero is not None else flujo.cliente,
         sentido='entrante',
         driver='asterisk',
         call_id=identificador,
         numero=numero,
         numero_origen=numero_origen,
         numero_destino=numero_destino,
-        pais_iso=numero.pais_iso or '',
-        idioma=numero.idioma or 'es',
+        pais_iso=(numero.pais_iso or '') if numero is not None else '',
+        idioma=(numero.idioma if numero is not None else flujo.idioma) or 'es',
         flujo=flujo,
         estado='iniciando',
     )

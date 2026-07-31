@@ -33,12 +33,16 @@ class Command(BaseCommand):
         parser.add_argument('--destino', default=RUTA_ASTERISK)
 
     def handle(self, *args, **opciones):
-        from telefonia.models import NumeroTelefonico, TroncalSIP
+        from telefonia.models import AsesorHumano, NumeroTelefonico, TroncalSIP
 
         troncales = list(TroncalSIP.objects.filter(status=True, activo=True)
                          .select_related('proveedor'))
         numeros = list(NumeroTelefonico.objects.filter(status=True, activo=True)
                        .select_related('flujo', 'troncal'))
+        # Los asesores con extensión son también softphones: se registran para
+        # recibir las transferencias y, de paso, para probar el bot sin carrier.
+        asesores = [a for a in AsesorHumano.objects.filter(status=True)
+                    if (a.extension_sip or '').strip()]
 
         if not troncales:
             self.stdout.write(self.style.WARNING(
@@ -48,8 +52,8 @@ class Command(BaseCommand):
                 'No hay números activos: ninguna llamada tendría a dónde ir.'))
 
         archivos = {
-            'pjsip.conf': self._pjsip(troncales),
-            'extensions.conf': self._dialplan(troncales, numeros),
+            'pjsip.conf': self._pjsip(troncales, asesores),
+            'extensions.conf': self._dialplan(troncales, numeros, asesores),
         }
 
         if not opciones['escribir']:
@@ -77,9 +81,44 @@ class Command(BaseCommand):
         self.stdout.write('  sudo asterisk -rx "pjsip reload"')
         self.stdout.write('  sudo asterisk -rx "dialplan reload"')
 
-    def _pjsip(self, troncales):
+    def _pjsip(self, troncales, asesores):
         partes = [CABECERA, '[transport-udp]\ntype = transport\nprotocol = udp\n'
                             'bind = 0.0.0.0:5060\n']
+
+        for asesor in asesores:
+            extension = asesor.extension_sip.strip()
+            clave = (asesor.clave_sip or '').strip()
+            if not clave:
+                partes.append(f'\n; {extension} ({asesor.nombre}) sin clave SIP: no se genera.\n'
+                              f'; Ponle una en Centro de telefonía → Asesores.\n')
+                continue
+            partes.append(f"""
+[{extension}]
+type = endpoint
+transport = transport-udp
+context = desde-interno
+disallow = all
+allow = alaw,ulaw
+auth = {extension}-auth
+aors = {extension}
+callerid = {asesor.nombre} <{extension}>
+direct_media = no
+
+[{extension}-auth]
+type = auth
+auth_type = userpass
+username = {extension}
+password = {clave}
+
+[{extension}]
+type = aor
+max_contacts = 2
+remove_existing = yes
+""")
+        return ''.join(partes) + self._pjsip_troncales(troncales)
+
+    def _pjsip_troncales(self, troncales):
+        partes = []
         for troncal in troncales:
             nombre = self._identificador(troncal)
             partes.append(f"""
@@ -119,7 +158,7 @@ match = {troncal.host}
 """)
         return ''.join(partes)
 
-    def _dialplan(self, troncales, numeros):
+    def _dialplan(self, troncales, numeros, asesores):
         host = (settings.VOZ_PUBLIC_HOST or '127.0.0.1').split('/')[0]
         aviso = f'http://127.0.0.1:{self._puerto_panel()}/telefonia/webhook/asterisk/'
         audiosocket = f'{settings.AUDIOSOCKET_HOST}:{settings.AUDIOSOCKET_PUERTO}'
@@ -157,12 +196,41 @@ exten => _X.,1,Goto(atender-con-ia,${{EXTEN}},1)
                 flujo = numero.flujo.nombre if numero.flujo_id else 'SIN FLUJO'
                 partes.append(f';   {numero.numero} → {flujo}\n')
 
+        # La extensión de prueba manda el id del flujo, no un número: sirve para
+        # oír al bot antes de tener un DID contratado.
+        flujo_prueba = self._flujo_de_prueba(numeros)
         partes.append(f"""
-; Softphone de pruebas: marca 1000 y te atiende la IA sin gastar un minuto.
 [desde-interno]
-exten => 1000,1,Goto(atender-con-ia,{numeros[0].numero if numeros else '1000'},1)
+; Marca 1000 desde el softphone y te atiende la IA, sin gastar un minuto de
+; teléfono ni depender del carrier. Es la forma de probar todo el pipeline.
+exten => 1000,1,NoOp(Prueba del bot desde una extension interna)
+ same => n,Answer()
+ same => n,Set(CALLUUID=${{SHELL(uuidgen -r | tr -d '\\n')}})
+ same => n,Set(AVISO=${{CURL({aviso},uuid=${{CALLUUID}}&from=${{CALLERID(num)}}&to=interno&flujo={flujo_prueba})}})
+ same => n,GotoIf($[${{REGEX("\\"error\\": false" ${{AVISO}})}} = 0]?atender-con-ia,s,sinpanel)
+ same => n,AudioSocket(${{CALLUUID}},{audiosocket})
+ same => n,Hangup()
 """)
+        for asesor in asesores:
+            extension = asesor.extension_sip.strip()
+            partes.append(f"""exten => {extension},1,NoOp(Llamada interna a {asesor.nombre})
+ same => n,Dial(PJSIP/{extension},30)
+ same => n,Hangup()
+""")
+        if not asesores:
+            partes.append('; Sin asesores con extensión: no hay softphones que registrar.\n'
+                          '; Cárgalos en Centro de telefonía → Asesores, con su clave SIP.\n')
         return ''.join(partes)
+
+    def _flujo_de_prueba(self, numeros):
+        """Flujo que atiende la extensión 1000: el del primer número, o el primero activo."""
+        from ivr.models import FlujoVoz
+
+        for numero in numeros:
+            if numero.flujo_id:
+                return numero.flujo_id
+        flujo = FlujoVoz.objects.filter(status=True, activo=True).order_by('id').first()
+        return flujo.id if flujo else 0
 
     def _identificador(self, troncal):
         limpio = ''.join(c if c.isalnum() else '-' for c in troncal.nombre.lower())

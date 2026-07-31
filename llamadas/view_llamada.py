@@ -81,23 +81,48 @@ def monitor_view(request):
             .select_related('flujo', 'agente_ia')
             .order_by('-fecha_inicio')
         )
+        from django.utils import timezone
+
+        from telefonia.estado import estado_asterisk, estado_audiosocket
+
+        ahora = timezone.now()
+        llamadas = []
+        for llamada in en_curso:
+            # La conversación completa, para poder seguir una prueba en vivo sin
+            # tener que abrir el detalle y refrescar a mano.
+            turnos = list(
+                llamada.turnos.filter(status=True).order_by('-id')
+                .values('rol', 'texto', 'fecha')[:8]
+            )
+            turnos.reverse()
+            llamadas.append({
+                'id': llamada.id,
+                'origen': llamada.numero_origen,
+                'destino': llamada.numero_destino,
+                'driver': llamada.driver,
+                'estado': llamada.get_estado_display(),
+                'paso': llamada.paso_actual or '',
+                'flujo': llamada.flujo.nombre if llamada.flujo else '',
+                'inicio': llamada.fecha_inicio.strftime('%H:%M:%S'),
+                'segundos': int((ahora - llamada.fecha_inicio).total_seconds()),
+                'turnos': [
+                    {'rol': turno['rol'],
+                     'texto': (turno['texto'] or '')[:220],
+                     'hora': turno['fecha'].strftime('%H:%M:%S') if turno['fecha'] else ''}
+                    for turno in turnos
+                ],
+            })
+
+        asterisk, audiosocket = estado_asterisk(), estado_audiosocket()
         return JsonResponse({
             'error': False,
-            'llamadas': [
-                {
-                    'id': llamada.id,
-                    'origen': llamada.numero_origen,
-                    'destino': llamada.numero_destino,
-                    'estado': llamada.get_estado_display(),
-                    'paso': llamada.paso_actual or '',
-                    'flujo': llamada.flujo.nombre if llamada.flujo else '',
-                    'inicio': llamada.fecha_inicio.strftime('%H:%M:%S'),
-                    'ultimo_turno': (
-                        llamada.turnos.order_by('-id').values_list('texto', flat=True).first() or ''
-                    )[:120],
-                }
-                for llamada in en_curso
-            ],
+            'llamadas': llamadas,
+            'telefonia': {
+                'asterisk_activo': asterisk['activo'],
+                'canales': asterisk['canales'],
+                'audiosocket': audiosocket['escuchando'],
+                'detalle': asterisk['detalle'],
+            },
         })
 
     data = {'titulo': 'Monitor en vivo', 'modulo': 'Centro de operación'}

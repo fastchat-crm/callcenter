@@ -5,7 +5,7 @@
     <title>{{ titulo }} · {{ configuracion.nombre_empresa|default:nombre_sistema }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#2f6bff">
-    <link rel="stylesheet" href="/static/css/base.css?v1.7">
+    <link rel="stylesheet" href="/static/css/base.css?v1.8">
     {% block head %}{% endblock %}
 </head>
 <body>
@@ -98,7 +98,7 @@
 
 <div class="avisos" id="avisos"></div>
 <form id="formulario-csrf">{% csrf_token %}</form>
-<script src="/static/js/app.js?v1.7"></script>
+<script src="/static/js/app.js?v1.8"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -311,6 +311,10 @@ table.tabla tbody tr:last-child td { border-bottom: none; }
 .aviso-error { border-left-color: var(--peligro); }
 .aviso-alerta { border-left-color: var(--alerta); }
 
+.conversacion-vivo { padding: .9rem 0; border-bottom: 1px solid var(--borde); }
+.conversacion-vivo:last-child { border-bottom: 0; padding-bottom: 0; }
+.conversacion-titulo { display: flex; align-items: baseline; gap: .6rem; margin-bottom: .6rem; }
+
 /* ---------- Conversación ---------- */
 .conversacion { display: flex; flex-direction: column; gap: .7rem; }
 .turno { display: flex; gap: .7rem; align-items: flex-start; }

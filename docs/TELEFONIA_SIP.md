@@ -13,60 +13,19 @@ quién le entrega el audio.
 
 ## 1. Gratis: Asterisk local + softphone
 
-```bash
-sudo apt install -y asterisk
-```
-
-`/etc/asterisk/pjsip.conf` — una extensión para el softphone:
-
-```ini
-[transport-udp]
-type = transport
-protocol = udp
-bind = 0.0.0.0:5060
-
-[1001]
-type = endpoint
-context = desde-interno
-disallow = all
-allow = alaw,ulaw
-auth = 1001-auth
-aors = 1001
-
-[1001-auth]
-type = auth
-auth_type = userpass
-username = 1001
-password = una-clave-larga
-
-[1001]
-type = aor
-max_contacts = 2
-```
-
-`/etc/asterisk/extensions.conf` — marcar `*100` entrega la llamada al bot:
-
-```ini
-[desde-interno]
-exten => *100,1,Answer()
- same => n,Stasis(callcenter-ia)
- same => n,Hangup()
-
-[desde-troncal]
-exten => _X.,1,Answer()
- same => n,Stasis(callcenter-ia)
- same => n,Hangup()
-```
+**No escribas la configuración a mano.** Se genera desde lo que cargues en el panel, para que
+lo que ves en pantalla sea lo que realmente atiende las llamadas:
 
 ```bash
-sudo systemctl restart asterisk
-sudo asterisk -rx "pjsip show endpoints"
+sudo bash deploy/instalar_asterisk.sh
 ```
 
-Configura Linphone o Zoiper con usuario `1001`, la clave y la IP del servidor, marca `*100`
-y estarás hablando con el mismo motor que atenderá las llamadas reales.
+Antes de correrlo, en *Centro de telefonía → Asesores* crea al menos un asesor con
+**extensión SIP** y **clave SIP**: de ahí sale el softphone. El detalle de cómo funciona todo
+esto está en la sección siguiente.
 
-Firewall: `5060/udp` para SIP y `10000-20000/udp` para RTP.
+Firewall: `5060/udp` para SIP y `10000-20000/udp` para RTP. Léete antes «Seguridad del 5060»,
+al final de este documento.
 
 ## El puente con Asterisk
 
@@ -261,3 +220,48 @@ que después permite afinar el flujo: si el 40 % de las transferencias son
 | La llamada se corta al minuto | `proxy_read_timeout` bajo en Nginx |
 | El carrier no conecta | `VOZ_PUBLIC_HOST` mal configurado, o `wss://` sin certificado válido |
 | Audio en un solo sentido | Puertos RTP cerrados en el firewall (Asterisk) |
+
+### Probar sin tener número: la extensión 1000
+
+Cargas un asesor con **extensión SIP** y **clave SIP** (*Centro de telefonía → Asesores*),
+regeneras la configuración y ya tienes un softphone. Con Linphone, Zoiper o MicroSIP:
+
+| Campo | Valor |
+|---|---|
+| Usuario | la extensión, por ejemplo `1001` |
+| Clave | la clave SIP del asesor |
+| Dominio / proxy | la IP del servidor |
+
+Marca **1000** y te atiende la IA. Esa extensión no necesita ningún número contratado: el
+dialplan le manda al panel el id del flujo en vez de un número, justamente para poder oír el
+bot antes de tener un DID.
+
+Marca **1001** y suena el softphone del asesor: así se prueba la transferencia.
+
+Mientras suena, *Centro de operación → Monitor en vivo* muestra la llamada con su duración
+corriendo, el paso que está ejecutando el motor y **la conversación turno por turno**, además
+del estado de Asterisk y del puente. Se refresca cada tres segundos.
+
+### Seguridad del 5060
+
+Abrir el 5060 a internet tiene una consecuencia concreta: los escáneres SIP lo encuentran en
+horas y prueban usuarios y claves. El objetivo habitual no es escuchar tus llamadas sino
+**hacer llamadas salientes a tu costa** (fraude telefónico), que se paga.
+
+Dos medidas mínimas, las dos ya aplicadas por el instalador:
+
+- **Claves largas y aleatorias** en cada extensión. El panel no las genera solo: ponla tú,
+  y que no se parezca a la extensión.
+- **fail2ban** con la cárcel `asterisk`, que lee `/var/log/asterisk/security` y bloquea la IP
+  tras cinco intentos fallidos en diez minutos, durante un día.
+
+```bash
+sudo fail2ban-client status asterisk    # cuántos intentos y qué IPs están bloqueadas
+```
+
+Para que Asterisk escriba ese archivo hace falta la línea `security => security` en
+`/etc/asterisk/logger.conf`; el instalador la agrega.
+
+Si no vas a registrar softphones desde fuera del servidor, lo más seguro es **no abrir el
+5060** y dejar que solo la troncal del proveedor llegue, restringiendo por IP con un
+`type = identify` en PJSIP.

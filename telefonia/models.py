@@ -155,6 +155,9 @@ class AsesorHumano(ModeloBase):
                                       help_text='Celular o fijo en E.164 al que se reenvía la llamada.')
     extension_sip = models.CharField(max_length=40, blank=True, null=True,
                                      help_text='Extensión interna del softphone, ejemplo 1001.')
+    clave_sip = models.CharField(max_length=80, blank=True, null=True,
+                                 help_text='Clave con la que el softphone se registra. '
+                                           'Se usa al generar la configuración de Asterisk.')
     correo = models.EmailField(blank=True, null=True)
     departamento = models.CharField(max_length=80, blank=True, null=True)
     horario = models.CharField(max_length=15, choices=HORARIO_CHOICES, default='laboral')
