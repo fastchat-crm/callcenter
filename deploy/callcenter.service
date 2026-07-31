@@ -1,0 +1,35 @@
+[Unit]
+Description=gunicorn daemon for callcenter
+After=network.target postgresql.service redis-server.service
+Requires=postgresql.service
+
+[Service]
+User=root
+Group=root
+WorkingDirectory=/home/callcenter
+Environment="DJANGO_SETTINGS_MODULE=callcenterdj.settings"
+Environment="PYTHONUNBUFFERED=1"
+Environment="KMP_DUPLICATE_LIB_OK=TRUE"
+
+# Un solo worker a propósito: Whisper y Piper quedan cargados en memoria y se
+# comparten entre llamadas. Cada worker extra duplicaría esos modelos (~2 GB).
+# Para escalar, levantar más puertos y balancear en Nginx, no subir --workers.
+#
+# El worker es de uvicorn (ASGI) porque los WebSockets de voz no viajan por WSGI.
+# Escucha solo en loopback: Nginx publica el puerto hacia afuera.
+ExecStart=/home/callcenter/venv/bin/gunicorn \
+    --workers 1 \
+    --worker-class uvicorn_worker.UvicornWorker \
+    --bind 127.0.0.1:8501 \
+    --timeout 3600 \
+    --graceful-timeout 30 \
+    --capture-output \
+    --access-logfile /var/log/callcenter/access.log \
+    --error-logfile /var/log/callcenter/error.log \
+    callcenterdj.asgi:application
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

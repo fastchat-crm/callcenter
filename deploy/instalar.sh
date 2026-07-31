@@ -54,13 +54,13 @@ bash scripts/descargar_modelos_voz.sh || echo "  (puedes ejecutarlo luego manual
 
 echo "=== 7/7 Servicios ==="
 mkdir -p /var/log/callcenter
-cp deploy/callcenter-daphne.service /etc/systemd/system/
+cp deploy/callcenter.service /etc/systemd/system/
 cp deploy/callcenter.nginx.conf /etc/nginx/sites-available/callcenter
 ln -sf /etc/nginx/sites-available/callcenter /etc/nginx/sites-enabled/callcenter
 rm -f /etc/nginx/sites-enabled/default
 systemctl daemon-reload
 systemctl enable --now redis-server postgresql
-systemctl enable --now callcenter-daphne
+systemctl enable --now callcenter
 nginx -t && systemctl reload nginx
 
 IP=$(curl -s --max-time 5 ifconfig.me || echo "IP-DEL-SERVIDOR")

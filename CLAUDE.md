@@ -4,12 +4,14 @@
 
 Recepción telefónica con IA. El cliente llama, un agente de IA contesta en español, captura
 datos, responde con la base de conocimiento y transfiere a un asesor humano cuando toca.
-Django 4.2 + Channels/Daphne + PostgreSQL + Redis. Mismas convenciones que `fastchatdj`, con
-el pipeline de voz e IA corriendo sobre servicios gratuitos o auto-hospedados.
+Django 4.2 + Channels sobre gunicorn/uvicorn + PostgreSQL + Redis. Mismas convenciones que
+`fastchatdj`, con el pipeline de voz e IA corriendo sobre servicios gratuitos o
+auto-hospedados.
 
 ## Stack
 
-- Python 3.11/3.12, Django 4.2, Channels 4, Daphne, PostgreSQL 14+, Redis
+- Python 3.11/3.12, Django 4.2, Channels 4, PostgreSQL 14+, Redis
+- Servidor: gunicorn con `uvicorn_worker.UvicornWorker` (ASGI); Daphne solo para depurar
 - Frontend propio: CSS con variables y JS vanilla, sin CDN ni frameworks
 - `AUTH_USER_MODEL = "autenticacion.Usuario"`
 - Configuración sensible en `credenciales.json` (nunca se versiona)
@@ -125,4 +127,5 @@ Todo `FileField`/`ImageField` declara `FileExtensionValidator` y un validador de
 - **No leer ni modificar** `credenciales.json`; `credenciales_template.json` muestra las claves
 - **No hacer** `git commit`/`push` salvo pedido explícito
 - **No formatear ni lintear** archivos que no se estén tocando
-- Un solo proceso Daphne: los modelos de voz se comparten entre llamadas
+- Un solo worker: los modelos de voz se comparten entre llamadas. El servicio es `callcenter`
+  (gunicorn + `uvicorn_worker.UvicornWorker`); se reinicia con `service callcenter restart`

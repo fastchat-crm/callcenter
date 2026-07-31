@@ -100,11 +100,11 @@ Otras voces: `es_ES-davefx-medium`, `es_ES-sharvard-medium`, `es_AR-daniela-high
 
 ```bash
 sudo mkdir -p /var/log/callcenter
-sudo cp deploy/callcenter-daphne.service /etc/systemd/system/
+sudo cp deploy/callcenter.service /etc/systemd/system/
 sudo cp deploy/callcenter.nginx.conf /etc/nginx/sites-available/callcenter
 sudo ln -s /etc/nginx/sites-available/callcenter /etc/nginx/sites-enabled/
 sudo systemctl daemon-reload
-sudo systemctl enable --now callcenter-daphne
+sudo systemctl enable --now callcenter
 sudo nginx -t && sudo systemctl reload nginx
 ```
 

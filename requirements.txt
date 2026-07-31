@@ -5,6 +5,11 @@ Django==4.2.15
 channels==4.2.2
 channels-redis==4.2.0
 daphne==4.1.2
+# Servidor de producción: gunicorn gobierna el proceso, el worker de uvicorn habla ASGI
+# (los WebSockets de voz no viajan por WSGI). Daphne queda para depurar en primer plano.
+gunicorn==26.0.0
+uvicorn[standard]==0.52.0
+uvicorn-worker==0.4.0
 psycopg2-binary==2.9.9
 redis==5.0.8
 requests==2.32.3
@@ -39,4 +44,3 @@ python-docx==1.1.2
 # Opcionales
 # ---------------------------------------------------------------
 # vosk==0.3.45          # STT alternativo, más liviano que Whisper
-# gunicorn==22.0.0      # solo si se sirve WSGI aparte del ASGI

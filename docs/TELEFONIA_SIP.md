@@ -156,7 +156,7 @@ que después permite afinar el flujo: si el 40 % de las transferencias son
 
 | Síntoma | Dónde mirar |
 |---|---|
-| La llamada entra pero no hay audio | ¿El carrier llegó al WebSocket? `journalctl -u callcenter-daphne -f` debe mostrar `media stream conectado` |
+| La llamada entra pero no hay audio | ¿El carrier llegó al WebSocket? `journalctl -u callcenter -f` debe mostrar `media stream conectado` |
 | Se escucha entrecortado | Falta `proxy_buffering off` en Nginx, o el servidor está saturado |
 | La llamada se corta al minuto | `proxy_read_timeout` bajo en Nginx |
 | El carrier no conecta | `VOZ_PUBLIC_HOST` mal configurado, o `wss://` sin certificado válido |

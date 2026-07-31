@@ -18,10 +18,10 @@ ufw status
 
 **En este servidor** el 80 y el 443 los usa Nginx con `fastchatdj` y `chatpdf`, el 8001 lo
 tiene Gunicorn y el 8080 un contenedor Docker. Por eso el callcenter se publica en el
-**puerto 9000**, con Daphne escuchando en `127.0.0.1:8501`:
+**puerto 9000**, con gunicorn escuchando en `127.0.0.1:8501`:
 
 ```
-navegador → 145.223.79.221:9000 (Nginx) → 127.0.0.1:8501 (Daphne)
+navegador → 145.223.79.221:9000 (Nginx) → 127.0.0.1:8501 (gunicorn)
 ```
 
 Al cambiar de puerto hay que actualizar tres lugares y mantenerlos iguales:
@@ -68,22 +68,29 @@ Ponla en `credenciales.json`:
 el carrier (`<Stream url="ws://145.223.79.221/ws/voz/stream/">`). Si queda vacío o apunta a
 `localhost`, el carrier no puede conectarse y la llamada se queda muda.
 
-## 2. Daphne detrás de Nginx
+## 2. Gunicorn detrás de Nginx
 
-Daphne escucha solo en `127.0.0.1:8001`; Nginx publica los puertos 80/443. Nunca expongas
-Daphne directo a internet.
+El servicio se llama `callcenter`, igual que en los demás proyectos del servidor, y lo
+gobierna **gunicorn**. El worker es el de uvicorn (`uvicorn_worker.UvicornWorker`) y no el
+worker sincrónico de siempre: este proyecto habla ASGI y los WebSockets de voz no viajan por
+WSGI. Escucha solo en `127.0.0.1:8501`; Nginx publica los puertos 80/443. Nunca lo expongas
+directo a internet.
 
 ```bash
 sudo mkdir -p /var/log/callcenter
-sudo cp deploy/callcenter-daphne.service /etc/systemd/system/
+sudo cp deploy/callcenter.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now callcenter-daphne
-sudo systemctl status callcenter-daphne
+sudo systemctl enable --now callcenter
+sudo systemctl status callcenter
 ```
 
-**Un solo proceso Daphne**, a propósito: Whisper y Piper quedan cargados en memoria y se
-comparten entre llamadas. Con varios workers cada uno cargaría su copia (~1,5 GB) y la
-primera respuesta de cada worker volvería a tardar segundos.
+**Un solo worker**, a propósito: Whisper y Piper quedan cargados en memoria y se comparten
+entre llamadas. Con varios workers cada uno cargaría su copia (~1,5 GB) y la primera
+respuesta de cada worker volvería a tardar segundos. Para escalar, levanta más puertos y
+balancea en Nginx; no subas `--workers`.
+
+Daphne sigue instalado, pero solo para depurar en primer plano
+(`bash deploy/reiniciar.sh manual`).
 
 ## 3. Nginx
 
@@ -182,7 +189,7 @@ Y luego en `credenciales.json`:
 }
 ```
 
-Reinicia con `sudo systemctl restart callcenter-daphne`. El sistema pasa solo a generar
+Reinicia con `sudo systemctl restart callcenter`. El sistema pasa solo a generar
 `wss://` en los webhooks (`VOZ_WS_ESQUEMA` se deriva de `USE_SSL`).
 
 Mientras no haya dominio, funciona igual con **Asterisk local por IP** (`ws://`), que es
@@ -191,12 +198,13 @@ justamente el camino gratuito: el carrier "comercial" no interviene.
 ## 7. Operación diaria
 
 ```bash
-sudo systemctl status callcenter-daphne
-sudo journalctl -u callcenter-daphne -f
-tail -f /var/log/callcenter/daphne.log
+sudo systemctl status callcenter
+sudo journalctl -u callcenter -f
+tail -f /var/log/callcenter/error.log
 tail -f /var/log/nginx/callcenter-error.log
 bash deploy/reiniciar.sh              # migrar + collectstatic + reiniciar + health
 bash deploy/reiniciar.sh manual       # Daphne en primer plano para depurar
+service callcenter restart            # reinicio directo, sin migrar ni collectstatic
 ```
 
 ## 8. Lista de verificación
