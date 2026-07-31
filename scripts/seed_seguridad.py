@@ -23,7 +23,7 @@ SECCIONES = (
     (20, CENTRO_VOZ, ('/ivr/flujos/', '/agentes-ia/agentes/', '/agentes-ia/conocimiento/',
                       '/agentes-ia/apikeys/', '/agentes-ia/consumo/', '/voz/demo/')),
     (30, CENTRO_TELEFONIA, ('/telefonia/proveedores/', '/telefonia/numeros/', '/telefonia/asesores/')),
-    (40, CENTRO_SEGURIDAD, ('/clientes/listado/', '/configuracion/', '/seguridad/usuarios/', '/seguridad/roles/',
+    (40, CENTRO_SEGURIDAD, ('/clientes/listado/', '/configuracion/', '/parametros/', '/seguridad/usuarios/', '/seguridad/roles/',
                             '/seguridad/modulos/', '/seguridad/secciones/', '/seguridad/auditoria/')),
     (50, 'Ayuda', ('/doc/', '/perfilpanel/')),
 )

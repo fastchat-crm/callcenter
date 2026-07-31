@@ -140,6 +140,15 @@ GUIAS = {
                    '«Trabajar aquí» el panel entero pasa a ese cliente.',
         'doc': ('guia-de-uso', 'Guía de uso'),
     },
+    '/parametros/': {
+        'centro': CENTRO_SEGURIDAD,
+        'titulo': 'Parámetros del sistema',
+        'resumen': 'Las perillas del motor que antes vivían en credenciales.json y exigían '
+                   'reiniciar: cuánto silencio cierra un turno, cuánta transcripción se le manda '
+                   'a la IA interna. Cada una dice qué pasa si la subes o la bajas, y se puede '
+                   'volver al valor por defecto de un clic.',
+        'doc': ('arquitectura', 'Arquitectura'),
+    },
     '/configuracion/': {
         'centro': CENTRO_SEGURIDAD,
         'titulo': 'Configuración general',

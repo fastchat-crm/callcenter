@@ -24,6 +24,7 @@ NOMBRES = {
     '/perfilpanel/': 'Mi perfil',
     '/doc/': 'Documentación',
     '/configuracion/': 'Configuración general',
+    '/parametros/': 'Parámetros del sistema',
     '/clientes/listado/': 'Clientes',
     '/clientes/puesta-en-marcha/': 'Puesta en marcha',
     '/llamadas/listado/': 'Llamadas',

@@ -41,8 +41,10 @@ class BaseVozConsumer:
         self.dtmf_pendiente = ''
         self.llamada = None
         self.orquestador = None
-        self.umbral = settings.VOZ_UMBRAL_SILENCIO
-        self.ms_para_cerrar_turno = settings.VOZ_MS_SILENCIO_FIN_TURNO
+        # Desde los parámetros del panel: se ajustan sin reiniciar el servicio.
+        from core.parametros import obtener
+        self.umbral = obtener('VOZ_UMBRAL_SILENCIO')
+        self.ms_para_cerrar_turno = obtener('VOZ_MS_SILENCIO_FIN_TURNO')
 
     def detectar_fin_turno(self, pcm: bytes, sample_rate: int) -> bool:
         """VAD por energía: devuelve True cuando el cliente terminó de hablar."""

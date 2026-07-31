@@ -15,7 +15,6 @@ import re
 
 logger = logging.getLogger('agentes_ia')
 
-MAXIMO_TRANSCRIPCION = 6000
 
 # Prefijo telefónico → ISO del país. Cubre los países donde opera el sistema;
 # lo que no esté aquí simplemente no se deduce.
@@ -88,16 +87,22 @@ def _preguntar(instruccion: str, contenido: str, max_tokens: int = 400) -> str:
     return (respuesta.texto or '').strip()
 
 
+def _tope_transcripcion():
+    from core.parametros import obtener
+
+    return obtener('IA_INTERNA_MAX_TRANSCRIPCION')
+
+
 def _transcripcion(llamada) -> str:
     texto = (llamada.transcripcion or '').strip()
     if texto:
-        return texto[:MAXIMO_TRANSCRIPCION]
+        return texto[:_tope_transcripcion()]
     lineas = [
         f"{'Cliente' if turno.rol == 'cliente' else 'Asistente'}: {turno.texto}"
         for turno in llamada.turnos.filter(status=True).order_by('fecha', 'id')
         if (turno.texto or '').strip()
     ]
-    return '\n'.join(lineas)[:MAXIMO_TRANSCRIPCION]
+    return '\n'.join(lineas)[:_tope_transcripcion()]
 
 
 def pais_por_numero(numero: str) -> str:
@@ -134,7 +139,10 @@ def resumir_llamada(llamada) -> str:
     transcripcion = _transcripcion(llamada)
     if not transcripcion:
         return ''
-    return _preguntar(PROMPT_RESUMEN, transcripcion, max_tokens=220)
+    from core.parametros import obtener
+
+    return _preguntar(PROMPT_RESUMEN, transcripcion,
+                      max_tokens=obtener('IA_INTERNA_TOKENS_RESUMEN'))
 
 
 def extraer_datos_llamada(llamada) -> dict:
@@ -142,7 +150,10 @@ def extraer_datos_llamada(llamada) -> dict:
     transcripcion = _transcripcion(llamada)
     if not transcripcion:
         return {}
-    datos = _json_de(_preguntar(PROMPT_DATOS, transcripcion, max_tokens=300))
+    from core.parametros import obtener
+
+    datos = _json_de(_preguntar(PROMPT_DATOS, transcripcion,
+                                max_tokens=obtener('IA_INTERNA_TOKENS_DATOS')))
 
     limpios = {}
     for clave in ('nombre', 'ciudad', 'correo', 'identificacion', 'motivo'):

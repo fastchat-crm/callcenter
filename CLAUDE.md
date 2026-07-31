@@ -18,7 +18,9 @@ auto-hospedados.
 
 ## Apps
 
-- `core/` — `ModeloBase` (auditoría + borrado lógico), `crud.py` (CRUD genérico), `ajax.py`
+- `core/` — `ModeloBase` (auditoría + borrado lógico), `crud.py` (CRUD genérico),
+  `parametros.py` (perillas del motor ajustables en caliente), `servicios.py`
+  (estado de lo externo), `ajax.py`
   (despachador), `funciones.py` (`addData`, `paginador`, `secure_module`, `log`), validadores,
   menú lateral, bitácora
 - `clientes/` — `Cliente` (el dueño de todo lo configurable), `contexto.py` (resuelve el

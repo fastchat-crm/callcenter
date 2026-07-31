@@ -135,3 +135,27 @@ y su zona horaria. Agregar Colombia o España es crear un registro.
 - Reintento automático de transferencia cuando el asesor no contesta
 - Métricas exportables a Prometheus
 - Firma/validación de los webhooks del carrier
+
+## Parámetros ajustables en caliente
+
+Las perillas del motor —cuánto silencio cierra un turno, cuánta transcripción se le manda a la
+IA interna— vivían en `credenciales.json` y cambiarlas exigía reiniciar el servicio. Ahora
+están en *Centro de seguridad → Parámetros del sistema* y entran en las llamadas nuevas.
+
+El catálogo vive en `core/parametros.py`: clave, qué hace, tipo y valor por defecto. En la
+base (`ParametroSistema`) **solo se guardan las claves que alguien cambió**, así que el valor
+por defecto siempre es el del código y restaurar es dar de baja la fila, no recordar cuál era
+el número original.
+
+```python
+from core.parametros import obtener
+
+self.umbral = obtener('VOZ_UMBRAL_SILENCIO')
+```
+
+Los valores se cachean 30 segundos, porque esto se lee en cada turno de voz. Si la base no
+responde, `obtener()` devuelve el valor del código en vez de fallar.
+
+**Regla al agregar uno:** declararlo en `CATALOGO` y leerlo con `obtener()` donde se use. Si
+no se lee en ningún lado, no se declara — una pantalla llena de perillas que no hacen nada es
+peor que no tenerla.

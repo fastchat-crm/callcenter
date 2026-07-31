@@ -217,16 +217,15 @@ class _DetectorTurno:
     """Fin de turno por energía, igual que en los consumers WebSocket."""
 
     def __init__(self):
-        from django.conf import settings
-
+        from core.parametros import obtener
         from voz import audio as audio_utils
 
         self.audio = audio_utils
         self.buffer = bytearray()
         self.ms_silencio = 0
         self.hablando = False
-        self.umbral = settings.VOZ_UMBRAL_SILENCIO
-        self.ms_limite = settings.VOZ_MS_SILENCIO_FIN_TURNO
+        self.umbral = obtener('VOZ_UMBRAL_SILENCIO')
+        self.ms_limite = obtener('VOZ_MS_SILENCIO_FIN_TURNO')
 
     def acumular(self, pcm: bytes) -> bool:
         self.buffer.extend(pcm)

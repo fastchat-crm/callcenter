@@ -36,6 +36,26 @@ class Bitacora(models.Model):
         return f'[{self.accion}] {self.descripcion[:60]}'
 
 
+class ParametroSistema(ModeloBase):
+    """Un parámetro que alguien cambió respecto del valor del código.
+
+    Solo se guardan los modificados: el catálogo con las descripciones y los
+    valores por defecto vive en `core/parametros.py`, y restaurar es dar de
+    baja la fila, no recordar cuál era el número original.
+    """
+
+    clave = models.CharField(max_length=80, unique=True)
+    valor = models.CharField(max_length=300, blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Parámetro del sistema'
+        verbose_name_plural = 'Parámetros del sistema'
+        ordering = ['clave']
+
+    def __str__(self):
+        return f'{self.clave} = {self.valor}'
+
+
 class Configuracion(ModeloBase):
     """Parametros editables del sistema (una sola fila)."""
 

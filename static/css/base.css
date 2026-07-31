@@ -521,3 +521,15 @@ table.tabla tbody tr:last-child td { border-bottom: none; }
     0%   { color: var(--primario); transform: scale(1.06); }
     100% { color: inherit; transform: scale(1); }
 }
+
+/* ---------- Parámetros ---------- */
+.parametro {
+    display: grid; grid-template-columns: 1fr minmax(240px, 320px); gap: 1.2rem;
+    padding: .9rem 0; border-bottom: 1px solid var(--borde); align-items: start;
+}
+.parametro:last-child { border-bottom: 0; padding-bottom: 0; }
+.parametro-etiqueta { display: flex; align-items: center; gap: .5rem; font-weight: 600; font-size: .9rem; }
+.parametro-clave { color: var(--texto-tenue); margin: .15rem 0 .3rem; }
+.parametro-desc { max-width: 78ch; }
+.parametro-control .campo { max-width: 130px; }
+@media (max-width: 980px) { .parametro { grid-template-columns: 1fr; } }
