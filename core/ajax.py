@@ -8,6 +8,8 @@ import json
 from django.http import JsonResponse
 from django.views.generic import View
 
+from clientes.contexto import acotar, cliente_actual
+
 
 class ConsultasAjax(View):
     def get(self, request, accion=None, pk=None, *args, **kwargs):
@@ -41,7 +43,7 @@ class ConsultasAjax(View):
         from agentes_ia.models import AgenteIA
 
         criterio = (request.GET.get('q') or '').strip()
-        consulta = AgenteIA.objects.filter(status=True)
+        consulta = acotar(AgenteIA.objects.filter(status=True), request)
         if criterio:
             consulta = consulta.filter(nombre__icontains=criterio)
         datos = list(consulta.values('id', 'nombre')[:30])
@@ -51,7 +53,7 @@ class ConsultasAjax(View):
         from ivr.models import FlujoVoz
 
         criterio = (request.GET.get('q') or '').strip()
-        consulta = FlujoVoz.objects.filter(status=True)
+        consulta = acotar(FlujoVoz.objects.filter(status=True), request)
         if criterio:
             consulta = consulta.filter(nombre__icontains=criterio)
         datos = list(consulta.values('id', 'nombre')[:30])
@@ -61,7 +63,7 @@ class ConsultasAjax(View):
         from telefonia.models import AsesorHumano
 
         criterio = (request.GET.get('q') or '').strip()
-        consulta = AsesorHumano.objects.filter(status=True, disponible=True)
+        consulta = acotar(AsesorHumano.objects.filter(status=True, disponible=True), request)
         if criterio:
             consulta = consulta.filter(nombre__icontains=criterio)
         datos = list(consulta.values('id', 'nombre', 'numero_destino')[:30])
@@ -70,7 +72,7 @@ class ConsultasAjax(View):
     def _resumen_llamada(self, request, pk):
         from llamadas.models import Llamada
 
-        llamada = Llamada.objects.filter(pk=pk).first()
+        llamada = acotar(Llamada.objects.all(), request).filter(pk=pk).first()
         if llamada is None:
             return JsonResponse({'error': True, 'message': 'Llamada no encontrada.'}, status=404)
         turnos = list(llamada.turnos.values('rol', 'texto', 'latencia_ms', 'fecha'))
@@ -89,7 +91,7 @@ class ConsultasAjax(View):
     def _metricas_panel(self, request):
         from llamadas.consultas import metricas_generales
 
-        return JsonResponse({'error': False, 'metricas': metricas_generales()},
+        return JsonResponse({'error': False, 'metricas': metricas_generales(cliente=cliente_actual(request))},
                             json_dumps_params={'default': str})
 
     def _cambiar_estado_agente(self, request):
@@ -97,7 +99,7 @@ class ConsultasAjax(View):
 
         try:
             cuerpo = json.loads(request.body or '{}') if request.content_type == 'application/json' else request.POST
-            agente = AgenteIA.objects.get(pk=int(cuerpo['id']))
+            agente = acotar(AgenteIA.objects.all(), request).get(pk=int(cuerpo['id']))
             agente.activo = not agente.activo
             agente.save(request)
             return JsonResponse({'error': False, 'activo': agente.activo})

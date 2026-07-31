@@ -105,12 +105,18 @@ class OrquestadorLlamada:
         if self.flujo is not None and self.flujo.agente_ia_id:
             agente = self.flujo.agente_ia
         if agente is None:
-            agente = (
-                AgenteIA.objects.filter(status=True, activo=True)
-                .select_related('apikey', 'coleccion').first()
-            )
+            # El respaldo se busca dentro del cliente de la llamada: contestar con
+            # el agente de otro cliente le entregaría su base de conocimiento.
+            cliente_id = getattr(self.llamada, 'cliente_id', None) if self.llamada else None
+            if cliente_id is None and self.flujo is not None:
+                cliente_id = self.flujo.cliente_id
+            if cliente_id is not None:
+                agente = (
+                    AgenteIA.objects.filter(status=True, activo=True, cliente_id=cliente_id)
+                    .select_related('apikey', 'coleccion').first()
+                )
         if agente is None:
-            logger.warning('[voz] no hay agentes IA activos; el flujo responderá solo con textos fijos')
+            logger.warning('[voz] no hay agente IA para este cliente; el flujo responderá solo con textos fijos')
             return
         try:
             self.consultor = AgenteConsultor(agente, self.llamada)

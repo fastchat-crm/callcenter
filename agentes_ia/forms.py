@@ -49,9 +49,15 @@ class ColeccionForm(FormularioBase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Solo tiene sentido ofrecer llaves de proveedores que generen embeddings.
-        self.fields['apikey_embeddings'].queryset = ApiKeyIA.objects.filter(
-            status=True, proveedor=1,
-        ).order_by('-activo', 'alias')
+        # Se vuelve a acotar al cliente porque este queryset pisa al de la base.
+        from clientes.contexto import acotar
+        from core.custom_middleware import get_current_request
+
+        llaves = ApiKeyIA.objects.filter(status=True, proveedor=1)
+        peticion = get_current_request()
+        if peticion is not None and getattr(peticion.user, 'is_authenticated', False):
+            llaves = acotar(llaves, peticion)
+        self.fields['apikey_embeddings'].queryset = llaves.order_by('-activo', 'alias')
 
     def clean(self):
         datos = super().clean()

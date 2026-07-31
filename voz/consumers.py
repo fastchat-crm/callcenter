@@ -343,10 +343,26 @@ class VozWebConsumer(BaseVozConsumer, AsyncWebsocketConsumer):
         if salida.finalizar:
             await self.send(text_data=json.dumps({'event': 'fin_llamada'}))
 
+    def _cliente_de_la_sesion(self):
+        """Cliente del usuario que abrió el demo, o el que eligió en el panel."""
+        from clientes.contexto import CLAVE_SESION
+        from clientes.models import Cliente
+
+        usuario = self.scope.get('user')
+        if usuario is None or not getattr(usuario, 'is_authenticated', False):
+            return None
+        if usuario.cliente_id is not None:
+            return usuario.cliente
+        elegido = (self.scope.get('session') or {}).get(CLAVE_SESION)
+        return Cliente.objects.filter(pk=elegido, status=True, activo=True).first() if elegido else None
+
     def _flujo_por_id(self, flujo_id):
         from ivr.models import FlujoVoz
 
-        consulta = FlujoVoz.objects.filter(status=True, activo=True)
+        cliente = self._cliente_de_la_sesion()
+        if cliente is None:
+            return None
+        consulta = FlujoVoz.objects.filter(status=True, activo=True, cliente=cliente)
         if str(flujo_id).isdigit():
             return consulta.filter(pk=int(flujo_id)).first() or consulta.first()
         return consulta.first()

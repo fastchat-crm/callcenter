@@ -173,15 +173,19 @@ class AgenteConsultor:
             logger.exception('[agente] no se pudo registrar el consumo')
 
 
-def responder_generico(pregunta: str, historial=None, idioma='es') -> str:
+def responder_generico(pregunta: str, historial=None, idioma='es', cliente=None) -> str:
     """Respuesta cuando el flujo no tiene agente configurado.
 
-    Usa la primera llave activa disponible; si no hay ninguna, devuelve la frase
-    segura para no tumbar la llamada.
+    Usa el primer agente activo *de ese cliente*; sin cliente, o si no tiene
+    ninguno, devuelve la frase segura para no tumbar la llamada. Nunca contesta
+    con el agente de otro cliente: le entregaría su base de conocimiento.
     """
     from agentes_ia.models import AgenteIA
 
-    agente = AgenteIA.objects.filter(status=True, activo=True).select_related('apikey').first()
+    agente = (
+        AgenteIA.objects.filter(status=True, activo=True, cliente=cliente)
+        .select_related('apikey').first()
+    ) if cliente is not None else None
     if agente is None:
         return FRASE_FALLBACK
     return AgenteConsultor(agente).responder(pregunta, historial or []).texto
