@@ -18,7 +18,7 @@ print(f'  {creados} nuevos · {existentes} ya existían · {Modulo.objects.count
 # Los nombres salen de core/guias.py para que el menú y el recuadro de guía de
 # cada pantalla hablen siempre del mismo centro.
 SECCIONES = (
-    (10, CENTRO_OPERACION, ('/panel/', '/llamadas/listado/', '/llamadas/monitor/',
+    (10, CENTRO_OPERACION, ('/panel/', '/clientes/puesta-en-marcha/', '/llamadas/listado/', '/llamadas/monitor/',
                             '/llamadas/transferencias/')),
     (20, CENTRO_VOZ, ('/ivr/flujos/', '/agentes-ia/agentes/', '/agentes-ia/conocimiento/',
                       '/agentes-ia/apikeys/', '/agentes-ia/consumo/', '/voz/demo/')),
@@ -65,7 +65,7 @@ if sin_seccion.exists():
 
 ROLES = {
     'Administrador': None,  # todos los módulos
-    'Supervisor': ('/panel/', '/llamadas/', '/ivr/', '/agentes-ia/', '/telefonia/', '/voz/', '/doc/', '/perfilpanel/'),
+    'Supervisor': ('/panel/', '/clientes/puesta-en-marcha/', '/llamadas/', '/ivr/', '/agentes-ia/', '/telefonia/', '/voz/', '/doc/', '/perfilpanel/'),
     'Asesor': ('/panel/', '/llamadas/listado/', '/llamadas/monitor/', '/voz/demo/', '/doc/', '/perfilpanel/'),
     'Auditor': ('/panel/', '/llamadas/', '/agentes-ia/consumo/', '/seguridad/auditoria/', '/doc/', '/perfilpanel/'),
 }

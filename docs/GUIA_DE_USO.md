@@ -83,9 +83,17 @@ entregaron. Cambia la contraseña de inmediato desde *Mi perfil → Cambiar cont
 El nombre de tu empresa, el logo y los datos de contacto: la marca del sistema, la que se ve
 en la pantalla de ingreso. El logo acepta PNG, JPG, WEBP o SVG de hasta 2 MB.
 
-Aquí también va el **token global de IA**, el del operador. No es la llave de ningún cliente:
-lo usan las funciones internas del sistema —resumir la llamada al cerrarla, detectar los datos
-de quien llamó, clasificar el motivo de una transferencia—.
+Aquí también va el **token global de IA**, el del operador, con su proveedor y su modelo. No
+es la llave de ningún cliente: lo usan las funciones internas del sistema. Hoy hace dos cosas,
+las dos al cerrar cada llamada:
+
+- **Resume la llamada** en tres oraciones, usando solo lo que se dijo.
+- **Detecta los datos de quien llamó** —nombre, ciudad, correo, identificación, motivo— y los
+  guarda junto a los datos capturados, marcados con la etiqueta *IA*. Si algo no se dijo en
+  voz alta, queda vacío: el prompt prohíbe deducir o completar.
+
+Sin token, esas dos funciones quedan apagadas y todo lo demás sigue igual. El **país** sí se
+deduce siempre, del prefijo del número que marcó, porque no cuesta nada.
 
 ### 3. Dar de alta el cliente
 
@@ -113,13 +121,24 @@ sabes dentro de cuál estás parado.
 Los **minutos incluidos al mes** son la referencia del plan contratado de ese cliente: sirven
 para comparar contra su consumo real.
 
-### 4. Revisar el estado del motor
+### 4. Seguir la puesta en marcha
+
+*Centro de operación → Puesta en marcha*
+
+Es la lista de control del cliente activo: los ocho eslabones del recorrido, cuáles ya están
+resueltos y qué falta exactamente en los que no, con el enlace a la pantalla donde se
+arregla. No guarda nada —se calcula al vuelo sobre los datos reales—, así que nunca queda
+desfasada respecto de lo que ves en cada módulo.
+
+Sirve de mapa para el resto de esta guía: los pasos que siguen son esos mismos eslabones.
+
+### 5. Revisar el estado del motor
 
 El **Panel** muestra arriba a la derecha qué componentes están listos: reconocimiento de voz,
 síntesis de voz y agentes de IA. Si alguno aparece en rojo, la llamada no va a funcionar
 completa. Debajo dice exactamente qué falta.
 
-### 5. Cargar el conocimiento de la empresa
+### 6. Cargar el conocimiento de la empresa
 
 *Centro de voz e IA → Base de conocimiento*
 
@@ -134,7 +153,7 @@ Para comprobar que quedó bien, entra a la colección y usa el buscador: escribe
 como haría un cliente y mira qué fragmentos aparecen. Si el fragmento correcto no aparece
 ahí, el agente tampoco lo va a encontrar — el problema está en el documento, no en la IA.
 
-### 6. Crear el agente
+### 7. Crear el agente
 
 *Centro de voz e IA → Agentes IA → Nuevo agente*
 
@@ -146,7 +165,7 @@ ahí, el agente tampoco lo va a encontrar — el problema está en el documento,
 Botón **Probar**: hazle una pregunta real y mira la respuesta, la latencia y el modelo que
 respondió. Es la forma rápida de saber si el agente está listo.
 
-### 7. Diseñar el flujo
+### 8. Diseñar el flujo
 
 *Centro de voz e IA → Flujos IVR → Diseñar*
 
@@ -163,7 +182,7 @@ saludo
 Cada paso hace una sola cosa: hablar, ofrecer opciones, capturar un dato, conversar con la
 IA, transferir o colgar. Detalle completo en la documentación del **Motor IVR**.
 
-### 8. Probar sin gastar un minuto de teléfono
+### 9. Probar sin gastar un minuto de teléfono
 
 Dos formas:
 
@@ -174,7 +193,7 @@ Dos formas:
   navegador contra el mismo motor que atiende las llamadas reales. Es la prueba de verdad:
   micrófono → reconocimiento → agente → voz.
 
-### 9. Conectar el número
+### 10. Conectar el número
 
 *Centro de telefonía → Números → Nuevo número*
 

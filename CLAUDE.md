@@ -21,8 +21,9 @@ auto-hospedados.
 - `core/` — `ModeloBase` (auditoría + borrado lógico), `crud.py` (CRUD genérico), `ajax.py`
   (despachador), `funciones.py` (`addData`, `paginador`, `secure_module`, `log`), validadores,
   menú lateral, bitácora
-- `clientes/` — `Cliente` (el dueño de todo lo configurable) y `contexto.py`, que resuelve el
-  cliente activo y da los helpers de filtrado
+- `clientes/` — `Cliente` (el dueño de todo lo configurable), `contexto.py` (resuelve el
+  cliente activo y da los helpers de filtrado) y `puesta_en_marcha.py` (estado de los ocho
+  eslabones del recorrido, calculado al vuelo)
 - `autenticacion/` — usuario del panel, ingreso, perfil, cambio de clave
 - `seguridad/` — `Modulo` (una URL = un permiso), `ModuloGrupo` (secciones del menú),
   `GroupModulo` (permisos por rol), CRUD de usuarios y roles, auditoría y
@@ -30,7 +31,8 @@ auto-hospedados.
 - `panel/` — tablero con indicadores y `view_doc.py`, que sirve `docs/*.md` en `/doc/`
 - `telefonia/` — proveedores, troncales SIP, números E.164, asesores, webhooks del carrier
 - `ivr/` — modelos de flujo y `motor.py` (ejecutor paso a paso)
-- `agentes_ia/` — agentes, llaves, RAG local, `consultor.py`, `providers/`
+- `agentes_ia/` — agentes, llaves, RAG local, `consultor.py`, `providers/` e `interna.py`
+  (resumen y detección de datos con el token global del operador)
 - `voz/` — `services.py` (STT/TTS), `consumers.py` (WebSocket), `orquestador.py`, `audio.py`
 - `llamadas/` — llamadas, turnos, transferencias, grabaciones, `consultas.py` (métricas)
 

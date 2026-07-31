@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+{% if not cliente_activo %}
+    <div class="tarjeta">
+        <div class="tarjeta-cuerpo">
+            <div class="vacio"><strong>Sin cliente activo</strong>Crea un cliente en <a href="/clientes/listado/">Clientes</a> para empezar.</div>
+        </div>
+    </div>
+{% else %}
+<div class="tarjeta mb-2">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">Puesta en marcha de {{ cliente_activo.nombre }}</div>
+            <div class="tarjeta-nota">
+                {% if estado.siguiente %}Lo siguiente es «{{ estado.siguiente.titulo }}».
+                {% else %}Todo listo: el cliente puede recibir llamadas.{% endif %}
+            </div>
+        </div>
+        <div class="marcador">{{ estado.listos }} de {{ estado.total }}</div>
+    </div>
+    <div class="tarjeta-cuerpo">
+        <div class="barra-progreso"><div class="barra-progreso-relleno" style="width: {{ estado.porcentaje }}%"></div></div>
+    </div>
+</div>
+
+<div class="tarjeta">
+    <div class="tarjeta-cuerpo">
+        <ol class="marcha">
+            {% for paso in estado.pasos %}
+                <li class="marcha-item {% if paso.listo %}marcha-listo{% endif %}">
+                    <span class="marcha-numero">{% if paso.listo %}&check;{% else %}{{ paso.orden }}{% endif %}</span>
+                    <span class="marcha-cuerpo">
+                        <a class="marcha-titulo" href="{{ paso.url }}">{{ paso.titulo }}</a>
+                        <span class="marcha-detalle">{{ paso.detalle }}</span>
+                        {% if not paso.listo %}<span class="marcha-ayuda">{{ paso.ayuda }}</span>{% endif %}
+                    </span>
+                    <a class="boton boton-sm {% if not paso.listo %}boton-primario{% endif %}" href="{{ paso.url }}">
+                        {% if paso.listo %}Revisar{% else %}Configurar{% endif %}
+                    </a>
+                </li>
+            {% endfor %}
+        </ol>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

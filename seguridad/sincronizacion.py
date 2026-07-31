@@ -25,6 +25,7 @@ NOMBRES = {
     '/doc/': 'Documentación',
     '/configuracion/': 'Configuración general',
     '/clientes/listado/': 'Clientes',
+    '/clientes/puesta-en-marcha/': 'Puesta en marcha',
     '/llamadas/listado/': 'Llamadas',
     '/llamadas/monitor/': 'Monitor en vivo',
     '/llamadas/transferencias/': 'Transferencias',

@@ -82,6 +82,14 @@ GUIAS = {
         'doc': ('guia-de-uso', 'Guía de uso'),
     },
 
+    '/clientes/puesta-en-marcha/': {
+        'centro': CENTRO_OPERACION,
+        'titulo': 'Puesta en marcha',
+        'resumen': 'El estado real de los ocho eslabones del recorrido para el cliente activo: qué '
+                   'ya está resuelto, qué falta y por qué importa. No se guarda nada, se calcula '
+                   'al vuelo, así que siempre coincide con lo que ves en cada pantalla.',
+        'doc': ('guia-de-uso', 'Guía de uso'),
+    },
     '/panel/': {
         'centro': CENTRO_OPERACION,
         'titulo': 'Tablero',

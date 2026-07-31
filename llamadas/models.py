@@ -93,6 +93,24 @@ class Llamada(ModeloBase):
     def minutos(self):
         return round((self.duracion_segundos or 0) / 60, 2)
 
+    @property
+    def datos_para_mostrar(self):
+        """Datos capturados con etiqueta legible, marcando los que dedujo la IA.
+
+        Los que empiezan con `ia_` los detectó la IA interna al cerrar; el resto
+        los pidió un paso del flujo.
+        """
+        filas = []
+        for clave, valor in (self.datos_capturados or {}).items():
+            detectado = clave.startswith('ia_')
+            nombre = clave[3:] if detectado else clave
+            filas.append({
+                'etiqueta': nombre.replace('_', ' ').capitalize(),
+                'valor': valor,
+                'detectado': detectado,
+            })
+        return sorted(filas, key=lambda fila: (fila['detectado'], fila['etiqueta']))
+
     def cerrar(self, resultado='resuelta_ia'):
         from django.utils import timezone
 

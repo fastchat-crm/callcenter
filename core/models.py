@@ -51,6 +51,12 @@ class Configuracion(ModeloBase):
         max_length=300, blank=True, null=True, verbose_name='Token global de IA',
         help_text='Token del operador para las funciones internas de IA (resúmenes, detección de '
                   'datos, clasificación). No es la llave de ningún cliente.')
+    proveedor_ia_interna = models.IntegerField(
+        default=1, verbose_name='Proveedor del token global',
+        help_text='Con qué proveedor habla el token global.')
+    modelo_ia_interna = models.CharField(
+        max_length=120, blank=True, null=True, verbose_name='Modelo del token global',
+        help_text='Vacío usa el modelo por defecto del proveedor.')
 
     class Meta:
         verbose_name = 'Configuración'

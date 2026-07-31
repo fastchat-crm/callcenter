@@ -315,6 +315,27 @@ table.tabla tbody tr:last-child td { border-bottom: none; }
 .ingreso-lista div { display: flex; gap: .6rem; align-items: center; font-size: .9rem; color: rgba(255,255,255,.9); }
 .ingreso-formulario { width: min(380px, 100%); margin: 0 auto; }
 
+/* ---------- Puesta en marcha ---------- */
+.marcador { font-size: .82rem; font-weight: 600; color: var(--texto-suave); white-space: nowrap; }
+.barra-progreso { height: 8px; border-radius: 999px; background: var(--fondo-hundido); overflow: hidden; }
+.barra-progreso-relleno { height: 100%; background: var(--primario); border-radius: 999px; transition: width .3s ease; }
+.marcha { list-style: none; display: flex; flex-direction: column; }
+.marcha-item {
+    display: flex; align-items: flex-start; gap: .9rem; padding: .85rem 0;
+    border-bottom: 1px solid var(--borde);
+}
+.marcha-item:last-child { border-bottom: 0; }
+.marcha-numero {
+    flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--fondo-hundido); color: var(--texto-tenue); font-size: .78rem; font-weight: 700;
+}
+.marcha-listo .marcha-numero { background: var(--exito-suave); color: var(--exito); }
+.marcha-cuerpo { display: flex; flex-direction: column; gap: .15rem; flex: 1; min-width: 0; }
+.marcha-titulo { font-weight: 600; font-size: .9rem; color: var(--texto); }
+.marcha-titulo:hover { color: var(--primario); }
+.marcha-detalle { font-size: .8rem; color: var(--texto-suave); }
+.marcha-ayuda { font-size: .78rem; color: var(--texto-tenue); }
+
 /* ---------- Guía de pantalla ---------- */
 .guia {
     background: var(--fondo-elevado); border: 1px solid var(--borde);

@@ -48,6 +48,18 @@
     </div>
 
     <div>
+        {% if filtro.resumen %}
+        <div class="tarjeta mb-2">
+            <div class="tarjeta-encabezado">
+                <div>
+                    <div class="tarjeta-titulo">Resumen</div>
+                    <div class="tarjeta-nota">Generado por la IA al cerrar la llamada.</div>
+                </div>
+            </div>
+            <div class="tarjeta-cuerpo"><p class="texto-suave">{{ filtro.resumen }}</p></div>
+        </div>
+        {% endif %}
+
         <div class="tarjeta mb-2">
             <div class="tarjeta-encabezado"><div class="tarjeta-titulo">Datos de la llamada</div></div>
             <div class="tarjeta-cuerpo lista-datos">
@@ -63,8 +75,11 @@
         <div class="tarjeta mb-2">
             <div class="tarjeta-encabezado"><div class="tarjeta-titulo">Datos capturados</div></div>
             <div class="tarjeta-cuerpo lista-datos">
-                {% for clave, valor in filtro.datos_capturados.items %}
-                    <div class="fila"><span>{{ clave }}</span><span>{{ valor }}</span></div>
+                {% for dato in filtro.datos_para_mostrar %}
+                    <div class="fila">
+                        <span>{{ dato.etiqueta }}{% if dato.detectado %} <span class="etiqueta etiqueta-acento">IA</span>{% endif %}</span>
+                        <span>{{ dato.valor }}</span>
+                    </div>
                 {% empty %}
                     <div class="texto-tenue texto-pequeno">El flujo no capturó variables en esta llamada.</div>
                 {% endfor %}

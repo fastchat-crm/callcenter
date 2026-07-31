@@ -225,3 +225,32 @@ operador y, cuando un cliente trae la suya, asignársela sin tocar al resto.
 
 No confundirla con el **token global de IA** de *Configuración general*: ese no atiende
 llamadas, lo usan las funciones internas del sistema.
+
+## IA interna: resumen y detección de datos
+
+Además del agente que atiende la llamada, el sistema usa la IA para su propio trabajo. Eso
+corre con el **token global** de *Configuración general*, nunca con la llave del cliente: así
+el consumo del cliente no se gasta en tareas que pidió el operador, y el resumen sale aunque
+el cliente todavía no tenga llave propia.
+
+Vive en `agentes_ia/interna.py` y se dispara desde `OrquestadorLlamada.cerrar()`, **después**
+de que la llamada ya quedó guardada:
+
+| Función | Qué escribe |
+|---|---|
+| `resumir_llamada()` | `Llamada.resumen`, tres oraciones sobre qué necesitaba y cómo terminó |
+| `extraer_datos_llamada()` | Claves `ia_nombre`, `ia_ciudad`, `ia_correo`, `ia_identificacion`, `ia_motivo` dentro de `datos_capturados` |
+| `pais_por_numero()` | `Llamada.pais_iso`, deducido del prefijo marcado |
+
+Tres decisiones que conviene no deshacer:
+
+- **Todo es de mejor esfuerzo.** Si no hay token, si el proveedor falla o si devuelve algo
+  ilegible, se registra el aviso y la llamada queda igual de completa. `procesar_cierre()`
+  nunca propaga una excepción al cierre.
+- **El prompt prohíbe deducir.** Un dato que no se dijo en voz alta se guarda como vacío, no
+  como suposición. Es la misma regla que se le pide al agente: no alucinar.
+- **Lo que capturó el flujo manda.** Los datos deducidos entran con `setdefault` y con el
+  prefijo `ia_`, así que nunca pisan lo que un paso de captura preguntó explícitamente, y en
+  el detalle de la llamada se distinguen con la etiqueta *IA*.
+
+El país se deduce siempre, con o sin token: sale del prefijo telefónico y no cuesta nada.

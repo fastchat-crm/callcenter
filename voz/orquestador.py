@@ -88,6 +88,13 @@ class OrquestadorLlamada:
             self.llamada.cerrar(resultado)
         except Exception:
             logger.exception('[voz] no se pudo cerrar la llamada %s', getattr(self.llamada, 'id', '?'))
+            return
+
+        # Recién con la llamada ya guardada se le pide a la IA interna el resumen
+        # y los datos: si eso falla o tarda, el registro ya está completo.
+        from agentes_ia.interna import procesar_cierre
+
+        procesar_cierre(self.llamada)
 
     def transcripcion(self) -> str:
         lineas = []
