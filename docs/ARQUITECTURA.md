@@ -35,18 +35,25 @@ que es lo que permite saber qué componente conviene optimizar.
 
 ## Capas
 
-### Transporte — `voz/consumers.py`
+### Transporte — `voz/consumers.py` y `voz/audiosocket.py`
 
-Dos consumers sobre la misma lógica:
+**Tres** transportes sobre la misma lógica de conversación:
 
-- `MediaStreamConsumer` habla el protocolo **Media Streams** (JSON con `event: start / media
-  / dtmf / stop`, audio mu-law 8 kHz en base64). Lo entienden Twilio, Telnyx, Plivo,
-  SignalWire y el módulo audiosocket de Asterisk.
-- `VozWebConsumer` recibe PCM 16 bits 16 kHz binario del navegador. Es el demo.
+| Transporte | Protocolo | Quién lo usa |
+|---|---|---|
+| `MediaStreamConsumer` | WebSocket, JSON con `start/media/dtmf/stop`, mu-law 8 kHz en base64 | Twilio, Telnyx, Plivo, SignalWire |
+| `VozWebConsumer` | WebSocket, PCM 16 bits 16 kHz binario | El demo del navegador |
+| `SesionAudioSocket` | **TCP plano**, encabezado de 3 bytes, PCM 16 bits 8 kHz | Asterisk auto-hospedado |
 
-Los consumers **solo manejan transporte**: buffer de audio, detección de fin de turno y
-envío de tramas. Toda la conversación vive fuera, en el orquestador. Por eso agregar un
-transporte nuevo (WebRTC nativo, SIP directo, un CLI de pruebas) no toca la lógica.
+Asterisk **no puede** usar el primero: Media Streams es un protocolo propio de Twilio y
+Asterisk no lo habla. Por eso existe el tercero, que habla el `AudioSocket()` que Asterisk sí
+trae de fábrica. El detalle de cómo se resuelve que AudioSocket no transporte el número que
+marcó está en [`TELEFONIA_SIP.md`](TELEFONIA_SIP.md).
+
+Los tres **solo manejan transporte**: buffer de audio, detección de fin de turno y envío de
+tramas. Toda la conversación vive fuera, en el orquestador. Por eso agregar un transporte
+nuevo no toca la lógica: hay dos protocolos completamente distintos —WebSocket con JSON y TCP
+crudo— compartiendo el mismo `OrquestadorLlamada`.
 
 ### Conversación — `voz/orquestador.py`
 

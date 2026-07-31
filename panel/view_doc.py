@@ -31,6 +31,7 @@ INDICE = (
     )),
     ('Infraestructura', (
         ('arquitectura', 'ARQUITECTURA.md', 'Cómo viaja el audio y qué hace cada capa'),
+        ('multi-cliente', 'MULTI_CLIENTE.md', 'Quién es dueño de qué y cómo se aísla'),
         ('base-datos', 'BASE_DATOS_POSTGRESQL.md', 'Modelo de datos, consultas y respaldos'),
         ('despliegue', 'DESPLIEGUE_IP_PUBLICA.md', 'Nginx, systemd, firewall y HTTPS'),
         ('servicios-gratuitos', 'SERVICIOS_GRATUITOS.md', 'Qué es gratis y hasta dónde alcanza'),

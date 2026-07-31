@@ -87,8 +87,39 @@ h3 { font-size: 1.02rem; }
     overflow-y: auto;
     overflow-x: hidden;
     transition: width .18s ease, flex-basis .18s ease;
-    scrollbar-width: thin;
 }
+
+/* Barras de desplazamiento con el color del diseño. La del navegador es gris
+   sistema, con flechas en los extremos, y rompe el conjunto —sobre todo en el
+   menú lateral y en modo oscuro.
+
+   Ojo con el orden: si se declara `scrollbar-width`, Chrome usa la propiedad
+   estándar e ignora por completo las reglas `::-webkit-`, con lo que vuelven
+   las flechas. Por eso la estándar queda solo para Firefox, que es quien no
+   entiende `::-webkit-scrollbar`. */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: var(--borde-fuerte); border-radius: 999px;
+    border: 3px solid transparent; background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--texto-tenue); background-clip: content-box; }
+::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+
+@supports not selector(::-webkit-scrollbar) {
+    * { scrollbar-width: thin; scrollbar-color: var(--borde-fuerte) transparent; }
+    .menu-lateral { scrollbar-color: transparent transparent; }
+    .menu-lateral:hover { scrollbar-color: var(--borde-fuerte) transparent; }
+}
+
+/* En el menú la barra solo aparece al pasar el ratón: con los centros abiertos
+   el listado desborda, y una barra permanente parte la columna en dos. */
+.menu-lateral::-webkit-scrollbar-thumb { background: transparent; }
+.menu-lateral:hover::-webkit-scrollbar-thumb {
+    background: var(--borde-fuerte); background-clip: content-box;
+}
+
 .sprite-iconos { display: none; }
 .ico { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 
