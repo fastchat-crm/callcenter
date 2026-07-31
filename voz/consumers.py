@@ -43,8 +43,10 @@ class BaseVozConsumer:
         self.orquestador = None
         # Desde los parámetros del panel: se ajustan sin reiniciar el servicio.
         from core.parametros import obtener
+        from voz.grabador import GrabadorLlamada
         self.umbral = obtener('VOZ_UMBRAL_SILENCIO')
         self.ms_para_cerrar_turno = obtener('VOZ_MS_SILENCIO_FIN_TURNO')
+        self.grabador = GrabadorLlamada()
 
     def detectar_fin_turno(self, pcm: bytes, sample_rate: int) -> bool:
         """VAD por energía: devuelve True cuando el cliente terminó de hablar."""
@@ -117,6 +119,7 @@ class MediaStreamConsumer(BaseVozConsumer, AsyncJsonWebsocketConsumer):
         logger.info('[voz] media stream cerrado code=%s', code)
         if self.orquestador is not None:
             await sync_to_async(self.orquestador.cerrar)('abandonada' if self.hablando else 'resuelta_ia')
+        await sync_to_async(self.grabador.guardar)(self.llamada)
 
     async def receive_json(self, content, **kwargs):
         evento = content.get('event')
@@ -169,6 +172,7 @@ class MediaStreamConsumer(BaseVozConsumer, AsyncJsonWebsocketConsumer):
             return
         pcm = audio_utils.ulaw_a_pcm(base64.b64decode(carga))
         self.buffer.extend(pcm)
+        self.grabador.anotar(pcm, services.SAMPLE_RATE_TELEFONICO)
         if self.detectar_fin_turno(pcm, services.SAMPLE_RATE_TELEFONICO):
             await self._procesar_turno()
 
@@ -199,6 +203,7 @@ class MediaStreamConsumer(BaseVozConsumer, AsyncJsonWebsocketConsumer):
             logger.info('[voz] ia(%s): %s', self.llamada.id, salida.texto)
             ulaw = await asyncio.to_thread(services.sintetizar_ulaw, salida.texto)
             if ulaw:
+                self.grabador.anotar(audio_utils.ulaw_a_pcm(ulaw), services.SAMPLE_RATE_TELEFONICO)
                 await self._enviar_ulaw(ulaw)
             else:
                 logger.warning('[voz] sin audio TTS; el cliente no escuchará la respuesta')
@@ -269,6 +274,7 @@ class VozWebConsumer(BaseVozConsumer, AsyncWebsocketConsumer):
     async def disconnect(self, code):
         if self.orquestador is not None:
             await sync_to_async(self.orquestador.cerrar)('resuelta_ia')
+        await sync_to_async(self.grabador.guardar)(self.llamada)
 
     async def receive(self, text_data=None, bytes_data=None):
         if bytes_data is not None:
@@ -296,6 +302,7 @@ class VozWebConsumer(BaseVozConsumer, AsyncWebsocketConsumer):
         if self.procesando:
             return
         self.buffer.extend(pcm)
+        self.grabador.anotar(pcm, SAMPLE_RATE_NAVEGADOR)
         estaba_hablando = self.hablando
         fin = self.detectar_fin_turno(pcm, SAMPLE_RATE_NAVEGADOR)
         if self.hablando != estaba_hablando:
@@ -332,6 +339,7 @@ class VozWebConsumer(BaseVozConsumer, AsyncWebsocketConsumer):
             }))
             pcm = await asyncio.to_thread(services.sintetizar_pcm, salida.texto, SAMPLE_RATE_NAVEGADOR)
             if pcm:
+                self.grabador.anotar(pcm, SAMPLE_RATE_NAVEGADOR)
                 tamano_bloque = int(SAMPLE_RATE_NAVEGADOR * 2 * 0.04)
                 for inicio in range(0, len(pcm), tamano_bloque):
                     await self.send(bytes_data=pcm[inicio:inicio + tamano_bloque])

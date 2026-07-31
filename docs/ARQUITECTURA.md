@@ -136,6 +136,33 @@ y su zona horaria. Agregar Colombia o España es crear un registro.
 - Métricas exportables a Prometheus
 - Firma/validación de los webhooks del carrier
 
+## Grabación de la llamada
+
+El sistema es **half-duplex** a propósito: mientras la IA habla se ignora el audio entrante,
+para que no se escuche a sí misma. Eso tiene una consecuencia útil para grabar —las dos voces
+nunca suenan a la vez—, así que `voz/grabador.py` **concatena en el orden en que ocurrieron
+las cosas** en vez de mezclar y sincronizar dos pistas. El resultado es fiel a lo que se oyó
+en la línea, con una fracción de la complejidad.
+
+El audio se acumula en memoria durante la llamada y se escribe una sola vez al cerrar, ya
+comprimido a MP3 con ffmpeg: un minuto pasa de ~960 KB a ~60 KB. Si ffmpeg no está, se guarda
+el WAV — mejor ocupar disco que quedarse sin grabación.
+
+Hay un tope de 30 minutos por llamada: a 8 kHz mono son 16 KB por segundo, y una llamada que
+se va de las manos no debe llenar la RAM del proceso. Al alcanzarlo se deja de grabar y se
+avisa en el log; la llamada sigue normal.
+
+Los tres transportes graban igual, porque cada uno anota lo que entra y lo que sale:
+
+| Transporte | Lo que anota |
+|---|---|
+| `MediaStreamConsumer` | mu-law del carrier, convertido a PCM |
+| `VozWebConsumer` | PCM del navegador a 16 kHz, remuestreado a 8 kHz |
+| `SesionAudioSocket` | PCM de Asterisk, ya a 8 kHz |
+
+Se apaga desde *Parámetros del sistema* con `VOZ_GRABAR_LLAMADAS`. Apagarlo no afecta a la
+transcripción ni al resumen, que se siguen guardando.
+
 ## Parámetros ajustables en caliente
 
 Las perillas del motor —cuánto silencio cierra un turno, cuánta transcripción se le manda a la

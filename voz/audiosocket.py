@@ -62,6 +62,7 @@ class SesionAudioSocket:
         self.llamada = None
         self.orquestador = None
         self.detector = None
+        self.grabador = None
         self.procesando = False
         self.cerrada = False
 
@@ -129,6 +130,8 @@ class SesionAudioSocket:
         self.orquestador = await sync_to_async(self._construir_orquestador)()
         await sync_to_async(self._marcar_en_curso)()
         self.detector = _DetectorTurno()
+        from voz.grabador import GrabadorLlamada
+        self.grabador = GrabadorLlamada()
         logger.info('[audiosocket] llamada %s en curso desde %s',
                     self.llamada.id, self.llamada.numero_origen)
         return True
@@ -150,6 +153,7 @@ class SesionAudioSocket:
                 return
             if tipo != TIPO_AUDIO or self.procesando:
                 continue
+            self.grabador.anotar(carga, SAMPLE_RATE)
             if self.detector.acumular(carga):
                 await self._procesar_turno()
 
@@ -176,6 +180,8 @@ class SesionAudioSocket:
         if not texto:
             return
         pcm = await asyncio.to_thread(services.sintetizar_pcm, texto, SAMPLE_RATE)
+        if self.grabador is not None:
+            self.grabador.anotar(pcm, SAMPLE_RATE)
         # Se manda al ritmo real de la llamada: de golpe, Asterisk descarta lo
         # que no entra en su buffer y el cliente escucha la frase cortada.
         for inicio in range(0, len(pcm), BYTES_POR_TRAMA):
@@ -201,6 +207,8 @@ class SesionAudioSocket:
     async def _cerrar(self):
         if self.orquestador is not None:
             await sync_to_async(self.orquestador.cerrar)('resuelta_ia')
+        if self.grabador is not None:
+            await sync_to_async(self.grabador.guardar)(self.llamada)
         try:
             self.escritor.write(_trama(TIPO_FIN))
             await self.escritor.drain()

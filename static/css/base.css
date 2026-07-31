@@ -533,3 +533,6 @@ table.tabla tbody tr:last-child td { border-bottom: none; }
 .parametro-desc { max-width: 78ch; }
 .parametro-control .campo { max-width: 130px; }
 @media (max-width: 980px) { .parametro { grid-template-columns: 1fr; } }
+
+.reproductor { width: 100%; height: 38px; }
+.reproductor::-webkit-media-controls-panel { background: var(--fondo-hundido); }

@@ -48,6 +48,23 @@
     </div>
 
     <div>
+        {% if filtro.grabacion.archivo %}
+        <div class="tarjeta mb-2">
+            <div class="tarjeta-encabezado">
+                <div>
+                    <div class="tarjeta-titulo">Grabación</div>
+                    <div class="tarjeta-nota">{{ filtro.duracion_texto }} · {{ filtro.grabacion.formato|upper }}</div>
+                </div>
+                <a class="boton boton-sm" href="{{ filtro.grabacion.archivo.url }}" download>Descargar</a>
+            </div>
+            <div class="tarjeta-cuerpo">
+                <audio class="reproductor" controls preload="metadata" src="{{ filtro.grabacion.archivo.url }}">
+                    Tu navegador no puede reproducir este audio.
+                </audio>
+            </div>
+        </div>
+        {% endif %}
+
         {% if filtro.resumen %}
         <div class="tarjeta mb-2">
             <div class="tarjeta-encabezado">

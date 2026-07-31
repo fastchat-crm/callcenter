@@ -49,6 +49,12 @@ CATALOGO = (
                     'persona y empezar a procesar. Bajo, la IA interrumpe a quien todavía está '
                     'pensando la frase. Alto, la conversación se siente lenta.'),
     Parametro(
+        'VOZ_GRABAR_LLAMADAS', 'Grabar las llamadas', tipo='booleano', defecto=True,
+        unidad='1 = sí / 0 = no', grupo='Grabación',
+        descripcion='Guarda el audio completo de cada llamada para poder escucharla después. '
+                    'Un minuto ocupa unos 60 KB comprimido. Apagarlo no afecta a la '
+                    'transcripción ni al resumen, que se siguen guardando.'),
+    Parametro(
         'IA_INTERNA_TOKENS_RESUMEN', 'Tokens del resumen de llamada', tipo='entero', defecto=220,
         unidad='tokens', grupo='IA interna',
         descripcion='Cuánto puede extenderse el resumen que se genera al cerrar la llamada. '

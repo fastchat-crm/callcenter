@@ -62,7 +62,7 @@ def llamada_view(request):
 
     listado = (
         Llamada.objects.filter(filtros)
-        .select_related('flujo', 'agente_ia', 'numero')
+        .select_related('flujo', 'agente_ia', 'numero', 'grabacion')
         .order_by('-fecha_inicio')
     )
     paginador(request, listado, data, 25, url_vars)
