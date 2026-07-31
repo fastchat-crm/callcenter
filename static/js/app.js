@@ -16,8 +16,28 @@
                 if (evento.key === 'Escape') this.cerrarModal();
             });
             this.marcarMenuActivo();
+            this.restaurarGrupos();
             this.restaurarMenu();
             this.restaurarGuia();
+        },
+
+        restaurarGrupos() {
+            document.querySelectorAll('.menu-grupo').forEach((grupo) => {
+                // El grupo de la pantalla en la que estás se abre siempre; el
+                // resto respeta lo que el usuario dejó la última vez.
+                if (grupo.classList.contains('con-activo')) {
+                    grupo.classList.add('abierto');
+                    return;
+                }
+                if (localStorage.getItem(`grupo:${grupo.dataset.grupo}`) === 'abierto') {
+                    grupo.classList.add('abierto');
+                }
+            });
+        },
+
+        alternarGrupo(grupo) {
+            const abierto = grupo.classList.toggle('abierto');
+            localStorage.setItem(`grupo:${grupo.dataset.grupo}`, abierto ? 'abierto' : 'cerrado');
         },
 
         esPantallaAngosta() {
@@ -58,6 +78,8 @@
                 const destino = enlace.getAttribute('href');
                 if (destino && destino !== '/' && ruta.startsWith(destino)) {
                     enlace.classList.add('activo');
+                    const grupo = enlace.closest('.menu-grupo');
+                    if (grupo) grupo.classList.add('con-activo');
                 }
             });
         },
@@ -78,6 +100,10 @@
             const alternador = evento.target.closest('[data-guia-alternar]');
             if (alternador) {
                 this.alternarGuia(alternador.closest('.guia'));
+            }
+            const cabeceraGrupo = evento.target.closest('[data-grupo-alternar]');
+            if (cabeceraGrupo) {
+                this.alternarGrupo(cabeceraGrupo.closest('.menu-grupo'));
             }
         },
 

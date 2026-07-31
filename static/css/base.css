@@ -80,18 +80,17 @@ h3 { font-size: 1.02rem; }
     flex: 0 0 var(--ancho-menu);
     background: var(--fondo-elevado);
     border-right: 1px solid var(--borde);
-    padding: 1.1rem .85rem 2rem;
+    padding: 1.1rem .7rem 2rem;
     position: sticky;
     top: 0;
     height: 100vh;
     overflow-y: auto;
-    transition: width .2s ease, flex-basis .2s ease, padding .2s ease;
+    overflow-x: hidden;
+    transition: width .18s ease, flex-basis .18s ease;
+    scrollbar-width: thin;
 }
-.aplicacion.menu-colapsado .menu-lateral {
-    width: 0; flex-basis: 0; padding-left: 0; padding-right: 0;
-    border-right-width: 0; overflow: hidden;
-}
-.aplicacion.menu-colapsado .menu-lateral > * { display: none; }
+.sprite-iconos { display: none; }
+.ico { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 
 .marca { display: flex; align-items: center; gap: .65rem; padding: .2rem .5rem 1.2rem; }
 .marca-logo {
@@ -105,18 +104,55 @@ h3 { font-size: 1.02rem; }
 .marca-nombre { font-weight: 650; letter-spacing: -.02em; }
 .marca-sub { font-size: .72rem; color: var(--texto-tenue); }
 
-.menu-grupo { margin-bottom: 1.1rem; }
+.menu-nav { display: flex; flex-direction: column; gap: .15rem; }
+.menu-grupo { margin-bottom: .1rem; }
 .menu-grupo-titulo {
-    font-size: .68rem; text-transform: uppercase; letter-spacing: .09em;
-    color: var(--texto-tenue); padding: 0 .6rem .4rem; font-weight: 600;
+    width: 100%; display: flex; align-items: center; gap: .65rem;
+    padding: .55rem .6rem; border: 0; border-radius: var(--radio-sm);
+    background: transparent; cursor: pointer; text-align: left;
+    color: var(--texto-suave); font-family: inherit; font-size: .82rem; font-weight: 600;
+    letter-spacing: -.01em;
 }
+.menu-grupo-titulo:hover { background: var(--fondo-hundido); color: var(--texto); }
+.menu-grupo-titulo .menu-texto { flex: 1; }
+.ico-flecha { width: 14px; height: 14px; color: var(--texto-tenue); transition: transform .18s ease; }
+.menu-grupo.abierto .ico-flecha { transform: rotate(90deg); }
+.menu-grupo.con-activo .menu-grupo-titulo { color: var(--texto); }
+
+.menu-items { display: none; flex-direction: column; gap: .1rem; padding: .15rem 0 .35rem .95rem; }
+.menu-grupo.abierto .menu-items { display: flex; }
 .menu-item {
     display: flex; align-items: center; gap: .6rem;
-    padding: .5rem .6rem; border-radius: var(--radio-sm);
-    color: var(--texto-suave); font-size: .89rem; font-weight: 500;
+    padding: .45rem .6rem; border-radius: var(--radio-sm);
+    color: var(--texto-suave); font-size: .85rem; font-weight: 500;
 }
+.menu-item .ico { width: 16px; height: 16px; color: var(--texto-tenue); }
 .menu-item:hover { background: var(--fondo-hundido); color: var(--texto); text-decoration: none; }
+.menu-item:hover .ico { color: var(--texto-suave); }
 .menu-item.activo { background: var(--primario-suave); color: var(--primario); font-weight: 600; }
+.menu-item.activo .ico { color: var(--primario); }
+
+/* Riel de iconos: en vez de esconder el menú, se queda la columna de iconos. */
+.aplicacion.menu-colapsado .menu-lateral { width: 62px; flex-basis: 62px; padding-left: .5rem; padding-right: .5rem; }
+.aplicacion.menu-colapsado .menu-texto,
+.aplicacion.menu-colapsado .ico-flecha,
+.aplicacion.menu-colapsado .marca > div:last-child { display: none; }
+.aplicacion.menu-colapsado .menu-grupo-titulo { display: none; }
+.aplicacion.menu-colapsado .menu-items { display: flex; padding: 0; }
+.aplicacion.menu-colapsado .menu-item { justify-content: center; padding: .5rem 0; }
+.aplicacion.menu-colapsado .marca { justify-content: center; padding: .2rem 0 1rem; }
+.aplicacion.menu-colapsado .menu-nav { gap: 0; }
+/* Sin los títulos, la única forma de ver dónde termina un centro es una raya. */
+.aplicacion.menu-colapsado .menu-grupo + .menu-grupo {
+    border-top: 1px solid var(--borde); margin-top: .4rem; padding-top: .4rem;
+}
+
+.boton-icono {
+    display: grid; place-items: center; width: 32px; height: 32px; flex: none;
+    border: 1px solid var(--borde); border-radius: var(--radio-sm);
+    background: var(--fondo-elevado); color: var(--texto-suave); cursor: pointer;
+}
+.boton-icono:hover { background: var(--fondo-hundido); color: var(--texto); }
 .menu-item .punto {
     width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .55; flex: none;
 }

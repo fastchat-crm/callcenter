@@ -6,6 +6,54 @@ Mientras esas tablas estén vacías —instalación recién hecha— se usa el m
 estático de abajo, para que el sistema sea navegable desde el primer minuto.
 """
 
+# Icono de cada entrada, por URL. Los símbolos viven en
+# `templates/componentes/iconos.html`; si un módulo trae su `icono` en la base,
+# ese manda sobre este mapa.
+ICONOS_URL = {
+    '/panel/': 'tablero',
+    '/clientes/puesta-en-marcha/': 'lista-check',
+    '/clientes/listado/': 'edificio',
+    '/llamadas/listado/': 'telefono',
+    '/llamadas/monitor/': 'actividad',
+    '/llamadas/transferencias/': 'desvio',
+    '/ivr/flujos/': 'flujo',
+    '/agentes-ia/agentes/': 'chispa',
+    '/agentes-ia/conocimiento/': 'libro',
+    '/agentes-ia/apikeys/': 'llave',
+    '/agentes-ia/consumo/': 'grafico',
+    '/voz/demo/': 'microfono',
+    '/telefonia/proveedores/': 'nube',
+    '/telefonia/numeros/': 'hash',
+    '/telefonia/asesores/': 'persona',
+    '/configuracion/': 'engranaje',
+    '/seguridad/usuarios/': 'personas',
+    '/seguridad/roles/': 'escudo',
+    '/seguridad/modulos/': 'cuadricula',
+    '/seguridad/secciones/': 'lista',
+    '/seguridad/auditoria/': 'historial',
+    '/doc/': 'documento',
+    '/perfilpanel/': 'persona',
+}
+
+ICONOS_GRUPO = {
+    'Centro de operación': 'actividad',
+    'Centro de voz e IA': 'chispa',
+    'Centro de telefonía': 'telefono',
+    'Centro de seguridad': 'escudo',
+    'Ayuda': 'ayuda',
+}
+
+ICONO_POR_DEFECTO = 'cuadricula'
+
+
+def icono_de(url, declarado=''):
+    return (declarado or '').strip() or ICONOS_URL.get(url, ICONO_POR_DEFECTO)
+
+
+def icono_grupo(nombre):
+    return ICONOS_GRUPO.get(nombre, ICONO_POR_DEFECTO)
+
+
 MENU_BASE = (
     {
         'grupo': 'Operación',
@@ -81,12 +129,17 @@ def _menu_desde_base_datos(usuario):
     resultado = []
     for seccion in secciones:
         items = [
-            {'nombre': modulo.nombre, 'url': modulo.url, 'icono': modulo.icono or ''}
+            {'nombre': modulo.nombre, 'url': modulo.url,
+             'icono': icono_de(modulo.url, modulo.icono)}
             for modulo in seccion.modulos_visibles()
             if modulo.id in permitidos
         ]
         if items:
-            resultado.append({'grupo': seccion.nombre, 'items': items})
+            resultado.append({
+                'grupo': seccion.nombre,
+                'icono': (seccion.icono or '').strip() or icono_grupo(seccion.nombre),
+                'items': items,
+            })
     return resultado
 
 
@@ -95,9 +148,14 @@ def _menu_estatico(usuario):
     resultado = []
     for grupo in MENU_BASE:
         items = [
-            item for item in grupo['items']
+            {**item, 'icono': icono_de(item['url'])}
+            for item in grupo['items']
             if es_superusuario or not item.get('solo_superusuario')
         ]
         if items:
-            resultado.append({'grupo': grupo['grupo'], 'items': items})
+            resultado.append({
+                'grupo': grupo['grupo'],
+                'icono': icono_grupo(grupo['grupo']),
+                'items': items,
+            })
     return resultado

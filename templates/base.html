@@ -5,10 +5,11 @@
     <title>{{ titulo }} · {{ configuracion.nombre_empresa|default:nombre_sistema }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#2f6bff">
-    <link rel="stylesheet" href="/static/css/base.css?v1.4">
+    <link rel="stylesheet" href="/static/css/base.css?v1.6">
     {% block head %}{% endblock %}
 </head>
 <body>
+{% include 'componentes/iconos.html' %}
 <div class="aplicacion">
     <aside class="menu-lateral">
         <div class="marca">
@@ -24,14 +25,25 @@
                 <div class="marca-sub">{% if cliente %}{{ configuracion.nombre_empresa|default:nombre_sistema }}{% else %}Voz con inteligencia artificial{% endif %}</div>
             </div>
         </div>
-        {% for grupo in menu %}
-            <div class="menu-grupo">
-                <div class="menu-grupo-titulo">{{ grupo.grupo }}</div>
-                {% for item in grupo.items %}
-                    <a class="menu-item" href="{{ item.url }}"><span class="punto"></span>{{ item.nombre }}</a>
-                {% endfor %}
-            </div>
-        {% endfor %}
+        <nav class="menu-nav">
+            {% for grupo in menu %}
+                <div class="menu-grupo" data-grupo="{{ grupo.grupo|slugify }}">
+                    <button class="menu-grupo-titulo" type="button" data-grupo-alternar>
+                        <svg class="ico"><use href="#ico-{{ grupo.icono }}"></use></svg>
+                        <span class="menu-texto">{{ grupo.grupo }}</span>
+                        <svg class="ico ico-flecha"><use href="#ico-chevron"></use></svg>
+                    </button>
+                    <div class="menu-items">
+                        {% for item in grupo.items %}
+                            <a class="menu-item" href="{{ item.url }}" title="{{ item.nombre }}">
+                                <svg class="ico"><use href="#ico-{{ item.icono }}"></use></svg>
+                                <span class="menu-texto">{{ item.nombre }}</span>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </nav>
     </aside>
 
     <main class="contenido">
@@ -41,7 +53,9 @@
                 <h1>{{ titulo }}</h1>
             </div>
             <div class="barra-acciones">
-                <button class="boton boton-sutil boton-sm" id="alternar-menu" type="button">Menú</button>
+                <button class="boton-icono" id="alternar-menu" type="button" title="Mostrar u ocultar el menú" aria-label="Mostrar u ocultar el menú">
+                    <svg class="ico"><use href="#ico-menu"></use></svg>
+                </button>
                 {% if puede_cambiar_cliente %}
                     <form class="selector-cliente" method="get" action="/clientes/cambiar/">
                         <input type="hidden" name="siguiente" value="{{ request.path }}">
@@ -84,7 +98,7 @@
 
 <div class="avisos" id="avisos"></div>
 <form id="formulario-csrf">{% csrf_token %}</form>
-<script src="/static/js/app.js?v1.4"></script>
+<script src="/static/js/app.js?v1.6"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

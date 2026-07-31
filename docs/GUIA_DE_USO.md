@@ -59,11 +59,13 @@ hace esa pantalla y en qué punto de la llamada entra. Trae tres cosas:
 - **Un enlace al documento** de `/doc/` que profundiza en esa parte.
 
 El recuadro se pliega con un clic en su cabecera y el sistema recuerda la elección por
-pantalla, así que una vez que conoces el módulo deja de estorbar. El menú lateral también se
-pliega, con el botón **Menú** de la barra superior, y esa elección igualmente se recuerda.
+pantalla, así que una vez que conoces el módulo deja de estorbar.
 
 Los mismos cuatro centros son las secciones del menú lateral, para que el sitio donde entras
-y el recuadro que lo explica hablen del mismo lugar.
+y el recuadro que lo explica hablen del mismo lugar. En el menú cada centro se abre y se
+cierra con un clic —el del módulo en el que estás se abre solo— y el botón de la barra
+superior reduce toda la barra a una columna de iconos, útil cuando la pantalla es angosta o
+cuando el listado es ancho. Las dos elecciones se recuerdan.
 
 Los textos viven en `core/guias.py`; para cambiar uno, o para dar de alta la guía de una
 pantalla nueva, basta con editar ese diccionario: se resuelven por la ruta y ninguna vista
