@@ -254,3 +254,31 @@ Tres decisiones que conviene no deshacer:
   el detalle de la llamada se distinguen con la etiqueta *IA*.
 
 El país se deduce siempre, con o sin token: sale del prefijo telefónico y no cuesta nada.
+
+### Cuidado con los modelos que razonan
+
+Los modelos de razonamiento (Gemini 2.5, Gemma con *thinking*) devuelven su borrador en
+partes marcadas `thought: true` **antes** de la respuesta. Dos consecuencias que ya se
+tropezaron una vez:
+
+- Si se concatenan todas las partes, lo que se le habla al cliente es el razonamiento del
+  modelo, no su respuesta. `GeminiProvider` descarta las partes `thought`.
+- El razonamiento consume `maxOutputTokens`. Con un presupuesto corto —y en telefonía siempre
+  lo es— el modelo se queda sin tokens antes de contestar y devuelve nada. Por eso el
+  proveedor manda `thinkingConfig.thinkingBudget = 0`: esto es voz, cada segundo y cada token
+  cuentan. Si un modelo no acepta el campo, se reintenta sin él.
+
+Cuando el modelo agota el presupuesto pensando, el proveedor devuelve un error explícito
+(«agotó los N tokens antes de responder») en vez de un texto vacío, para que se vea en el log
+qué pasó.
+
+Medido contra la API real con el mismo prompt y 220 tokens:
+
+| Modelo | Tokens de razonamiento | Resultado |
+|---|---|---|
+| `gemini-2.5-flash` | 0 | Responde bien |
+| `gemini-2.5-flash-lite` | 0 | Responde bien |
+| `gemma-4-31b-it` | 217 | Ignora `thinkingBudget` y se queda sin tokens |
+
+Para el token global conviene `gemini-2.5-flash`, que es el que sale por defecto si se deja
+el modelo vacío.

@@ -30,24 +30,49 @@ class GeminiProvider(BaseProvider):
 
         cuerpo = {
             'contents': contenidos,
-            'generationConfig': {'temperature': temperatura, 'maxOutputTokens': max_tokens},
+            'generationConfig': {
+                'temperature': temperatura,
+                'maxOutputTokens': max_tokens,
+                # Esto es un sistema de voz: el razonamiento interno de los
+                # modelos 2.5 se come el presupuesto de tokens y agrega segundos
+                # a una llamada telefónica. Los modelos que no lo aceptan
+                # responden 400 y se reintenta sin el campo.
+                'thinkingConfig': {'thinkingBudget': 0},
+            },
         }
         if instruccion_sistema:
             cuerpo['systemInstruction'] = {'parts': [{'text': instruccion_sistema}]}
 
         try:
             respuesta = requests.post(url, json=cuerpo, params={'key': apikey}, timeout=TIMEOUT_LLM)
+            if respuesta.status_code == 400 and 'thinking' in respuesta.text.lower():
+                cuerpo['generationConfig'].pop('thinkingConfig', None)
+                respuesta = requests.post(url, json=cuerpo, params={'key': apikey}, timeout=TIMEOUT_LLM)
             if respuesta.status_code >= 400:
                 return RespuestaLLM(error=f'HTTP {respuesta.status_code}: {respuesta.text[:300]}')
             datos = respuesta.json()
             candidatos = datos.get('candidates') or []
             texto = ''
+            motivo = ''
             if candidatos:
+                motivo = candidatos[0].get('finishReason') or ''
                 partes = (candidatos[0].get('content') or {}).get('parts') or []
-                texto = ''.join(parte.get('text', '') for parte in partes)
+                # Las partes con `thought` son el razonamiento del modelo, no su
+                # respuesta: devolverlas sería filtrar su borrador al cliente.
+                texto = ''.join(
+                    parte.get('text', '') for parte in partes if not parte.get('thought')
+                )
             uso = datos.get('usageMetadata') or {}
+            texto = texto.strip()
+            if not texto and motivo == 'MAX_TOKENS':
+                pensados = uso.get('thoughtsTokenCount', 0) or 0
+                return RespuestaLLM(
+                    error=f'El modelo agotó los {max_tokens} tokens antes de responder'
+                          + (f' ({pensados} se fueron en razonamiento)' if pensados else ''),
+                    modelo=modelo, crudo=datos,
+                )
             return RespuestaLLM(
-                texto=texto.strip(),
+                texto=texto,
                 tokens_entrada=uso.get('promptTokenCount', 0) or 0,
                 tokens_salida=uso.get('candidatesTokenCount', 0) or 0,
                 modelo=modelo,
