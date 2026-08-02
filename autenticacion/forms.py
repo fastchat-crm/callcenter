@@ -42,6 +42,18 @@ class CambiarClaveForm(forms.Form):
 class RegistroForm(forms.Form):
     """Alta pública. Pide lo mínimo: quién es, qué empresa y cómo entrar."""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # `FormularioBase` solo estiliza ModelForms; esto es un Form plano, así
+        # que las clases del diseño se aplican aquí o los campos salen crudos.
+        for campo in self.fields.values():
+            campo.widget.attrs['class'] = 'campo'
+            if campo.required:
+                campo.widget.attrs['required'] = 'required'
+        self.fields['empresa'].widget.attrs['autofocus'] = 'autofocus'
+        self.fields['empresa'].widget.attrs['placeholder'] = 'Ferretería Andina'
+        self.fields['email'].widget.attrs['placeholder'] = 'tu@empresa.com'
+
     empresa = forms.CharField(label='Nombre de la empresa', max_length=120)
     nombres = forms.CharField(label='Tu nombre', max_length=120)
     email = forms.EmailField(label='Correo electrónico')

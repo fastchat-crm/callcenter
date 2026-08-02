@@ -597,3 +597,10 @@ table.tabla tbody tr:last-child td { border-bottom: none; }
 .usuario-salir:hover { background: var(--peligro-suave); color: var(--peligro); }
 .usuario-salir:hover .ico { color: var(--peligro); }
 .usuario-separador { height: 1px; background: var(--borde); margin: .35rem .4rem; }
+
+/* El alta va a dos columnas: seis campos en una sola fila se leen como un trámite. */
+.ingreso-formulario .rejilla-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ingreso-formulario .campo-ancho { grid-column: 1 / -1; }
+@media (max-width: 620px) {
+    .ingreso-formulario .rejilla-form { grid-template-columns: 1fr; }
+}

@@ -56,4 +56,28 @@ def cliente_panel(request):
 
 def guia_pantalla(request):
     """Guía de la ventana actual, resuelta por la ruta para no tocar cada vista."""
-    return {'guia': guias.obtener(request.path)}
+    guia = guias.obtener(request.path)
+    if guia:
+        guia = dict(guia)
+        guia['doc_slug'], guia['doc_nombre'] = _documento_para(request, guia)
+    return {'guia': guia}
+
+
+def _documento_para(request, guia):
+    """A qué documento enlaza el recuadro según quién mira.
+
+    Casi todas las guías apuntan a documentación del operador. Para un cliente
+    esos enlaces dan 404, así que se le manda a la suya en lugar de dejarle un
+    enlace roto en cada pantalla.
+    """
+    from panel.view_doc import SOLO_OPERADOR, _es_operador, _mapa_documentos
+
+    try:
+        if _es_operador(request):
+            return guia['doc_slug'], guia['doc_nombre']
+        entrada = _mapa_documentos().get(guia['doc_slug'])
+        if entrada and entrada[2] == SOLO_OPERADOR:
+            return 'guia-cliente', 'Guía para empezar'
+    except Exception:
+        pass
+    return guia['doc_slug'], guia['doc_nombre']

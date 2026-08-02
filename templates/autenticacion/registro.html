@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Crear cuenta · {{ configuracion.nombre_empresa|default:nombre_sistema }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/static/css/base.css?v2.8">
+    <link rel="stylesheet" href="/static/css/base.css?v2.9">
 </head>
 <body>
 <div class="ingreso">
@@ -34,14 +34,16 @@
 
             <form method="post">
                 {% csrf_token %}
-                {% for campo in form %}
-                    <div class="grupo-campo">
-                        <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
-                        {{ campo }}
-                        {% for error in campo.errors %}<div class="error">{{ error }}</div>{% endfor %}
-                    </div>
-                {% endfor %}
-                <button class="boton boton-primario" style="width:100%" type="submit">Crear mi cuenta</button>
+                <div class="rejilla-form">
+                    {% for campo in form %}
+                        <div class="grupo-campo {% if campo.name == 'empresa' %}campo-ancho{% endif %}">
+                            <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                            {{ campo }}
+                            {% for error in campo.errors %}<div class="error">{{ error }}</div>{% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+                <button class="boton boton-primario mt-1" style="width:100%" type="submit">Crear mi cuenta</button>
             </form>
             <p class="texto-tenue texto-pequeno mt-3">
                 ¿Ya tienes cuenta? <a href="/login/">Ingresa aquí</a>

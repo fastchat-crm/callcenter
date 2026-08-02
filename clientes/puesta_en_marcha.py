@@ -13,21 +13,32 @@ def _paso(orden, titulo, url, listo, detalle, ayuda):
 
 
 def _proveedores(cliente):
-    from telefonia.models import ProveedorTelefonia, TroncalSIP
+    """Por dónde entra el audio. Hay dos caminos y solo hace falta uno.
 
-    # Los proveedores y las troncales son infraestructura del operador: se
-    # comparten entre clientes, por eso no se filtran por cliente.
-    proveedores = ProveedorTelefonia.objects.filter(status=True, activo=True).count()
-    troncales = TroncalSIP.objects.filter(status=True, activo=True).count()
-    listo = proveedores > 0 and troncales > 0
-    if listo:
-        detalle = f'{proveedores} proveedor(es) y {troncales} troncal(es) activas'
-    elif proveedores:
-        detalle = 'Hay proveedor, pero ninguna troncal SIP activa'
+    Con un carrier de Media Streams (Twilio, Telnyx) la llamada llega por
+    WebSocket y **no existe ninguna troncal SIP**: exigirla marcaba en rojo un
+    paso que ese camino nunca va a cumplir.
+    """
+    from telefonia.models import DRIVERS_MEDIA_STREAMS, ProveedorTelefonia, TroncalSIP
+
+    # Proveedores y troncales son infraestructura del operador: se comparten
+    # entre clientes, por eso no se filtran por cliente.
+    proveedores = ProveedorTelefonia.objects.filter(status=True, activo=True)
+    carriers = [p for p in proveedores
+                if p.driver in DRIVERS_MEDIA_STREAMS and p.driver != 'asterisk']
+    con_troncal = TroncalSIP.objects.filter(status=True, activo=True).count()
+
+    if carriers:
+        listo, detalle = True, f'{len(carriers)} carrier(s) por WebSocket: no necesitan troncal SIP'
+    elif con_troncal:
+        listo, detalle = True, f'{con_troncal} troncal(es) SIP activas'
+    elif proveedores.exists():
+        listo, detalle = False, 'Hay proveedor, pero ni troncal SIP ni carrier configurado'
     else:
-        detalle = 'Sin proveedor de telefonía'
-    return _paso(1, 'Proveedor y troncal SIP', '/telefonia/proveedores/', listo, detalle,
-                 'Es por donde entra el audio. Sin troncal activa, nada del resto llega a sonar.')
+        listo, detalle = False, 'Sin proveedor de telefonía'
+    return _paso(1, 'Proveedor de telefonía', '/telefonia/proveedores/', listo, detalle,
+                 'Es por donde entra el audio: un carrier como Telnyx, o una troncal SIP propia '
+                 'si prefieres administrar Asterisk.')
 
 
 def _numeros(cliente):
