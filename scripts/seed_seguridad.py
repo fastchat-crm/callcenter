@@ -19,7 +19,7 @@ print(f'  {creados} nuevos · {existentes} ya existían · {Modulo.objects.count
 # cada pantalla hablen siempre del mismo centro.
 SECCIONES = (
     (10, CENTRO_OPERACION, ('/panel/', '/clientes/puesta-en-marcha/', '/llamadas/listado/', '/llamadas/monitor/',
-                            '/llamadas/transferencias/')),
+                            '/llamadas/transferencias/', '/llamadas/contactos/')),
     (20, CENTRO_VOZ, ('/ivr/flujos/', '/agentes-ia/agentes/', '/agentes-ia/conocimiento/',
                       '/agentes-ia/apikeys/', '/agentes-ia/consumo/', '/voz/demo/')),
     (30, CENTRO_TELEFONIA, ('/telefonia/proveedores/', '/telefonia/numeros/', '/telefonia/asesores/')),

@@ -112,3 +112,59 @@ def costo_estimado_mes(costo_minuto=0.02, cliente=None):
     )
     minutos = segundos / 60
     return {'minutos': round(minutos, 1), 'costo_usd': round(minutos * costo_minuto, 2)}
+
+
+def registrar_contacto(llamada):
+    """Consolida en un contacto lo que dejó esta llamada.
+
+    De mejor esfuerzo: se invoca al cerrar y no debe impedir que la llamada
+    quede guardada. Sin cliente o sin número de origen no hay a quién atribuirlo.
+    """
+    import logging
+
+    logger = logging.getLogger('llamadas')
+    try:
+        from llamadas.models import Contacto
+
+        numero = (llamada.numero_origen or '').strip()
+        if llamada.cliente_id is None or not numero or numero in ('navegador', 'interno'):
+            return None
+
+        contacto, creado = Contacto.objects.get_or_create(
+            cliente_id=llamada.cliente_id, numero=numero,
+            defaults={'primera_llamada': llamada.fecha_inicio},
+        )
+        datos = llamada.datos_capturados or {}
+
+        # Lo capturado por el flujo pesa más que lo deducido por la IA.
+        for campo, claves in (('nombre', ('nombre', 'ia_nombre')),
+                              ('ciudad', ('ciudad', 'ia_ciudad')),
+                              ('correo', ('correo', 'ia_correo')),
+                              ('identificacion', ('cedula', 'identificacion', 'ia_identificacion'))):
+            if getattr(contacto, campo):
+                continue
+            for clave in claves:
+                valor = (datos.get(clave) or '').strip() if isinstance(datos.get(clave), str) else ''
+                if valor:
+                    setattr(contacto, campo, valor[:120])
+                    break
+
+        motivo = datos.get('ia_motivo') or datos.get('motivo')
+        if motivo:
+            contacto.ultimo_motivo = str(motivo)[:200]
+        if not contacto.pais_iso and llamada.pais_iso:
+            contacto.pais_iso = llamada.pais_iso
+        if contacto.primera_llamada is None:
+            contacto.primera_llamada = llamada.fecha_inicio
+
+        contacto.total_llamadas += 1
+        contacto.segundos_totales += max(0, llamada.duracion_segundos or 0)
+        contacto.ultima_llamada = llamada.fecha_fin or llamada.fecha_inicio
+        contacto.save()
+        logger.info('[contactos] %s %s (%s llamadas)',
+                    'creado' if creado else 'actualizado', numero, contacto.total_llamadas)
+        return contacto
+    except Exception:
+        logger.exception('[contactos] no se pudo registrar el contacto de la llamada %s',
+                         getattr(llamada, 'id', '?'))
+        return None

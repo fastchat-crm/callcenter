@@ -16,6 +16,7 @@ ICONOS_URL = {
     '/llamadas/listado/': 'telefono',
     '/llamadas/monitor/': 'actividad',
     '/llamadas/transferencias/': 'desvio',
+    '/llamadas/contactos/': 'personas',
     '/ivr/flujos/': 'flujo',
     '/agentes-ia/agentes/': 'chispa',
     '/agentes-ia/conocimiento/': 'libro',

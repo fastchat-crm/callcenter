@@ -111,6 +111,11 @@ class NumeroTelefonico(ModeloBase):
                                 related_name='numeros')
     flujo = models.ForeignKey('ivr.FlujoVoz', on_delete=models.SET_NULL, blank=True, null=True,
                               related_name='numeros', help_text='Flujo IVR que atiende este número.')
+    agente_ia = models.ForeignKey('agentes_ia.AgenteIA', on_delete=models.SET_NULL, blank=True,
+                                  null=True, related_name='numeros',
+                                  help_text='Agente que responde en este número. Vacío usa el del '
+                                            'flujo, que es lo normal: solo se llena cuando el mismo '
+                                            'flujo debe sonar distinto según el número que marcaron.')
     idioma = models.CharField(max_length=10, default='es',
                               help_text='Idioma de atención: es, en, pt. Define STT y voz TTS.')
     zona_horaria = models.CharField(max_length=60, default='America/Guayaquil')

@@ -109,7 +109,12 @@ class OrquestadorLlamada:
         from agentes_ia.models import AgenteIA
 
         agente = None
-        if self.flujo is not None and self.flujo.agente_ia_id:
+        # El número manda sobre el flujo: así un mismo guion puede atender a dos
+        # marcas distintas cambiando solo el agente de cada número.
+        numero = getattr(self.llamada, 'numero', None) if self.llamada else None
+        if numero is not None and numero.agente_ia_id:
+            agente = numero.agente_ia
+        if agente is None and self.flujo is not None and self.flujo.agente_ia_id:
             agente = self.flujo.agente_ia
         if agente is None:
             # El respaldo se busca dentro del cliente de la llamada: contestar con

@@ -37,6 +37,7 @@ class NumeroForm(FormularioBase):
     class Meta:
         model = NumeroTelefonico
         fields = ('numero', 'pais_iso', 'prefijo_pais', 'ciudad', 'tipo', 'proveedor', 'troncal',
+                  'agente_ia',
                   'flujo', 'idioma', 'zona_horaria', 'concurrencia_maxima', 'minutos_incluidos',
                   'activo', 'notas')
         labels = {

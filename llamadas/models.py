@@ -199,3 +199,50 @@ class TransferenciaLlamada(ModeloBase):
 
     def __str__(self):
         return f'Transferencia llamada {self.llamada_id} → {self.asesor or self.destino}'
+
+
+class Contacto(ModeloBase):
+    """Quién ha llamado a este cliente, consolidado a partir de sus llamadas.
+
+    No se captura en un formulario: se arma solo al cerrar cada llamada, con el
+    número que marcó y lo que la IA detectó en la conversación. Un dato que ya
+    existe nunca se pisa —lo primero que dijo la persona vale más que lo que el
+    modelo dedujo en la llamada veinte—, pero lo que estaba vacío se completa.
+    """
+
+    cliente = models.ForeignKey('clientes.Cliente', on_delete=models.PROTECT,
+                                related_name='contactos', db_index=True)
+    numero = models.CharField(max_length=25, db_index=True,
+                              help_text='Número desde el que llamó, en E.164.')
+    nombre = models.CharField(max_length=120, blank=True, null=True)
+    ciudad = models.CharField(max_length=80, blank=True, null=True)
+    correo = models.EmailField(blank=True, null=True)
+    identificacion = models.CharField(max_length=20, blank=True, null=True)
+    pais_iso = models.CharField(max_length=2, blank=True, null=True)
+    ultimo_motivo = models.CharField(max_length=200, blank=True, null=True)
+    total_llamadas = models.IntegerField(default=0)
+    segundos_totales = models.IntegerField(default=0)
+    primera_llamada = models.DateTimeField(blank=True, null=True)
+    ultima_llamada = models.DateTimeField(blank=True, null=True, db_index=True)
+    notas = models.TextField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Contacto'
+        verbose_name_plural = 'Contactos'
+        ordering = ['-ultima_llamada']
+        unique_together = (('cliente', 'numero'),)
+
+    def __str__(self):
+        return f'{self.nombre or "Sin nombre"} · {self.numero}'
+
+    @property
+    def minutos_totales(self):
+        return round(self.segundos_totales / 60, 1)
+
+    @property
+    def duracion_media_texto(self):
+        from core.funciones import formato_duracion
+
+        if not self.total_llamadas:
+            return '—'
+        return formato_duracion(int(self.segundos_totales / self.total_llamadas))

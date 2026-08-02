@@ -196,6 +196,12 @@ def procesar_cierre(llamada):
 
         if campos:
             llamada.save(update_fields=campos)
+
+        # Con los datos ya detectados, el contacto se consolida con lo mejor
+        # que se sabe de esta llamada.
+        from llamadas.consultas import registrar_contacto
+
+        registrar_contacto(llamada)
     except Exception:
         logger.exception('[ia-interna] no se pudo procesar el cierre de la llamada %s',
                          getattr(llamada, 'id', '?'))

@@ -30,6 +30,7 @@ NOMBRES = {
     '/llamadas/listado/': 'Llamadas',
     '/llamadas/monitor/': 'Monitor en vivo',
     '/llamadas/transferencias/': 'Transferencias',
+    '/llamadas/contactos/': 'Contactos',
     '/ivr/flujos/': 'Flujos IVR',
     '/agentes-ia/agentes/': 'Agentes IA',
     '/agentes-ia/conocimiento/': 'Base de conocimiento',

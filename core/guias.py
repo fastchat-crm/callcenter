@@ -104,6 +104,14 @@ GUIAS = {
                    'ese momento. Sirve para ver el flujo funcionando mientras suena.',
         'doc': ('arquitectura', 'Arquitectura'),
     },
+    '/llamadas/contactos/': {
+        'centro': CENTRO_OPERACION,
+        'titulo': 'Contactos',
+        'resumen': 'Quiénes han llamado, con lo que dijeron de sí mismos. No se captura a mano: '
+                   'se arma solo al cerrar cada llamada, juntando el número que marcó con lo que '
+                   'el flujo capturó y lo que la IA detectó. Un dato que ya existe no se pisa.',
+        'doc': ('guia-de-uso', 'Guía de uso'),
+    },
     '/llamadas/transferencias/': {
         'centro': CENTRO_OPERACION,
         'titulo': 'Transferencias',

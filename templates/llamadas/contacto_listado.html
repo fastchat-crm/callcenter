@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="tarjeta">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">Contactos</div>
+            <div class="tarjeta-nota">Se arman solos con cada llamada: el número que marcó más lo que dijo de sí mismo.</div>
+        </div>
+    </div>
+    <div class="tarjeta-cuerpo">{% include 'componentes/buscador.html' with placeholder='Número, nombre, ciudad o correo…' %}</div>
+    <div class="tabla-envoltura">
+        <table class="tabla">
+            <thead>
+            <tr><th>Contacto</th><th>Número</th><th>Ciudad</th><th>Último motivo</th><th>Llamadas</th><th>Tiempo total</th><th>Última</th></tr>
+            </thead>
+            <tbody>
+            {% for filtro in listado %}
+                <tr>
+                    <td>
+                        <strong>{{ filtro.nombre|default:"Sin nombre" }}</strong>
+                        <div class="texto-tenue texto-pequeno">{{ filtro.correo|default:"" }}{% if filtro.identificacion %} · {{ filtro.identificacion }}{% endif %}</div>
+                    </td>
+                    <td class="celda-mono">{{ filtro.numero }}{% if filtro.pais_iso %} <span class="etiqueta">{{ filtro.pais_iso }}</span>{% endif %}</td>
+                    <td>{{ filtro.ciudad|default:"—" }}</td>
+                    <td class="texto-suave texto-pequeno">{{ filtro.ultimo_motivo|default:"—" }}</td>
+                    <td>{{ filtro.total_llamadas }}<div class="texto-tenue texto-pequeno">media {{ filtro.duracion_media_texto }}</div></td>
+                    <td class="celda-mono">{{ filtro.minutos_totales }} min</td>
+                    <td class="texto-pequeno">{{ filtro.ultima_llamada|date:"d/m/Y H:i"|default:"—" }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="7" class="vacio"><strong>Todavía no hay contactos</strong>Se crean solos cuando entre la primera llamada.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'componentes/paginacion.html' %}
+</div>
+{% endblock %}
