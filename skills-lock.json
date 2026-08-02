@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "asterisk-tester": {
+      "source": "smithery.ai",
+      "sourceType": "well-known",
+      "computedHash": "c022c1f6477c0eae5db4701f1254806e8a7509b2ae664639dfb8640a98d0a841"
+    }
+  }
+}

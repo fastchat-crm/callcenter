@@ -207,6 +207,13 @@ GUIAS = {
                    'protegido, pero no aparece en la barra.',
         'doc': ('seguridad', 'Seguridad'),
     },
+    '/seguridad/arbol/': {
+        'centro': CENTRO_SEGURIDAD,
+        'titulo': 'Árbol del menú',
+        'resumen': 'Sección, URL y perfil en una sola pantalla. Aquí se marca si cada URL es del '
+                   'administrador, del cliente o de ambos, y se mueve de sección sin salir.',
+        'doc': ('seguridad', 'Seguridad'),
+    },
     '/seguridad/auditoria/': {
         'centro': CENTRO_SEGURIDAD,
         'titulo': 'Auditoría',

@@ -13,6 +13,7 @@ from __future__ import annotations
 import io
 import logging
 import os
+import re
 import subprocess
 import tempfile
 import wave
@@ -167,6 +168,46 @@ def _cargar_piper():
     logger.info('[voz] cargando Piper %s', ruta)
     _tts_piper = PiperVoice.load(ruta)
     return _tts_piper
+
+
+# Dónde se puede cortar una frase sin que se note: después de puntuación fuerte,
+# y si no la hay, después de una coma.
+_CORTE_FUERTE = re.compile(r'(?<=[.!?…])\s+')
+_CORTE_SUAVE = re.compile(r'(?<=[,;:])\s+')
+
+PALABRAS_MINIMAS_TROZO = 4
+
+
+def trocear_para_habla(texto: str, palabras_minimas: int = PALABRAS_MINIMAS_TROZO) -> list:
+    """Parte la respuesta en trozos que se pueden sintetizar y reproducir sueltos.
+
+    Sintetizar la respuesta entera antes de emitir el primer sonido hace que la
+    persona espere por una frase que todavía no va a oír. Cortando por
+    puntuación, el primer trozo empieza a sonar mientras el resto se sintetiza.
+
+    Los trozos muy cortos se pegan al siguiente: un «Claro.» suelto suena
+    entrecortado, y además cada llamada al TTS tiene su propio costo fijo.
+    """
+    texto = (texto or '').strip()
+    if not texto:
+        return []
+
+    partes = [parte for parte in _CORTE_FUERTE.split(texto) if parte.strip()]
+    if len(partes) == 1:
+        partes = [parte for parte in _CORTE_SUAVE.split(texto) if parte.strip()]
+
+    trozos = []
+    for parte in partes:
+        parte = parte.strip()
+        if trozos and len(trozos[-1].split()) < palabras_minimas:
+            trozos[-1] = f'{trozos[-1]} {parte}'
+        else:
+            trozos.append(parte)
+    # El último también puede quedar corto, y arrastrarlo hacia atrás es mejor
+    # que emitir una palabra suelta al final.
+    if len(trozos) > 1 and len(trozos[-1].split()) < palabras_minimas:
+        trozos[-2] = f'{trozos[-2]} {trozos.pop()}'
+    return trozos
 
 
 def sintetizar_pcm(texto: str, sample_rate: int = SAMPLE_RATE_NAVEGADOR) -> bytes:

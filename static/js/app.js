@@ -97,8 +97,11 @@
             if (evento.target.matches('[data-cerrar-modal]') || evento.target === this.modal) {
                 this.cerrarModal();
             }
-            if (evento.target.closest('#alternar-menu')) {
+            if (evento.target.closest('#alternar-menu') || evento.target.closest('#abrir-menu')) {
                 this.alternarMenu();
+            }
+            if (evento.target.closest('#cerrar-menu')) {
+                document.querySelector('.menu-lateral').classList.remove('abierto');
             }
             const alternador = evento.target.closest('[data-guia-alternar]');
             if (alternador) {

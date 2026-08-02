@@ -1,5 +1,6 @@
 from django.urls import path
 
+from .view_arbol import arbol_view
 from .view_auditoria import auditoria_view
 from .view_modulo import modulo_view, seccion_menu_view
 from .view_rol import permisos_rol_view, rol_view
@@ -10,6 +11,7 @@ seguridad_urls = (
     {'nombre': 'Roles de usuario', 'url': 'roles/', 'vista': rol_view},
     {'nombre': 'Módulos del sistema', 'url': 'modulos/', 'vista': modulo_view},
     {'nombre': 'Secciones del menú', 'url': 'secciones/', 'vista': seccion_menu_view},
+    {'nombre': 'Árbol del menú', 'url': 'arbol/', 'vista': arbol_view},
     {'nombre': 'Auditoría', 'url': 'auditoria/', 'vista': auditoria_view},
 )
 

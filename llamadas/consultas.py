@@ -168,3 +168,50 @@ def registrar_contacto(llamada):
         logger.exception('[contactos] no se pudo registrar el contacto de la llamada %s',
                          getattr(llamada, 'id', '?'))
         return None
+
+
+def consumo_por_numero(cliente, dias=30):
+    """Qué gastó cada número del cliente. Es su factura, no la del operador."""
+    from datetime import timedelta
+
+    from django.db.models import Avg, Count, Q, Sum
+    from django.utils import timezone
+
+    from llamadas.models import Llamada
+    from telefonia.models import NumeroTelefonico
+
+    if cliente is None:
+        return []
+
+    desde = timezone.now().date() - timedelta(days=dias - 1)
+    numeros = (
+        NumeroTelefonico.objects.filter(status=True, cliente=cliente)
+        .select_related('flujo', 'agente_ia').order_by('numero')
+    )
+    filas = []
+    for numero in numeros:
+        agregados = (
+            Llamada.objects.filter(status=True, cliente=cliente, numero=numero,
+                                   fecha_inicio__date__gte=desde)
+            .aggregate(total=Count('id'), segundos=Sum('duracion_segundos'),
+                       latencia=Avg('latencia_promedio_ms'),
+                       resueltas=Count('id', filter=Q(resultado='resuelta_ia')),
+                       transferidas=Count('id', filter=Q(resultado='transferida')))
+        )
+        total = agregados['total'] or 0
+        minutos = round((agregados['segundos'] or 0) / 60, 1)
+        incluidos = numero.minutos_incluidos or 0
+        filas.append({
+            'numero': numero,
+            'llamadas': total,
+            'minutos': minutos,
+            'resueltas': agregados['resueltas'] or 0,
+            'transferidas': agregados['transferidas'] or 0,
+            'tasa_resolucion': round(100 * (agregados['resueltas'] or 0) / total) if total else 0,
+            'latencia_ms': int(agregados['latencia'] or 0),
+            'minutos_incluidos': incluidos,
+            'porcentaje_plan': round(100 * minutos / incluidos) if incluidos else 0,
+            # El agente que de verdad atiende: el del número manda sobre el del flujo.
+            'agente': numero.agente_ia or (numero.flujo.agente_ia if numero.flujo_id else None),
+        })
+    return filas

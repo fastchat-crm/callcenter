@@ -44,8 +44,43 @@ NOMBRES = {
     '/seguridad/roles/': 'Roles de usuario',
     '/seguridad/modulos/': 'Módulos del sistema',
     '/seguridad/secciones/': 'Secciones del menú',
+    '/seguridad/arbol/': 'Árbol del menú',
     '/seguridad/auditoria/': 'Auditoría',
 }
+
+
+# Para quién es cada pantalla. Lo que no figure aquí queda en «ambos».
+#
+# La regla para poner algo en SOLO_ADMINISTRADOR es una sola: la pantalla
+# muestra datos que no son del cliente —del servidor, del carrier o de otros
+# clientes—. Las credenciales del proveedor SIP son el caso claro: son las del
+# operador y las paga él, y un cliente que las viera podría usarlas.
+SOLO_ADMINISTRADOR = (
+    '/clientes/listado/',
+    '/telefonia/proveedores/',
+    '/parametros/',
+    '/configuracion/',
+    '/seguridad/usuarios/',
+    '/seguridad/roles/',
+    '/seguridad/modulos/',
+    '/seguridad/secciones/',
+    '/seguridad/arbol/',
+    '/seguridad/auditoria/',
+)
+
+# Pantallas pensadas para quien contrata el servicio. El administrador también
+# entra —ve el sistema completo—, pero el sentido de la pantalla es del cliente.
+SOLO_CLIENTE = (
+    '/clientes/puesta-en-marcha/',
+)
+
+
+def perfil_para(ruta):
+    if ruta in SOLO_ADMINISTRADOR:
+        return 'administrador'
+    if ruta in SOLO_CLIENTE:
+        return 'cliente'
+    return 'ambos'
 
 
 def _recorrer(patrones, prefijo=''):
@@ -99,12 +134,14 @@ def sincronizar_modulos():
         if existente is not None:
             existentes += 1
             _refrescar_descripcion(existente)
+            _refrescar_perfil(existente)
             continue
         orden += 10
         Modulo.objects.create(
             nombre=nombre_para(ruta),
             url=ruta,
             descripcion=descripcion_para(ruta),
+            perfil=perfil_para(ruta),
             orden=orden,
         )
         creados += 1
@@ -154,3 +191,19 @@ def _refrescar_descripcion(modulo):
     if nueva != actual:
         modulo.descripcion = nueva
         modulo.save(update_fields=['descripcion'])
+
+
+def _refrescar_perfil(modulo):
+    """Aplica el perfil declarado, pero solo si nadie lo cambió a mano.
+
+    «ambos» es el valor con que nace un módulo, así que se trata como «sin
+    decidir» y se puede ajustar. Si alguien ya lo restringió desde el panel, esa
+    decisión se respeta: la sincronización no debe abrirle a un cliente una
+    pantalla que el administrador cerró.
+    """
+    if modulo.perfil != 'ambos':
+        return
+    declarado = perfil_para(modulo.url)
+    if declarado != modulo.perfil:
+        modulo.perfil = declarado
+        modulo.save(update_fields=['perfil'])

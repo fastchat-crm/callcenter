@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="tarjeta arranque">
+    <div class="tarjeta-cuerpo">
+        <span class="etiqueta etiqueta-acento">Primeros pasos</span>
+        <h1 class="mt-1">Todavía no tienes ningún número</h1>
+        <p class="texto-suave arranque-nota">
+            Tu asistente está listo, pero nadie puede llamarlo hasta que registres un número
+            de teléfono. Son dos cosas, en este orden.
+        </p>
+
+        <div class="arranque-pasos">
+            <div class="arranque-paso">
+                <span class="arranque-numero">1</span>
+                <div>
+                    <strong>Registra tu número</strong>
+                    <p class="texto-suave texto-pequeno">
+                        Si todavía no lo contrataste, la guía te dice dónde comprarlo y cuánto
+                        cuesta. Con el número en la mano, cargarlo aquí toma un minuto.
+                    </p>
+                    <div class="fila-flex mt-1">
+                        <a class="boton boton-primario" href="/telefonia/numeros/">Registrar mi número</a>
+                        <a class="boton boton-sutil" href="/doc/guia-cliente/">Dónde comprarlo</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="arranque-paso">
+                <span class="arranque-numero">2</span>
+                <div>
+                    <strong>Elige qué agente atiende cada número</strong>
+                    <p class="texto-suave texto-pequeno">
+                        {% if agentes %}
+                            Tienes {{ agentes }} agente{{ agentes|pluralize:"s" }} listo{{ agentes|pluralize:"s" }}.
+                            Al cargar el número eliges cuál contesta; si lo dejas vacío usa el del flujo.
+                        {% else %}
+                            Todavía no tienes ningún agente activo. Créalo antes de conectar el número,
+                            o la llamada entrará sin nadie que responda.
+                        {% endif %}
+                    </p>
+                    <div class="fila-flex mt-1">
+                        <a class="boton" href="/agentes-ia/agentes/">Configurar agentes</a>
+                        <a class="boton boton-sutil" href="/agentes-ia/conocimiento/">Cargar conocimiento</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="arranque-pie">
+            <span class="texto-tenue texto-pequeno">
+                Mientras tanto puedes oír a tu asistente sin gastar un minuto de teléfono.
+            </span>
+            <a class="boton boton-sm" href="/voz/demo/">Probar en el navegador</a>
+        </div>
+    </div>
+</div>
+
+{% if estado_marcha.pasos %}
+<div class="tarjeta mt-2">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">Cómo vas</div>
+            <div class="tarjeta-nota">{{ estado_marcha.listos }} de {{ estado_marcha.total }} pasos resueltos</div>
+        </div>
+        <a class="boton boton-sm" href="/clientes/puesta-en-marcha/">Ver el detalle</a>
+    </div>
+    <div class="tarjeta-cuerpo">
+        <div class="barra-progreso"><div class="barra-progreso-relleno" style="width: {{ estado_marcha.porcentaje }}%"></div></div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

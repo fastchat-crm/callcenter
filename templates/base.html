@@ -5,7 +5,7 @@
     <title>{{ titulo }} · {{ configuracion.nombre_empresa|default:nombre_sistema }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#2f6bff">
-    <link rel="stylesheet" href="/static/css/base.css?v2.9">
+    <link rel="stylesheet" href="/static/css/base.css?v3.2">
     {% block head %}{% endblock %}
 </head>
 <body>
@@ -45,15 +45,22 @@
             {% endfor %}
         </nav>
 
-        <button class="colapsar-menu" id="alternar-menu" type="button"
-                title="Mostrar u ocultar el menú" aria-label="Mostrar u ocultar el menú">
-            <svg class="ico"><use href="#ico-chevron"></use></svg>
-        </button>
     </aside>
+
+    <button class="velo-menu" id="cerrar-menu" type="button" aria-label="Cerrar el menú"></button>
+
+    <button class="colapsar-menu" id="alternar-menu" type="button"
+            title="Mostrar u ocultar el menú" aria-label="Mostrar u ocultar el menú">
+        <svg class="ico"><use href="#ico-chevron"></use></svg>
+    </button>
 
     <main class="contenido">
         <header class="barra-superior">
-            <div>
+            <button class="abrir-menu" id="abrir-menu" type="button"
+                    title="Menú" aria-label="Abrir el menú">
+                <svg class="ico"><use href="#ico-menu"></use></svg>
+            </button>
+            <div class="barra-titulo">
                 <div class="ruta-modulo">{{ modulo }}</div>
                 <h1>{{ titulo }}</h1>
             </div>
@@ -146,7 +153,7 @@
 
 <div class="avisos" id="avisos"></div>
 <form id="formulario-csrf">{% csrf_token %}</form>
-<script src="/static/js/app.js?v2.9"></script>
+<script src="/static/js/app.js?v3.2"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

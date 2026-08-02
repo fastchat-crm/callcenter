@@ -8,6 +8,7 @@
             <div class="tarjeta-nota">Cada módulo es una URL protegida. {{ sin_seccion }} sin sección asignada · {{ total_secciones }} secciones del menú.</div>
         </div>
         <div class="fila-flex">
+            <a class="boton boton-sm" href="/seguridad/arbol/">Árbol del menú</a>
             <a class="boton boton-sm" href="/seguridad/secciones/">Secciones del menú</a>
             <button class="boton boton-sm" type="button" onclick="sincronizar()">Sincronizar con las URLs</button>
             <button class="boton boton-primario" data-accion="add" data-titulo="Nuevo módulo">Nuevo módulo</button>
@@ -16,13 +17,14 @@
     <div class="tarjeta-cuerpo">{% include 'componentes/buscador.html' with placeholder='Nombre o URL…' %}</div>
     <div class="tabla-envoltura">
         <table class="tabla">
-            <thead><tr><th>Orden</th><th>Módulo</th><th>URL</th><th>Secciones</th><th>Roles</th><th>Menú</th><th class="celda-acciones">Acciones</th></tr></thead>
+            <thead><tr><th>Orden</th><th>Módulo</th><th>URL</th><th>Habilitada para</th><th>Secciones</th><th>Roles</th><th>Menú</th><th class="celda-acciones">Acciones</th></tr></thead>
             <tbody>
             {% for filtro in listado %}
                 <tr>
                     <td class="celda-mono">{{ filtro.orden }}</td>
                     <td><strong>{{ filtro.nombre }}</strong><div class="texto-tenue texto-pequeno">{{ filtro.descripcion|default:""|truncatechars:60 }}</div></td>
                     <td class="celda-mono texto-pequeno">{{ filtro.url }}</td>
+                    <td><span class="etiqueta etiqueta-perfil-{{ filtro.perfil }}">{{ filtro.get_perfil_display }}</span></td>
                     <td>
                         {% for seccion in filtro.grupos_menu.all %}<span class="etiqueta">{{ seccion.nombre }}</span>{% empty %}
                             <span class="texto-tenue texto-pequeno">sin sección</span>
@@ -40,7 +42,7 @@
                     </td>
                 </tr>
             {% empty %}
-                <tr><td colspan="7" class="vacio"><strong>Sin módulos registrados</strong>Usa «Sincronizar con las URLs» para darlos de alta automáticamente.</td></tr>
+                <tr><td colspan="8" class="vacio"><strong>Sin módulos registrados</strong>Usa «Sincronizar con las URLs» para darlos de alta automáticamente.</td></tr>
             {% endfor %}
             </tbody>
         </table>

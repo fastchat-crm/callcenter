@@ -57,6 +57,30 @@ CATALOGO = (
                     'persona y empezar a procesar. Bajo, la IA interrumpe a quien todavía está '
                     'pensando la frase. Alto, la conversación se siente lenta.'),
     Parametro(
+        'VOZ_MS_ESPERA_DTMF', 'Espera entre teclas', tipo='entero', defecto=1200,
+        unidad='milisegundos', grupo='Detección de fin de turno',
+        descripcion='Cuánto se espera otra tecla antes de dar por terminado lo marcado. Un menú '
+                    'se resuelve con una sola tecla, pero una cédula son diez seguidas: este '
+                    'tiempo es lo que distingue los dos casos. Bajarlo parte los números largos; '
+                    'subirlo hace que el menú tarde en reaccionar.'),
+    Parametro(
+        'VOZ_BARGE_IN', 'Permitir interrumpir al asistente', tipo='booleano', defecto=True,
+        unidad='1 = sí / 0 = no', grupo='Interrupción',
+        descripcion='Deja que la persona corte al asistente hablándole encima, como en una '
+                    'conversación real. Si en tus llamadas el asistente se interrumpe solo, '
+                    'lo que oye es su propio eco: sube el margen de interrupción o apaga esto.'),
+    Parametro(
+        'VOZ_MS_VOZ_PARA_INTERRUMPIR', 'Voz necesaria para interrumpir', tipo='entero', defecto=500,
+        unidad='milisegundos', grupo='Interrupción',
+        descripcion='Cuánto tiene que hablar la persona encima del asistente para cortarlo. '
+                    'Bajo, una tos o un ruido lo callan. Alto, hay que insistir para que pare.'),
+    Parametro(
+        'VOZ_FACTOR_INTERRUPCION', 'Margen sobre el umbral', tipo='entero', defecto=200,
+        unidad='% del umbral de silencio', grupo='Interrupción',
+        descripcion='Qué tan fuerte hay que hablar para cortar al asistente, comparado con el '
+                    'umbral normal. 200 significa el doble. Este es el margen que separa la voz '
+                    'de la persona del eco del propio asistente en la línea.'),
+    Parametro(
         'VOZ_GRABAR_LLAMADAS', 'Grabar las llamadas', tipo='booleano', defecto=True,
         unidad='1 = sí / 0 = no', grupo='Grabación',
         descripcion='Guarda el audio completo de cada llamada para poder escucharla después. '

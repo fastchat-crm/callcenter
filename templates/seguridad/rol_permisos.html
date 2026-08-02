@@ -30,6 +30,7 @@
                             <span>
                                 <strong>{{ item.obj.nombre }}</strong>
                                 <span class="texto-tenue texto-pequeno celda-mono">{{ item.obj.url }}</span>
+                                {% if item.obj.perfil != 'ambos' %}<span class="etiqueta etiqueta-perfil-{{ item.obj.perfil }}">{{ item.obj.get_perfil_display }}</span>{% endif %}
                             </span>
                         </label>
                     {% endfor %}
@@ -43,16 +44,6 @@
         </div>
     </div>
 </form>
-{% endblock %}
-
-{% block head %}
-<style>
-.permiso { display: flex; gap: .6rem; align-items: flex-start; padding: .55rem .7rem;
-    border: 1px solid var(--borde); border-radius: var(--radio-sm); background: var(--fondo-elevado); cursor: pointer; }
-.permiso:hover { border-color: var(--primario); }
-.permiso span { display: flex; flex-direction: column; }
-.permiso strong { font-size: .87rem; font-weight: 600; }
-</style>
 {% endblock %}
 
 {% block scripts %}

@@ -82,8 +82,25 @@ class Command(BaseCommand):
         self.stdout.write('  sudo asterisk -rx "dialplan reload"')
 
     def _pjsip(self, troncales, asesores):
-        partes = [CABECERA, '[transport-udp]\ntype = transport\nprotocol = udp\n'
-                            'bind = 0.0.0.0:5060\n']
+        # Endurecimiento del 5060. Los escáneres SIP encuentran el puerto en
+        # horas —en esta instalación fail2ban ya lleva IPs baneadas antes de
+        # tener una sola troncal—, y lo que buscan no es escuchar llamadas sino
+        # hacer salientes a tu costa, que se facturan al dueño de la troncal.
+        partes = [CABECERA, """[global]
+type = global
+; No anunciar «Asterisk 20.6.0» en cada respuesta: el escáner usa la versión
+; para elegir con qué exploit seguir.
+user_agent = PBX
+; Sin esto, un usuario inexistente responde distinto que uno con clave mala, y
+; eso permite enumerar extensiones válidas antes de probar claves.
+endpoint_identifier_order = auth_username,username,ip
+
+[transport-udp]
+type = transport
+protocol = udp
+bind = 0.0.0.0:5060
+
+"""]
 
         for asesor in asesores:
             extension = asesor.extension_sip.strip()
@@ -207,8 +224,11 @@ exten => 1000,1,NoOp(Prueba del bot desde una extension interna)
  same => n,Answer()
  same => n,Set(CALLUUID=${{SHELL(uuidgen -r | tr -d '\\n')}})
  same => n,Set(AVISO=${{CURL({aviso},uuid=${{CALLUUID}}&from=${{CALLERID(num)}}&to=interno&flujo={flujo_prueba})}})
- same => n,GotoIf($[${{REGEX("\\"error\\": false" ${{AVISO}})}} = 0]?atender-con-ia,s,sinpanel)
+ same => n,GotoIf($[${{REGEX("\\"error\\": false" ${{AVISO}})}} = 0]?sinpanel)
  same => n,AudioSocket(${{CALLUUID}},{audiosocket})
+ same => n,Hangup()
+ same => n(sinpanel),NoOp(El panel no aceptó la prueba: no hay ningún flujo activo)
+ same => n,Playback(vm-goodbye)
  same => n,Hangup()
 """)
         for asesor in asesores:

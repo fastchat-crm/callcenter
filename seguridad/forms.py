@@ -96,9 +96,10 @@ class RolForm(forms.ModelForm):
 class ModuloForm(FormularioBase):
     class Meta:
         model = Modulo
-        fields = ('nombre', 'url', 'descripcion', 'icono', 'orden', 'visible_menu')
+        fields = ('nombre', 'url', 'perfil', 'descripcion', 'icono', 'orden', 'visible_menu')
         labels = {
-            'nombre': 'Nombre', 'url': 'URL', 'descripcion': 'Descripción',
+            'nombre': 'Nombre', 'url': 'URL', 'perfil': 'Habilitada para',
+            'descripcion': 'Descripción',
             'icono': 'Icono', 'orden': 'Orden', 'visible_menu': 'Mostrar en el menú',
         }
 

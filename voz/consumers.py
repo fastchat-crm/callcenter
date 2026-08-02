@@ -201,19 +201,34 @@ class MediaStreamConsumer(BaseVozConsumer, AsyncJsonWebsocketConsumer):
     async def _hablar(self, salida):
         if salida.texto:
             logger.info('[voz] ia(%s): %s', self.llamada.id, salida.texto)
-            ulaw = await asyncio.to_thread(services.sintetizar_ulaw, salida.texto)
-            if ulaw:
-                self.grabador.anotar(audio_utils.ulaw_a_pcm(ulaw), services.SAMPLE_RATE_TELEFONICO)
-                await self._enviar_ulaw(ulaw)
-            else:
-                logger.warning('[voz] sin audio TTS; el cliente no escuchará la respuesta')
+            # Troceado por puntuación: el primer trozo suena mientras se
+            # sintetiza el siguiente, en vez de callar hasta tener la frase
+            # entera. Ver `services.trocear_para_habla`.
+            trozos = services.trocear_para_habla(salida.texto)
+            siguiente = asyncio.create_task(
+                asyncio.to_thread(services.sintetizar_ulaw, trozos[0])) if trozos else None
+            try:
+                for indice, _trozo in enumerate(trozos):
+                    ulaw = await siguiente
+                    siguiente = (asyncio.create_task(
+                        asyncio.to_thread(services.sintetizar_ulaw, trozos[indice + 1]))
+                        if indice + 1 < len(trozos) else None)
+                    if not ulaw:
+                        logger.warning('[voz] sin audio TTS; el cliente no escuchará la respuesta')
+                        continue
+                    self.grabador.anotar(audio_utils.ulaw_a_pcm(ulaw),
+                                         services.SAMPLE_RATE_TELEFONICO)
+                    await self._enviar_ulaw(ulaw, ultimo=siguiente is None)
+            finally:
+                if siguiente is not None and not siguiente.done():
+                    siguiente.cancel()
         if salida.transferir is not None:
             await self._solicitar_transferencia(salida.transferir)
             return
         if salida.finalizar:
             await self.close()
 
-    async def _enviar_ulaw(self, ulaw):
+    async def _enviar_ulaw(self, ulaw, ultimo=True):
         for inicio in range(0, len(ulaw), TAMANO_TRAMA_ULAW):
             trama = ulaw[inicio:inicio + TAMANO_TRAMA_ULAW]
             if len(trama) < TAMANO_TRAMA_ULAW:
@@ -224,6 +239,10 @@ class MediaStreamConsumer(BaseVozConsumer, AsyncJsonWebsocketConsumer):
                 'media': {'payload': base64.b64encode(trama).decode('ascii')},
             })
             await asyncio.sleep(INTERVALO_TRAMA)
+        # La marca cierra la respuesta completa, no cada trozo: el carrier la usa
+        # para saber que la IA terminó de hablar.
+        if not ultimo:
+            return
         await self.send_json({
             'event': 'mark',
             'streamSid': self.stream_sid,

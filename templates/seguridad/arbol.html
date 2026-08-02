@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="tarjeta">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">Árbol del menú</div>
+            <div class="tarjeta-nota">{{ total_modulos }} URL{{ total_modulos|pluralize:"s" }} · {{ por_perfil.ambos }} para ambos perfiles · {{ por_perfil.administrador }} solo administrador · {{ por_perfil.cliente }} solo cliente</div>
+        </div>
+        <div class="fila-flex">
+            <a class="boton boton-sm" href="/seguridad/modulos/">Módulos</a>
+            <a class="boton boton-sm" href="/seguridad/secciones/">Secciones</a>
+            <a class="boton boton-sm" href="/seguridad/roles/">Roles</a>
+        </div>
+    </div>
+    <div class="tarjeta-cuerpo">
+        <p class="arbol-nota"><strong>Habilitada para</strong> decide quién ve la pantalla. «Solo el administrador» la esconde de los clientes aunque su rol la tenga concedida, y sirve para lo que muestra datos del servidor, del carrier o de otros clientes. El rol sigue mandando sobre quién puede abrirla: esto solo recorta.</p>
+    </div>
+
+    {% for rama in ramas %}
+        <div class="arbol-rama">
+            <div class="arbol-seccion">
+                {% if rama.seccion %}
+                    <strong>{{ rama.seccion.nombre }}</strong>
+                    <span class="texto-tenue texto-pequeno">prioridad {{ rama.seccion.prioridad }} · {{ rama.items|length }} URL{{ rama.items|length|pluralize:"s" }}</span>
+                {% else %}
+                    <strong>Sin sección</strong>
+                    <span class="texto-tenue texto-pequeno">protegidas, pero no aparecen en el menú lateral</span>
+                {% endif %}
+            </div>
+            <div class="tabla-envoltura">
+                <table class="tabla">
+                    <thead><tr><th>Módulo</th><th>URL</th><th>Habilitada para</th><th>Sección</th><th>Roles</th><th>Menú</th></tr></thead>
+                    <tbody>
+                    {% for item in rama.items %}
+                        <tr>
+                            <td><strong>{{ item.modulo.nombre }}</strong><div class="texto-tenue texto-pequeno">{{ item.modulo.descripcion|default:""|truncatechars:70 }}</div></td>
+                            <td class="celda-mono texto-pequeno">{{ item.modulo.url }}</td>
+                            <td>
+                                <select class="campo campo-sm" data-accion="perfil" data-id="{{ item.modulo.id }}">
+                                    {% for clave, etiqueta in perfiles %}
+                                        <option value="{{ clave }}" {% if item.modulo.perfil == clave %}selected{% endif %}>{{ etiqueta }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <select class="campo campo-sm" data-accion="seccion" data-id="{{ item.modulo.id }}">
+                                    <option value="">Sin sección</option>
+                                    {% for seccion in secciones %}
+                                        <option value="{{ seccion.id }}" {% if rama.seccion.id == seccion.id %}selected{% endif %}>{{ seccion.nombre }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                {% for rol in item.roles %}<span class="etiqueta">{{ rol }}</span>{% empty %}
+                                    <span class="texto-tenue texto-pequeno">ningún rol</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% if item.modulo.visible_menu %}<span class="etiqueta etiqueta-exito">Visible</span>
+                                {% else %}<span class="etiqueta">Oculto</span>{% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% empty %}
+        <div class="vacio">
+            <strong>No hay módulos registrados</strong>
+            Ve a <a href="/seguridad/modulos/">Módulos del sistema</a> y usa «Sincronizar con las URLs».
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.arbol-rama select[data-accion]').forEach((campo) => {
+    campo.addEventListener('change', () => {
+        const cuerpo = new FormData();
+        cuerpo.append('action', campo.dataset.accion);
+        cuerpo.append('id', campo.dataset.id);
+        cuerpo.append(campo.dataset.accion, campo.value);
+        cuerpo.append('csrfmiddlewaretoken', App.token());
+        fetch(window.location.pathname, { method: 'POST', body: cuerpo })
+            .then((respuesta) => respuesta.json())
+            .then((datos) => {
+                App.aviso(datos.message || 'Listo.', datos.error ? 'error' : 'exito');
+                if (!datos.error && campo.dataset.accion === 'seccion') {
+                    window.setTimeout(() => window.location.reload(), 900);
+                }
+            });
+    });
+});
+</script>
+{% endblock %}

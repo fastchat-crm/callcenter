@@ -15,8 +15,20 @@ from django.db import models
 from core.custom_models import ModeloBase
 
 
+PERFIL_MODULO_CHOICES = (
+    ('ambos', 'Administrador y cliente'),
+    ('administrador', 'Solo el administrador'),
+    ('cliente', 'Solo el cliente'),
+)
+
+
 class Modulo(ModeloBase):
     nombre = models.CharField(max_length=120)
+    perfil = models.CharField(max_length=15, choices=PERFIL_MODULO_CHOICES, default='ambos',
+                              help_text='Para quién es esta pantalla. «Solo el administrador» la '
+                                        'esconde de los clientes aunque su rol la tenga asignada: '
+                                        'sirve para lo que lleva datos del servidor o de otros '
+                                        'clientes.')
     url = models.CharField(max_length=140, unique=True,
                            help_text='Ruta del sistema, con barra inicial y final: /llamadas/listado/')
     descripcion = models.CharField(max_length=250, blank=True, null=True)
@@ -96,9 +108,27 @@ def modulos_de_usuario(usuario, request=None):
         return modulos_del_rol_cliente()
     if usuario.is_superuser:
         return Modulo.objects.filter(status=True)
-    return Modulo.objects.filter(
+    concedidos = Modulo.objects.filter(
         status=True, roles_asignados__group__in=usuario.groups.all(),
     ).distinct()
+    return acotar_por_perfil(concedidos, es_cliente=not es_operador(usuario))
+
+
+def es_operador(usuario):
+    """Quien administra el servicio: su usuario no cuelga de ningún cliente."""
+    return getattr(usuario, 'cliente_id', None) is None
+
+
+def acotar_por_perfil(queryset, es_cliente):
+    """Quita del queryset las URLs que no son de este perfil.
+
+    Va sobre los permisos del rol, no en su lugar: el rol dice qué se concedió y
+    el perfil dice a quién tiene sentido mostrárselo. Se aplica en
+    `modulos_de_usuario`, que es lo que consultan tanto el menú como el guardia
+    de acceso, así que marcar una pantalla «solo el administrador» no solo la
+    esconde: también cierra la puerta a quien la escriba a mano.
+    """
+    return queryset.exclude(perfil='cliente' if not es_cliente else 'administrador')
 
 
 def _en_modo_cliente(request):
@@ -111,7 +141,12 @@ def _en_modo_cliente(request):
 
 
 def modulos_del_rol_cliente():
-    """Lo que ve un usuario con el rol «Cliente». Vacío si el rol no existe."""
+    """Lo que ve un usuario con el rol «Cliente».
+
+    Cruza dos cosas: lo que su rol tiene asignado y el perfil declarado en el
+    módulo. El perfil manda: una pantalla marcada «solo el administrador» no se
+    muestra aunque alguien se la asigne al rol por error.
+    """
     from django.contrib.auth.models import Group
 
     from clientes.contexto import ROL_CLIENTE
@@ -119,7 +154,8 @@ def modulos_del_rol_cliente():
     rol = Group.objects.filter(name=ROL_CLIENTE).first()
     if rol is None:
         return Modulo.objects.none()
-    return Modulo.objects.filter(status=True, roles_asignados__group=rol).distinct()
+    return (Modulo.objects.filter(status=True, roles_asignados__group=rol)
+            .exclude(perfil='administrador').distinct())
 
 
 # Rutas que nunca se bloquean por permisos. La del modo cliente está aquí por

@@ -238,9 +238,52 @@ bot antes de tener un DID.
 
 Marca **1001** y suena el softphone del asesor: así se prueba la transferencia.
 
+Las teclas funcionan igual que en una llamada real: marca **1** en el menú y avanza de paso, o
+marca una cédula completa y la recibe entera. El tiempo que se espera otra tecla antes de dar
+por terminado lo marcado se ajusta en *Parámetros del sistema* con `VOZ_MS_ESPERA_DTMF`.
+
+### Probar sin softphone, desde el propio servidor
+
+Cuando ni siquiera hay un softphone a mano, se puede lanzar la llamada desde la consola de
+Asterisk. Es un canal local: no sale al carrier y no cuesta nada.
+
+```bash
+asterisk -rx 'channel originate Local/1000@desde-interno application Wait 20'
+```
+
+La ruta exacta que tomó queda en `/var/log/asterisk/llamadas.log`, que registra a nivel
+verbose. Sin ese archivo no se ve por qué rama se fue una llamada, porque `messages.log` solo
+guarda avisos y errores:
+
+```
+[1000@desde-interno:4] Set(AVISO={"error": false, "llamada": 30})
+[1000@desde-interno:5] GotoIf("0?sinpanel")
+[1000@desde-interno:6] AudioSocket(…,127.0.0.1:8090)
+```
+
+Si el panel rechaza la llamada —no hay ningún flujo activo—, se va a `sinpanel` y se despide
+en vez de cortar en seco.
+
 Mientras suena, *Centro de operación → Monitor en vivo* muestra la llamada con su duración
 corriendo, el paso que está ejecutando el motor y **la conversación turno por turno**, además
 del estado de Asterisk y del puente. Se refresca cada tres segundos.
+
+### Qué trae ya el `pjsip.conf` generado
+
+Dos ajustes que no son opcionales cuando el puerto mira a internet:
+
+- `user_agent = PBX` — sin esto, Asterisk anuncia su versión exacta en cada respuesta y el
+  escáner la usa para elegir con qué exploit seguir.
+- `endpoint_identifier_order` fijo — sin esto, un usuario inexistente responde distinto que uno
+  con clave mala, y eso permite enumerar qué extensiones existen antes de probar claves.
+
+La contención de verdad, sin embargo, es el **contexto** de cada endpoint. Los asesores entran
+en `desde-interno`, que solo tiene la extensión del bot y las de los propios asesores: no hay
+ningún patrón `_X.` que marque al exterior. Aunque alguien reviente una clave SIP, no puede
+hacer una llamada saliente, que es lo que el atacante buscaba.
+
+Al contratar la troncal, restringe el `5060/udp` a las IP del carrier. Mientras solo haya
+softphones, queda abierto y lo cubre fail2ban.
 
 ### Seguridad del 5060
 

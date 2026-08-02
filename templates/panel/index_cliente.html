@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block contenido %}
+<div class="rejilla rejilla-4 mb-3">
+    <div class="tarjeta indicador">
+        <div class="indicador-etiqueta">Llamadas ({{ metricas.dias }} días)</div>
+        <div class="indicador-valor">{{ metricas.total_llamadas }}</div>
+        <div class="indicador-pie">{{ metricas.en_curso }} en curso ahora</div>
+    </div>
+    <div class="tarjeta indicador">
+        <div class="indicador-etiqueta">Minutos consumidos</div>
+        <div class="indicador-valor">{{ metricas.minutos_consumidos }}</div>
+        <div class="indicador-pie">Promedio {{ metricas.duracion_promedio_seg }} s por llamada</div>
+    </div>
+    <div class="tarjeta indicador">
+        <div class="indicador-etiqueta">Resueltas sin pasar a una persona</div>
+        <div class="indicador-valor">{{ metricas.tasa_resolucion }}%</div>
+        <div class="indicador-pie">{{ metricas.transferidas }} pasaron a un asesor</div>
+    </div>
+    <div class="tarjeta indicador">
+        <div class="indicador-etiqueta">Abandonadas</div>
+        <div class="indicador-valor">{{ metricas.abandonadas }}</div>
+        <div class="indicador-pie">Colgaron antes de terminar</div>
+    </div>
+</div>
+
+<div class="tarjeta mb-3">
+    <div class="tarjeta-encabezado">
+        <div>
+            <div class="tarjeta-titulo">Consumo por número</div>
+            <div class="tarjeta-nota">Últimos 30 días. Cada número con su plan y quién lo atiende.</div>
+        </div>
+        <a class="boton boton-sm" href="/telefonia/numeros/">Administrar números</a>
+    </div>
+    <div class="tabla-envoltura">
+        <table class="tabla">
+            <thead>
+            <tr><th>Número</th><th>Atiende</th><th>Llamadas</th><th>Minutos</th><th>Plan</th><th>Resueltas</th><th>Latencia</th></tr>
+            </thead>
+            <tbody>
+            {% for fila in por_numero %}
+                <tr>
+                    <td>
+                        <strong class="celda-mono">{{ fila.numero.numero }}</strong>
+                        <div class="texto-tenue texto-pequeno">{{ fila.numero.flujo.nombre|default:"Sin flujo asignado" }}</div>
+                    </td>
+                    <td>
+                        {% if fila.agente %}{{ fila.agente.nombre }}
+                        {% else %}<span class="etiqueta etiqueta-alerta">Sin agente</span>{% endif %}
+                    </td>
+                    <td>{{ fila.llamadas }}</td>
+                    <td class="celda-mono">{{ fila.minutos }}</td>
+                    <td>
+                        {% if fila.minutos_incluidos %}
+                            <div class="barra-progreso" style="min-width:90px">
+                                <div class="barra-progreso-relleno" style="width: {{ fila.porcentaje_plan }}%"></div>
+                            </div>
+                            <div class="texto-tenue texto-pequeno">{{ fila.porcentaje_plan }}% de {{ fila.minutos_incluidos }} min</div>
+                        {% else %}<span class="texto-tenue">Sin plan</span>{% endif %}
+                    </td>
+                    <td>
+                        <span class="etiqueta {% if fila.tasa_resolucion >= 60 %}etiqueta-exito{% else %}etiqueta-alerta{% endif %}">
+                            {{ fila.tasa_resolucion }}%
+                        </span>
+                        <div class="texto-tenue texto-pequeno">{{ fila.transferidas }} a asesor</div>
+                    </td>
+                    <td class="celda-mono">{{ fila.latencia_ms }} ms</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="7" class="vacio"><strong>Sin números</strong>Registra uno para empezar a recibir llamadas.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="rejilla rejilla-2">
+    <div class="tarjeta">
+        <div class="tarjeta-encabezado">
+            <div>
+                <div class="tarjeta-titulo">Llamadas por día</div>
+                <div class="tarjeta-nota">Últimas dos semanas</div>
+            </div>
+        </div>
+        <div class="tarjeta-cuerpo">
+            <div class="barras">
+                {% for punto in serie_dias %}
+                    <div class="barra {% if not punto.total %}barra-vacia{% endif %}"
+                         style="height: {% if punto.total %}{% widthratio punto.total maximo_serie 100 %}{% else %}3{% endif %}%"
+                         title="{{ punto.dia }}: {{ punto.total }} llamadas"></div>
+                {% endfor %}
+            </div>
+            <div class="barras-ejes">
+                <span>{{ serie_inicio }}</span>
+                <span>{{ serie_fin }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="tarjeta">
+        <div class="tarjeta-encabezado">
+            <div class="tarjeta-titulo">Últimas llamadas</div>
+            <a class="boton boton-sm" href="/llamadas/listado/">Ver todas</a>
+        </div>
+        <div class="tabla-envoltura">
+            <table class="tabla">
+                <thead><tr><th>Origen</th><th>Número marcado</th><th>Estado</th><th>Duración</th></tr></thead>
+                <tbody>
+                {% for llamada in ultimas_llamadas %}
+                    <tr>
+                        <td class="celda-mono">{{ llamada.numero_origen|default:"—" }}</td>
+                        <td class="celda-mono texto-pequeno">{{ llamada.numero_destino|default:"—" }}</td>
+                        <td><span class="etiqueta">{{ llamada.get_estado_display }}</span></td>
+                        <td>{{ llamada.duracion_texto }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="4" class="vacio"><strong>Todavía no hay llamadas</strong>Prueba el demo de voz mientras tanto.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -27,9 +27,10 @@ auto-hospedados.
   cliente activo y da los helpers de filtrado) y `puesta_en_marcha.py` (estado de los ocho
   eslabones del recorrido, calculado al vuelo)
 - `autenticacion/` — usuario del panel, ingreso, perfil, cambio de clave
-- `seguridad/` — `Modulo` (una URL = un permiso), `ModuloGrupo` (secciones del menú),
-  `GroupModulo` (permisos por rol), CRUD de usuarios y roles, auditoría y
-  `sincronizacion.py` (descubre las URLs del proyecto)
+- `seguridad/` — `Modulo` (una URL = un permiso, con el perfil que dice si es del cliente,
+  del administrador o de ambos), `ModuloGrupo` (secciones del menú), `GroupModulo` (permisos
+  por rol), CRUD de usuarios y roles, árbol del menú, auditoría y `sincronizacion.py`
+  (descubre las URLs del proyecto)
 - `panel/` — tablero con indicadores y `view_doc.py`, que sirve `docs/*.md` en `/doc/`
 - `telefonia/` — proveedores, troncales SIP, números E.164, asesores, webhooks del carrier
 - `ivr/` — modelos de flujo y `motor.py` (ejecutor paso a paso)
@@ -38,6 +39,23 @@ auto-hospedados.
 - `voz/` — `services.py` (STT/TTS), `consumers.py` (WebSocket), `audiosocket.py` (puente TCP
   con Asterisk), `orquestador.py`, `audio.py`
 - `llamadas/` — llamadas, turnos, transferencias, grabaciones, `consultas.py` (métricas)
+
+## Guías de trabajo (`.ai/`)
+
+Misma estructura que `fastchatdj`, con el contenido adaptado a este proyecto. Antes de
+escribir código, leer la que toque:
+
+- `.ai/context/conventions.md` — naming, estructura de vistas, modelos, forms, CSS y JS
+- `.ai/context/dependencies.md` — qué corre en el servidor y qué pasa si falta
+- `.ai/skills/multi-cliente.md` — **el aislamiento entre clientes; la regla más cara de romper**
+- `.ai/skills/forms-ajax.md` — contrato real del panel (`App`, `JsonResponse`, `data-accion`)
+- `.ai/skills/django-patterns.md` — lo que aquí se hace distinto de fastchatdj
+- `.ai/skills/voz-tiempo-real.md` — orquestador, transportes, medio dúplex y fin de turno
+- `.ai/agents/backend.md` y `.ai/agents/frontend.md` — por dónde empezar según lo que toques
+
+Los patrones Django genéricos —`select_related`, transacciones, `Q`, `F`, signals— no se
+repiten: están en `fastchatdj/.ai/skills/django-patterns.md` y siguen valiendo. Lo que **no**
+se hereda es el frontend: aquí no hay jQuery, DataTables ni SweetAlert.
 
 ## Documentación
 
